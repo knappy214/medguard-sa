@@ -1,3 +1,436 @@
-from django.shortcuts import render
+"""
+Views for medications app.
 
-# Create your views here.
+This module contains API views for managing medications, schedules, logs, and alerts.
+"""
+
+from django.shortcuts import render, get_object_or_404
+from django.utils import timezone
+from django.db.models import Q, Count, Avg, F
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from rest_framework import viewsets, permissions, status, filters
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
+from datetime import datetime, timedelta
+
+from .models import Medication, MedicationSchedule, MedicationLog, StockAlert
+from .serializers import (
+    MedicationSerializer,
+    MedicationDetailSerializer,
+    MedicationScheduleSerializer,
+    MedicationScheduleDetailSerializer,
+    MedicationLogSerializer,
+    MedicationLogDetailSerializer,
+    StockAlertSerializer,
+    StockAlertDetailSerializer,
+    MedicationStatsSerializer
+)
+
+
+class MedicationViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing medications.
+    
+    Provides CRUD operations for medication management with filtering and search capabilities.
+    """
+    
+    queryset = Medication.objects.all()
+    serializer_class = MedicationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['medication_type', 'prescription_type', 'manufacturer']
+    search_fields = ['name', 'generic_name', 'brand_name', 'description', 'active_ingredients']
+    ordering_fields = ['name', 'created_at', 'updated_at', 'pill_count']
+    ordering = ['name']
+    
+    def get_serializer_class(self):
+        """Return appropriate serializer based on action."""
+        if self.action in ['retrieve', 'create', 'update', 'partial_update']:
+            return MedicationDetailSerializer
+        return MedicationSerializer
+    
+    @action(detail=False, methods=['get'])
+    def low_stock(self, request):
+        """Get medications with low stock."""
+        medications = self.get_queryset().filter(
+            pill_count__lte=F('low_stock_threshold')
+        )
+        serializer = self.get_serializer(medications, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def expiring_soon(self, request):
+        """Get medications expiring soon (within 30 days)."""
+        thirty_days_from_now = timezone.now().date() + timedelta(days=30)
+        medications = self.get_queryset().filter(
+            expiration_date__lte=thirty_days_from_now,
+            expiration_date__gte=timezone.now().date()
+        )
+        serializer = self.get_serializer(medications, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def expired(self, request):
+        """Get expired medications."""
+        medications = self.get_queryset().filter(
+            expiration_date__lt=timezone.now().date()
+        )
+        serializer = self.get_serializer(medications, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def update_stock(self, request, pk=None):
+        """Update medication stock count."""
+        medication = self.get_object()
+        new_count = request.data.get('pill_count')
+        
+        if new_count is None:
+            return Response(
+                {'error': 'pill_count is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            new_count = int(new_count)
+            if new_count < 0:
+                raise ValueError("Stock count cannot be negative")
+        except (ValueError, TypeError):
+            return Response(
+                {'error': 'Invalid pill_count value'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        medication.pill_count = new_count
+        medication.save()
+        
+        serializer = self.get_serializer(medication)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def schedules(self, request, pk=None):
+        """Get all schedules for a specific medication."""
+        medication = self.get_object()
+        schedules = MedicationSchedule.objects.filter(medication=medication)
+        serializer = MedicationScheduleSerializer(schedules, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def logs(self, request, pk=None):
+        """Get all logs for a specific medication."""
+        medication = self.get_object()
+        logs = MedicationLog.objects.filter(medication=medication)
+        serializer = MedicationLogSerializer(logs, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def alerts(self, request, pk=None):
+        """Get all alerts for a specific medication."""
+        medication = self.get_object()
+        alerts = StockAlert.objects.filter(medication=medication)
+        serializer = StockAlertSerializer(alerts, many=True)
+        return Response(serializer.data)
+
+
+class MedicationScheduleViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing medication schedules.
+    """
+    
+    serializer_class = MedicationScheduleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['timing', 'status', 'medication', 'patient']
+    search_fields = ['instructions', 'frequency']
+    ordering_fields = ['start_date', 'end_date', 'created_at']
+    ordering = ['-start_date']
+    
+    def get_queryset(self):
+        """Filter schedules based on user type and permissions."""
+        user = self.request.user
+        if user.user_type == user.UserType.PATIENT:
+            return MedicationSchedule.objects.filter(patient=user)
+        elif user.user_type == user.UserType.CAREGIVER:
+            # Caregivers can see schedules for patients they care for
+            return MedicationSchedule.objects.filter(patient__caregiver=user)
+        else:
+            # Staff and admins can see all schedules
+            return MedicationSchedule.objects.all()
+    
+    def get_serializer_class(self):
+        """Return appropriate serializer based on action."""
+        if self.action in ['retrieve', 'create', 'update', 'partial_update']:
+            return MedicationScheduleDetailSerializer
+        return MedicationScheduleSerializer
+    
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """Get active medication schedules."""
+        schedules = self.get_queryset().filter(status=MedicationSchedule.Status.ACTIVE)
+        serializer = self.get_serializer(schedules, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def today(self, request):
+        """Get schedules that should be taken today."""
+        today = timezone.now().date()
+        weekday = today.strftime('%A').lower()
+        
+        schedules = self.get_queryset().filter(
+            Q(status=MedicationSchedule.Status.ACTIVE) &
+            Q(start_date__lte=today) &
+            (Q(end_date__isnull=True) | Q(end_date__gte=today))
+        )
+        
+        # Filter by day of week
+        if weekday == 'monday':
+            schedules = schedules.filter(monday=True)
+        elif weekday == 'tuesday':
+            schedules = schedules.filter(tuesday=True)
+        elif weekday == 'wednesday':
+            schedules = schedules.filter(wednesday=True)
+        elif weekday == 'thursday':
+            schedules = schedules.filter(thursday=True)
+        elif weekday == 'friday':
+            schedules = schedules.filter(friday=True)
+        elif weekday == 'saturday':
+            schedules = schedules.filter(saturday=True)
+        elif weekday == 'sunday':
+            schedules = schedules.filter(sunday=True)
+        serializer = self.get_serializer(schedules, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def pause(self, request, pk=None):
+        """Pause a medication schedule."""
+        schedule = self.get_object()
+        schedule.status = MedicationSchedule.Status.PAUSED
+        schedule.save()
+        serializer = self.get_serializer(schedule)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def resume(self, request, pk=None):
+        """Resume a paused medication schedule."""
+        schedule = self.get_object()
+        schedule.status = MedicationSchedule.Status.ACTIVE
+        schedule.save()
+        serializer = self.get_serializer(schedule)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def complete(self, request, pk=None):
+        """Mark a medication schedule as completed."""
+        schedule = self.get_object()
+        schedule.status = MedicationSchedule.Status.COMPLETED
+        schedule.save()
+        serializer = self.get_serializer(schedule)
+        return Response(serializer.data)
+
+
+class MedicationLogViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing medication logs.
+    """
+    
+    serializer_class = MedicationLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['status', 'medication', 'patient', 'schedule']
+    search_fields = ['notes', 'side_effects']
+    ordering_fields = ['scheduled_time', 'actual_time', 'created_at']
+    ordering = ['-scheduled_time']
+    
+    def get_queryset(self):
+        """Filter logs based on user type and permissions."""
+        user = self.request.user
+        if user.user_type == user.UserType.PATIENT:
+            return MedicationLog.objects.filter(patient=user)
+        elif user.user_type == user.UserType.CAREGIVER:
+            return MedicationLog.objects.filter(patient__caregiver=user)
+        else:
+            return MedicationLog.objects.all()
+    
+    def get_serializer_class(self):
+        """Return appropriate serializer based on action."""
+        if self.action in ['retrieve', 'create', 'update', 'partial_update']:
+            return MedicationLogDetailSerializer
+        return MedicationLogSerializer
+    
+    @action(detail=False, methods=['get'])
+    def today(self, request):
+        """Get logs for today."""
+        today = timezone.now().date()
+        logs = self.get_queryset().filter(
+            scheduled_time__date=today
+        )
+        serializer = self.get_serializer(logs, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def missed(self, request):
+        """Get missed medication logs."""
+        logs = self.get_queryset().filter(status=MedicationLog.Status.MISSED)
+        serializer = self.get_serializer(logs, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def adherence_stats(self, request):
+        """Get medication adherence statistics."""
+        user = request.user
+        if user.user_type == user.UserType.PATIENT:
+            logs = self.get_queryset().filter(patient=user)
+        elif user.user_type == user.UserType.CAREGIVER:
+            logs = self.get_queryset().filter(patient__caregiver=user)
+        else:
+            logs = self.get_queryset()
+        
+        # Calculate adherence statistics
+        total_logs = logs.count()
+        taken_logs = logs.filter(status=MedicationLog.Status.TAKEN).count()
+        missed_logs = logs.filter(status=MedicationLog.Status.MISSED).count()
+        
+        adherence_rate = (taken_logs / total_logs * 100) if total_logs > 0 else 0
+        
+        stats = {
+            'total_logs': total_logs,
+            'taken_logs': taken_logs,
+            'missed_logs': missed_logs,
+            'adherence_rate': round(adherence_rate, 2)
+        }
+        
+        return Response(stats)
+
+
+class StockAlertViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing stock alerts.
+    """
+    
+    queryset = StockAlert.objects.all()
+    serializer_class = StockAlertSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['alert_type', 'priority', 'status', 'medication']
+    search_fields = ['title', 'message']
+    ordering_fields = ['created_at', 'priority']
+    ordering = ['-created_at']
+    
+    def get_serializer_class(self):
+        """Return appropriate serializer based on action."""
+        if self.action in ['retrieve', 'create', 'update', 'partial_update']:
+            return StockAlertDetailSerializer
+        return StockAlertSerializer
+    
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """Get active alerts."""
+        alerts = self.get_queryset().filter(status=StockAlert.Status.ACTIVE)
+        serializer = self.get_serializer(alerts, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def critical(self, request):
+        """Get critical priority alerts."""
+        alerts = self.get_queryset().filter(
+            priority=StockAlert.Priority.CRITICAL,
+            status=StockAlert.Status.ACTIVE
+        )
+        serializer = self.get_serializer(alerts, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def acknowledge(self, request, pk=None):
+        """Acknowledge an alert."""
+        alert = self.get_object()
+        alert.acknowledge(request.user)
+        serializer = self.get_serializer(alert)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def resolve(self, request, pk=None):
+        """Resolve an alert."""
+        alert = self.get_object()
+        notes = request.data.get('notes', '')
+        alert.resolve(notes)
+        serializer = self.get_serializer(alert)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def dismiss(self, request, pk=None):
+        """Dismiss an alert."""
+        alert = self.get_object()
+        alert.dismiss()
+        serializer = self.get_serializer(alert)
+        return Response(serializer.data)
+
+
+# Legacy views for backward compatibility
+def test_i18n(request):
+    """Test internationalization functionality."""
+    return render(request, 'medications/test_i18n.html')
+
+@csrf_exempt
+def set_language_ajax(request):
+    """Set language via AJAX."""
+    if request.method == 'POST':
+        language = request.POST.get('language')
+        if language:
+            request.session['django_language'] = language
+            return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
+
+from django.shortcuts import render
+from django.utils.translation import activate, gettext as _
+from django.http import JsonResponse
+
+def working_i18n_test(request):
+    """Working i18n test view."""
+    
+    # Test translations
+    activate('af-ZA')
+    
+    translations = {
+        'Medications': _('Medications'),
+        'Medication Schedules': _('Medication Schedules'),
+        'Medication Logs': _('Medication Logs'),
+        'Stock Alerts': _('Stock Alerts'),
+        'Language': _('Language'),
+        'Current': _('Current')
+    }
+    
+    context = {
+        'translations': translations,
+        'current_language': 'af-ZA',
+        'test_strings': [
+            'Medications',
+            'Medication Schedules', 
+            'Medication Logs',
+            'Stock Alerts',
+            'Language',
+            'Current'
+        ]
+    }
+    
+    return render(request, 'medications/working_i18n_test.html', context)
+
+def api_i18n_test(request):
+    """API endpoint for i18n testing."""
+    activate('af-ZA')
+    
+    translations = {
+        'Medications': _('Medications'),
+        'Medication Schedules': _('Medication Schedules'),
+        'Medication Logs': _('Medication Logs'),
+        'Stock Alerts': _('Stock Alerts'),
+        'Language': _('Language'),
+        'Current': _('Current')
+    }
+    
+    return JsonResponse({
+        'success': True,
+        'language': 'af-ZA',
+        'translations': translations
+    })

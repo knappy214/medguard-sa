@@ -1,413 +1,151 @@
 {% extends "wagtailadmin/base.html" %}
+{% load i18n %}
 
 {% block extra_css %}
-{{ block.super }}
-<style>
-    /* Healthcare Color Scheme */
-    :root {
-        --primary-color: #2563EB;      /* Blue - Trust & Professionalism */
-        --secondary-color: #10B981;    /* Green - Health & Safety */
-        --accent-color: #F59E0B;       /* Orange - Warning & Attention */
-        --danger-color: #EF4444;       /* Critical & Alerts */
-        --success-color: #059669;      /* Dark Green - Success */
-        --warning-color: #D97706;      /* Dark Orange - Warning */
-        --info-color: #3B82F6;         /* Light Blue - Information */
-        --neutral-color: #6B7280;      /* Gray - Neutral */
-        --light-bg: #F8FAFC;           /* Light Background */
-        --border-color: #E5E7EB;       /* Border Color */
-    }
-
-    /* Header Styling */
-    .header {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        border-bottom: 3px solid var(--accent-color);
-    }
-
-    .header__logo {
-        color: white !important;
-        font-weight: bold;
-        font-size: 1.5rem;
-    }
-
-    /* Navigation Styling */
-    .nav-main {
-        background-color: var(--light-bg);
-        border-right: 1px solid var(--border-color);
-    }
-
-    .nav-main a {
-        color: var(--neutral-color);
-        transition: all 0.3s ease;
-    }
-
-    .nav-main a:hover,
-    .nav-main a.active {
-        background-color: var(--primary-color);
-        color: white;
-    }
-
-    /* Button Styling */
-    .button {
-        background-color: var(--primary-color);
-        border-color: var(--primary-color);
-        color: white;
-        transition: all 0.3s ease;
-    }
-
-    .button:hover {
-        background-color: #1D4ED8;
-        border-color: #1D4ED8;
-    }
-
-    .button-secondary {
-        background-color: var(--secondary-color);
-        border-color: var(--secondary-color);
-    }
-
-    .button-secondary:hover {
-        background-color: var(--success-color);
-        border-color: var(--success-color);
-    }
-
-    .button-warning {
-        background-color: var(--warning-color);
-        border-color: var(--warning-color);
-    }
-
-    .button-warning:hover {
-        background-color: #B45309;
-        border-color: #B45309;
-    }
-
-    .button-danger {
-        background-color: var(--danger-color);
-        border-color: var(--danger-color);
-    }
-
-    .button-danger:hover {
-        background-color: #DC2626;
-        border-color: #DC2626;
-    }
-
-    /* Status Indicators */
-    .status-indicator {
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-weight: bold;
-        font-size: 0.875rem;
-    }
-
-    .status-success {
-        background-color: #D1FAE5;
-        color: var(--success-color);
-        border: 1px solid #A7F3D0;
-    }
-
-    .status-warning {
-        background-color: #FEF3C7;
-        color: var(--warning-color);
-        border: 1px solid #FDE68A;
-    }
-
-    .status-danger {
-        background-color: #FEE2E2;
-        color: var(--danger-color);
-        border: 1px solid #FECACA;
-    }
-
-    .status-info {
-        background-color: #DBEAFE;
-        color: var(--info-color);
-        border: 1px solid #BFDBFE;
-    }
-
-    /* Table Styling */
-    .listing {
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .listing thead th {
-        background-color: var(--light-bg);
-        border-bottom: 2px solid var(--border-color);
-        color: var(--neutral-color);
-        font-weight: 600;
-    }
-
-    .listing tbody tr:hover {
-        background-color: #F1F5F9;
-    }
-
-    /* Form Styling */
-    .field {
-        margin-bottom: 1.5rem;
-    }
-
-    .field label {
-        color: var(--neutral-color);
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .field input,
-    .field select,
-    .field textarea {
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        padding: 0.75rem;
-        transition: border-color 0.3s ease;
-    }
-
-    .field input:focus,
-    .field select:focus,
-    .field textarea:focus {
-        border-color: var(--primary-color);
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-
-    /* Panel Styling */
-    .panel {
-        background: white;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
-    }
-
-    .panel__heading {
-        background-color: var(--light-bg);
-        border-bottom: 1px solid var(--border-color);
-        padding: 1rem;
-        font-weight: 600;
-        color: var(--neutral-color);
-    }
-
-    .panel__content {
-        padding: 1rem;
-    }
-
-    /* Alert Styling */
-    .messages {
-        margin-bottom: 1rem;
-    }
-
-    .messages .message {
-        border-radius: 6px;
-        border-left: 4px solid;
-        padding: 1rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .messages .message.success {
-        background-color: #D1FAE5;
-        border-left-color: var(--success-color);
-        color: var(--success-color);
-    }
-
-    .messages .message.warning {
-        background-color: #FEF3C7;
-        border-left-color: var(--warning-color);
-        color: var(--warning-color);
-    }
-
-    .messages .message.error {
-        background-color: #FEE2E2;
-        border-left-color: var(--danger-color);
-        color: var(--danger-color);
-    }
-
-    /* Search and Filter Styling */
-    .search-form {
-        background-color: var(--light-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .search-form input[type="text"] {
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        padding: 0.5rem;
-    }
-
-    /* Pagination Styling */
-    .pagination {
-        margin-top: 1rem;
-    }
-
-    .pagination a {
-        color: var(--primary-color);
-        border: 1px solid var(--border-color);
-        padding: 0.5rem 0.75rem;
-        margin: 0 0.25rem;
-        border-radius: 4px;
-        text-decoration: none;
-    }
-
-    .pagination a:hover {
-        background-color: var(--primary-color);
-        color: white;
-    }
-
-    .pagination .current {
-        background-color: var(--primary-color);
-        color: white;
-        border-color: var(--primary-color);
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .header__logo {
-            font-size: 1.25rem;
-        }
-
-        .listing {
-            font-size: 0.875rem;
-        }
-
-        .button {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-        }
-    }
-
-    /* Accessibility Improvements */
-    .button:focus,
-    .field input:focus,
-    .field select:focus,
-    .field textarea:focus {
-        outline: 2px solid var(--primary-color);
-        outline-offset: 2px;
-    }
-
-    /* High Contrast Mode Support */
-    @media (prefers-contrast: high) {
+    {{ block.super }}
+    <style>
+        /* MedGuard SA Admin Theme - Wagtail 7.0.2 Compatible */
         :root {
-            --primary-color: #1E40AF;
-            --secondary-color: #047857;
-            --accent-color: #D97706;
-            --danger-color: #DC2626;
-        }
-    }
-
-    /* Dark Mode Support */
-    @media (prefers-color-scheme: dark) {
-        :root {
-            --light-bg: #1F2937;
-            --border-color: #374151;
-            --neutral-color: #D1D5DB;
+            --primary-color: #2563EB;
+            --secondary-color: #10B981;
+            --accent-color: #F59E0B;
+            --danger-color: #EF4444;
+            --text-color: #374151;
+            --bg-color: #F8FAFC;
+            --border-color: #E5E7EB;
         }
 
+        /* Global overrides */
         body {
-            background-color: #111827;
-            color: #F9FAFB;
+            background-color: var(--bg-color) !important;
+            color: var(--text-color) !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         }
 
-        .panel {
-            background-color: #1F2937;
-            border-color: #374151;
+        /* Header styling */
+        .w-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+            border-bottom: 3px solid var(--accent-color) !important;
         }
 
-        .listing {
-            background-color: #1F2937;
-            border-color: #374151;
+        /* Logo styling */
+        .w-header__logo {
+            font-size: 1.5rem !important;
+            font-weight: bold !important;
+            color: white !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
         }
 
-        .listing thead th {
-            background-color: #374151;
-            border-color: #4B5563;
-            color: #F9FAFB;
+        /* Navigation styling */
+        .w-slim-header {
+            background-color: var(--primary-color) !important;
         }
-    }
-</style>
+
+        /* Button styling */
+        .w-btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+
+        .w-btn-primary:hover {
+            background-color: #1d4ed8 !important;
+            border-color: #1d4ed8 !important;
+        }
+
+        .w-btn-secondary {
+            background-color: var(--secondary-color) !important;
+            border-color: var(--secondary-color) !important;
+        }
+
+        /* Card styling */
+        .w-card {
+            border: 1px solid var(--border-color) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+        }
+
+        /* Table styling */
+        .w-table {
+            border-collapse: collapse !important;
+        }
+
+        .w-table th {
+            background-color: var(--primary-color) !important;
+            color: white !important;
+        }
+
+        /* Form styling */
+        .w-field__input {
+            border: 1px solid var(--border-color) !important;
+            border-radius: 4px !important;
+        }
+
+        .w-field__input:focus {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
+        }
+
+        /* Alert styling */
+        .w-alert {
+            border-radius: 6px !important;
+            border-left: 4px solid !important;
+        }
+
+        .w-alert--success {
+            border-left-color: var(--secondary-color) !important;
+        }
+
+        .w-alert--warning {
+            border-left-color: var(--accent-color) !important;
+        }
+
+        .w-alert--error {
+            border-left-color: var(--danger-color) !important;
+        }
+
+        /* Sidebar styling */
+        .w-sidebar {
+            background-color: #f8fafc !important;
+            border-right: 1px solid var(--border-color) !important;
+        }
+
+        /* Content area */
+        .w-content {
+            background-color: white !important;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .w-header__logo {
+                font-size: 1.2rem !important;
+            }
+        }
+    </style>
 {% endblock extra_css %}
 
+{% block branding_logo %}
+    <div class="w-header__logo">
+        🏥 MedGuard SA
+    </div>
+{% endblock branding_logo %}
+
+{% block content %}
+    {{ block.super }}
+{% endblock content %}
+
 {% block extra_js %}
-{{ block.super }}
-<script>
-    // Enhanced functionality for medication management
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Ctrl/Cmd + N for new medication
-            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-                const newButton = document.querySelector('a[href*="add/"]');
-                if (newButton) {
-                    e.preventDefault();
-                    newButton.click();
-                }
-            }
+    {{ block.super }}
+    <script>
+        // MedGuard SA Admin Enhancements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add custom branding
+            console.log('🏥 MedGuard SA Admin Interface Loaded');
             
-            // Ctrl/Cmd + F for search
-            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-                const searchInput = document.querySelector('input[name="q"]');
-                if (searchInput) {
-                    e.preventDefault();
-                    searchInput.focus();
-                }
-            }
-        });
-
-        // Enhanced form validation
-        const forms = document.querySelectorAll('form');
-        forms.forEach(form => {
-            form.addEventListener('submit', function(e) {
-                const requiredFields = form.querySelectorAll('[required]');
-                let isValid = true;
-
-                requiredFields.forEach(field => {
-                    if (!field.value.trim()) {
-                        isValid = false;
-                        field.style.borderColor = 'var(--danger-color)';
-                        field.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.1)';
-                    } else {
-                        field.style.borderColor = 'var(--border-color)';
-                        field.style.boxShadow = 'none';
-                    }
-                });
-
-                if (!isValid) {
-                    e.preventDefault();
-                    alert('Please fill in all required fields.');
-                }
+            // Enhance accessibility
+            const buttons = document.querySelectorAll('.w-btn');
+            buttons.forEach(button => {
+                button.setAttribute('aria-label', button.textContent.trim());
             });
         });
-
-        // Auto-save functionality for long forms
-        let autoSaveTimer;
-        const textAreas = document.querySelectorAll('textarea');
-        textAreas.forEach(textarea => {
-            textarea.addEventListener('input', function() {
-                clearTimeout(autoSaveTimer);
-                autoSaveTimer = setTimeout(() => {
-                    // Save to localStorage as backup
-                    const form = textarea.closest('form');
-                    if (form) {
-                        const formData = new FormData(form);
-                        const formId = form.id || 'medication-form';
-                        localStorage.setItem(`autosave-${formId}`, JSON.stringify({
-                            timestamp: new Date().toISOString(),
-                            data: Object.fromEntries(formData)
-                        }));
-                    }
-                }, 2000);
-            });
-        });
-
-        // Status indicator animations
-        const statusIndicators = document.querySelectorAll('.status-indicator');
-        statusIndicators.forEach(indicator => {
-            indicator.addEventListener('mouseenter', function() {
-                this.style.transform = 'scale(1.05)';
-                this.style.transition = 'transform 0.2s ease';
-            });
-
-            indicator.addEventListener('mouseleave', function() {
-                this.style.transform = 'scale(1)';
-            });
-        });
-    });
-</script>
+    </script>
 {% endblock extra_js %} 

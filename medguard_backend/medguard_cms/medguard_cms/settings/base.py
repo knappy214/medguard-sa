@@ -161,8 +161,7 @@ LANGUAGES = [
 
 # Locale paths for translation files
 LOCALE_PATHS = [
-    os.path.join(BASE_DIR, 'locale'),
-    os.path.join(PROJECT_DIR, 'locale'),
+    os.path.join(BASE_DIR, '..', 'locale'),  # Use main project's locale
 ]
 
 # Site ID for django.contrib.sites

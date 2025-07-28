@@ -1,0 +1,47 @@
+
+{% extends "wagtailadmin/base.html" %}
+{% load i18n %}
+
+{% block title %}Working i18n Test - MedGuard SA{% endblock title %}
+
+{% block content %}
+<div class="nice-padding">
+    <h1>🌍 Working Internationalization Test</h1>
+    
+    <div class="panel">
+        <h2>Current Language: {{ current_language }}</h2>
+        
+        <h3>Translation Results:</h3>
+        <table class="listing">
+            <thead>
+                <tr>
+                    <th>English</th>
+                    <th>Translated</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for english, translated in translations.items %}
+                <tr>
+                    <td>{{ english }}</td>
+                    <td>{{ translated }}</td>
+                    <td>
+                        {% if translated != english %}
+                            <span style="color: green;">✅ Working</span>
+                        {% else %}
+                            <span style="color: red;">❌ Not Working</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="panel">
+        <h3>Test Links:</h3>
+        <p><a href="/medications/working-i18n-test/" class="button">Test Working View</a></p>
+        <p><a href="/medications/api-i18n-test/" class="button">Test API Endpoint</a></p>
+    </div>
+</div>
+{% endblock content %}

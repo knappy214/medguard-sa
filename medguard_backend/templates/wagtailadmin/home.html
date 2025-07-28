@@ -1,0 +1,402 @@
+{% extends "wagtailadmin/generic/base.html" %}
+{% load wagtailadmin_tags i18n %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <style>
+        /* MedGuard SA Dashboard Customization */
+        .medguard-dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #2563EB, #10B981);
+            border-radius: 12px;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .dashboard-header p {
+            font-size: 1.1rem;
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #E5E7EB;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .dashboard-card h3 {
+            color: #2563EB;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dashboard-card .icon {
+            width: 24px;
+            height: 24px;
+            color: #2563EB;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #E5E7EB;
+            transition: transform 0.2s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-1px);
+        }
+
+        .stat-item .stat-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            color: #2563EB;
+        }
+
+        .stat-item .stat-count {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2563EB;
+            margin: 0;
+        }
+
+        .stat-item .stat-label {
+            font-size: 0.875rem;
+            color: #6B7280;
+            margin: 0.25rem 0 0 0;
+        }
+
+        .quick-actions {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #E5E7EB;
+        }
+
+        .quick-actions h3 {
+            color: #2563EB;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 1rem 0;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: #2563EB;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: #1d4ed8;
+            color: white;
+            text-decoration: none;
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #E5E7EB;
+            margin-bottom: 2rem;
+        }
+
+        .search-section h3 {
+            color: #2563EB;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 1rem 0;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .search-btn {
+            padding: 0.75rem 1.5rem;
+            background: #2563EB;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .search-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .welcome-message {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .welcome-message h2 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .welcome-message p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .medguard-dashboard {
+                padding: 1rem;
+            }
+
+            .dashboard-header h1 {
+                font-size: 2rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="medguard-dashboard">
+    <!-- Welcome Message -->
+    <div class="welcome-message">
+        <h2>🏥 Welcome to MedGuard SA</h2>
+        <p>Your comprehensive medication management system</p>
+    </div>
+
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1>{% block branding_welcome %}{{ site_name }}{% endblock branding_welcome %}</h1>
+        <p>Manage medications, schedules, and patient care efficiently</p>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="summary-stats">
+        {% component site_summary %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <h3>🚀 Quick Actions</h3>
+        <div class="action-buttons">
+            <a href="{% url 'medication:add' %}" class="action-btn">
+                {% icon name="plus" %} Add Medication
+            </a>
+            <a href="{% url 'medication-schedule:add' %}" class="action-btn">
+                {% icon name="date" %} Create Schedule
+            </a>
+            <a href="{% url 'notification:add' %}" class="action-btn">
+                {% icon name="mail" %} Send Notification
+            </a>
+            <a href="{% url 'stock-alert:add' %}" class="action-btn">
+                {% icon name="warning" %} Create Alert
+            </a>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-section">
+        <h3>🔍 Quick Search</h3>
+        <form class="search-form" method="get" action="{% url 'wagtailadmin_pages:search' %}">
+            <input type="text" name="q" placeholder="Search medications, patients, or content..." class="search-input">
+            <button type="submit" class="search-btn">
+                {% icon name="search" %} Search
+            </button>
+        </form>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+        <!-- Medication Management -->
+        <div class="dashboard-card">
+            <h3>
+                {% icon name="doc-full" classname="icon" %}
+                Medication Management
+            </h3>
+            <p>Manage your medication inventory, track stock levels, and monitor medication schedules for patients.</p>
+            <div class="action-buttons">
+                <a href="{% url 'medication:index' %}" class="action-btn">View All</a>
+                <a href="{% url 'medication:add' %}" class="action-btn">Add New</a>
+            </div>
+        </div>
+
+        <!-- Patient Care -->
+        <div class="dashboard-card">
+            <h3>
+                {% icon name="user" classname="icon" %}
+                Patient Care
+            </h3>
+            <p>Monitor patient medication schedules, track adherence, and manage individual care plans.</p>
+            <div class="action-buttons">
+                <a href="{% url 'medication-schedule:index' %}" class="action-btn">Schedules</a>
+                <a href="{% url 'medication-log:index' %}" class="action-btn">Logs</a>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="dashboard-card">
+            <h3>
+                {% icon name="mail" classname="icon" %}
+                Notifications
+            </h3>
+            <p>Send alerts, manage system notifications, and keep everyone informed about important updates.</p>
+            <div class="action-buttons">
+                <a href="{% url 'notification:index' %}" class="action-btn">View All</a>
+                <a href="{% url 'notification:add' %}" class="action-btn">Send New</a>
+            </div>
+        </div>
+
+        <!-- Stock Management -->
+        <div class="dashboard-card">
+            <h3>
+                {% icon name="warning" classname="icon" %}
+                Stock Management
+            </h3>
+            <p>Monitor inventory levels, set up alerts for low stock, and ensure medications are always available.</p>
+            <div class="action-buttons">
+                <a href="{% url 'stock-alert:index' %}" class="action-btn">Alerts</a>
+                <a href="{% url 'medication:index' %}" class="action-btn">Inventory</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Summary -->
+    {% include "wagtailadmin/home/account_summary.html" %}
+
+    <!-- Additional Panels -->
+    {% if panels %}
+        {% for panel in panels %}
+            {% component panel fallback_render_method=True %}
+        {% endfor %}
+    {% else %}
+        <div class="dashboard-card">
+            <h3>📊 Dashboard Information</h3>
+            <p>This is your dashboard where helpful information about content you've created will be displayed.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script>
+        // MedGuard SA Dashboard Enhancements
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🏥 MedGuard SA Dashboard Loaded');
+            
+            // Add smooth scrolling
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            // Enhance accessibility
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                btn.setAttribute('role', 'button');
+                btn.setAttribute('tabindex', '0');
+            });
+
+            // Add keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && e.target.classList.contains('action-btn')) {
+                    e.target.click();
+                }
+            });
+        });
+    </script>
+{% endblock extra_js %} 

@@ -1,0 +1,369 @@
+{% extends "wagtailadmin/base.html" %}
+{% load i18n %}
+
+{% block title %}Internationalization Test - MedGuard SA{% endblock title %}
+
+{% block content %}
+<div class="nice-padding">
+    <!-- Language Switcher at the top of the page -->
+    <div class="page-language-switcher">
+        <label for="page-language-select">{% trans "Language" %}:</label>
+        <select id="page-language-select" onchange="changeLanguage(this.value)">
+            <option value="en-ZA" {% if LANGUAGE_CODE == 'en-ZA' %}selected{% endif %}>
+                English (South Africa)
+            </option>
+            <option value="af-ZA" {% if LANGUAGE_CODE == 'af-ZA' %}selected{% endif %}>
+                Afrikaans (Suid-Afrika)
+            </option>
+        </select>
+    </div>
+
+    <h1>{% trans "Internationalization Test" %}</h1>
+    
+    <div class="panel">
+        <h2>{% trans "Current Language" %}</h2>
+        <p><strong>{% trans "Language Code" %}:</strong> {{ current_language }}</p>
+        <p><strong>{% trans "Language Name" %}:</strong> {{ current_language_name }}</p>
+    </div>
+    
+    <div class="panel">
+        <h2>{% trans "Available Languages" %}</h2>
+        <ul>
+            {% for code, name in available_languages.items %}
+            <li>
+                <strong>{{ code }}:</strong> {{ name }}
+                {% if code == current_language %}
+                    <span class="status-indicator status-valid">{% trans "Current" %}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <div class="panel">
+        <h2>{% trans "Test Translations" %}</h2>
+        <table class="listing">
+            <thead>
+                <tr>
+                    <th>{% trans "Translation Key" %}</th>
+                    <th>{% trans "Translated Text" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, value in test_translations.items %}
+                <tr>
+                    <td>{{ key }}</td>
+                    <td>{{ value }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="panel">
+        <h2>{% trans "Navigation" %}</h2>
+        <p>{% trans "Use the buttons below to navigate to different admin sections." %}</p>
+        
+        <div class="button-group">
+            <a href="{% url 'admin:index' %}" class="button">{% trans "Go to Django Admin" %}</a>
+            <a href="{% url 'wagtailadmin_home' %}" class="button button-secondary">{% trans "Go to Wagtail Admin" %}</a>
+            <a href="{% url 'wagtailadmin_home' %}medications/medication/" class="button button-accent">{% trans "Go to Medications" %}</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Force readable text colors */
+    body {
+        background-color: #F8FAFC !important;
+        color: #374151 !important;
+    }
+    
+    .nice-padding {
+        background-color: white !important;
+        color: #374151 !important;
+    }
+    
+    /* Page-specific language switcher */
+    .page-language-switcher {
+        background: linear-gradient(135deg, #2563EB, #10B981) !important;
+        border: 2px solid #F59E0B !important;
+        border-radius: 8px !important;
+        padding: 15px 20px !important;
+        margin-bottom: 20px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+    
+    .page-language-switcher label {
+        font-weight: 600 !important;
+        color: white !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+        font-size: 16px !important;
+    }
+    
+    .page-language-switcher select {
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 6px !important;
+        padding: 8px 12px !important;
+        background: rgba(255, 255, 255, 0.9) !important;
+        font-size: 14px !important;
+        cursor: pointer !important;
+        min-width: 180px !important;
+        color: #374151 !important;
+        font-weight: 500 !important;
+    }
+    
+    .page-language-switcher select:focus {
+        outline: none !important;
+        border-color: #F59E0B !important;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3) !important;
+    }
+    
+    .panel {
+        background: white !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 8px !important;
+        padding: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+        color: #374151 !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .panel h2 {
+        margin-top: 0 !important;
+        color: #374151 !important;
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+        border-bottom: 2px solid #2563EB !important;
+        padding-bottom: 0.5rem !important;
+    }
+    
+    .panel p, .panel li {
+        color: #374151 !important;
+        font-weight: 500 !important;
+    }
+    
+    .listing {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-top: 1rem !important;
+        background: white !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 6px !important;
+        overflow: hidden !important;
+    }
+    
+    .listing th,
+    .listing td {
+        padding: 0.75rem !important;
+        text-align: left !important;
+        border-bottom: 1px solid #e5e7eb !important;
+        color: #374151 !important;
+        font-weight: 500 !important;
+    }
+    
+    .listing th {
+        background-color: #2563EB !important;
+        font-weight: 600 !important;
+        color: white !important;
+    }
+    
+    .listing td {
+        color: #374151 !important;
+        font-weight: 500 !important;
+    }
+    
+    .listing tbody tr:hover {
+        background-color: #F1F5F9 !important;
+    }
+    
+    .status-indicator {
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 0.25rem 0.75rem !important;
+        border-radius: 9999px !important;
+        font-size: 0.875rem !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+    }
+    
+    .status-valid {
+        background-color: rgba(16, 185, 129, 0.1) !important;
+        color: #10b981 !important;
+        border: 1px solid rgba(16, 185, 129, 0.2) !important;
+    }
+    
+    .button-group {
+        display: flex !important;
+        gap: 1rem !important;
+        margin-top: 1rem !important;
+        flex-wrap: wrap !important;
+    }
+    
+    .button {
+        display: inline-block !important;
+        padding: 0.75rem 1.5rem !important;
+        background-color: #2563EB !important;
+        color: white !important;
+        text-decoration: none !important;
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+        border: none !important;
+        cursor: pointer !important;
+    }
+    
+    .button:hover {
+        background-color: #1d4ed8 !important;
+        color: white !important;
+        text-decoration: none !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3) !important;
+    }
+    
+    .button-secondary {
+        background-color: #6b7280 !important;
+    }
+    
+    .button-secondary:hover {
+        background-color: #4b5563 !important;
+        box-shadow: 0 4px 8px rgba(107, 114, 128, 0.3) !important;
+    }
+    
+    .button-accent {
+        background-color: #F59E0B !important;
+    }
+    
+    .button-accent:hover {
+        background-color: #D97706 !important;
+        box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3) !important;
+    }
+    
+    /* Force all headings to be dark and readable */
+    h1, h2, h3, h4, h5, h6 {
+        color: #1F2937 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Force all text to be readable */
+    p, span, div, td, th, li {
+        color: #374151 !important;
+    }
+    
+    /* Override Wagtail's dark theme completely */
+    body, .nice-padding, .panel {
+        background-color: #F8FAFC !important;
+        color: #374151 !important;
+    }
+    
+    /* Ensure table text is readable */
+    .listing th, .listing td {
+        color: #374151 !important;
+    }
+    
+    /* But keep links blue */
+    a {
+        color: #2563EB !important;
+    }
+    
+    a:hover {
+        color: #1d4ed8 !important;
+    }
+    
+    /* Override any Wagtail dark theme classes */
+    .w-header, .w-sidebar, .w-content {
+        background-color: #F8FAFC !important;
+        color: #374151 !important;
+    }
+    
+    /* Force override any inherited light colors */
+    .w-header *, .w-sidebar *, .w-content * {
+        color: #374151 !important;
+    }
+    
+    /* Specific override for Wagtail admin elements */
+    .w-header h1, .w-header h2, .w-header h3,
+    .w-content h1, .w-content h2, .w-content h3 {
+        color: #1F2937 !important;
+        font-weight: 600 !important;
+    }
+</style>
+
+<script>
+    // Language switching functionality using AJAX
+    function changeLanguage(languageCode) {
+        // Get CSRF token from cookie or meta tag
+        function getCSRFToken() {
+            // Try to get from meta tag first
+            const metaTag = document.querySelector('meta[name="csrf-token"]');
+            if (metaTag) {
+                return metaTag.getAttribute('content');
+            }
+            
+            // Try to get from cookie
+            const name = 'csrftoken';
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        const csrfToken = getCSRFToken();
+        console.log('CSRF Token found:', csrfToken ? 'Yes' : 'No');
+        console.log('Language to change to:', languageCode);
+        
+        if (!csrfToken) {
+            console.error('CSRF token not found');
+            alert('Error: CSRF token not found. Please refresh the page and try again.');
+            return;
+        }
+        
+        // Use AJAX to change language without page redirect
+        // Get current language prefix from URL
+        const currentPath = window.location.pathname;
+        const languageMatch = currentPath.match(/^\/(en-za|af-za)/);
+        const currentLangPrefix = languageMatch ? languageMatch[1] : 'en-za';
+        
+        fetch(`/${currentLangPrefix}/medications/set-language/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken,
+            },
+            body: `language=${encodeURIComponent(languageCode)}`,
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Language change response:', data);
+            if (data.success) {
+                // Redirect to the new language URL
+                const currentPath = window.location.pathname;
+                // Convert language code to URL format (e.g., 'af-ZA' -> 'af-za')
+                const newLangPrefix = data.language.toLowerCase();
+                const newPath = currentPath.replace(/^\/(en-za|af-za)/, `/${newLangPrefix}`);
+                window.location.href = newPath;
+            } else {
+                console.error('Language change failed:', data.error);
+                alert('Failed to change language: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error changing language:', error);
+            alert('Error changing language. Please try again.');
+        });
+    }
+</script>
+{% endblock content %} 

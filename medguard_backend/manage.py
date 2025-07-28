@@ -6,7 +6,9 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'medguard_backend.settings')
+    # Set the default settings module
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'medguard_backend.settings.development')
+    
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
@@ -15,6 +17,7 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
+    
     execute_from_command_line(sys.argv)
 
 

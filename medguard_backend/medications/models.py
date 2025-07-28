@@ -7,7 +7,138 @@ from django.contrib.auth import get_user_model
 from decimal import Decimal
 import uuid
 
+# Wagtail imports
+from wagtail.models import Page
+from wagtail.fields import RichTextField
+from wagtail.admin.panels import FieldPanel, MultiFieldPanel, InlinePanel
+from wagtail.search import index
+
 User = get_user_model()
+
+
+class MedicationIndexPage(Page):
+    """
+    Index page for medications.
+    
+    This page lists all medications and provides search/filter functionality.
+    """
+    
+    # Page content
+    intro = RichTextField(
+        verbose_name=_('Introduction'),
+        help_text=_('Introduction text for the medications page'),
+        blank=True
+    )
+    
+    # Page configuration
+    parent_page_types = ['home.HomePage']
+    subpage_types = ['medications.MedicationDetailPage']
+    
+    # Search configuration
+    search_fields = Page.search_fields + [
+        index.SearchField('intro'),
+    ]
+    
+    # Admin panels
+    content_panels = Page.content_panels + [
+        FieldPanel('intro'),
+    ]
+    
+    class Meta:
+        verbose_name = _('Medication Index Page')
+        verbose_name_plural = _('Medication Index Pages')
+    
+    def get_context(self, request, *args, **kwargs):
+        """Add medications to the template context."""
+        context = super().get_context(request, *args, **kwargs)
+        
+        # Get all medications
+        medications = Medication.objects.all().order_by('name')
+        
+        # Apply filters if provided
+        medication_type = request.GET.get('type')
+        if medication_type:
+            medications = medications.filter(medication_type=medication_type)
+        
+        prescription_type = request.GET.get('prescription')
+        if prescription_type:
+            medications = medications.filter(prescription_type=prescription_type)
+        
+        # Search functionality
+        search_query = request.GET.get('search')
+        if search_query:
+            medications = medications.filter(
+                models.Q(name__icontains=search_query) |
+                models.Q(generic_name__icontains=search_query) |
+                models.Q(description__icontains=search_query)
+            )
+        
+        # Pagination
+        from django.core.paginator import Paginator
+        paginator = Paginator(medications, 20)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        context['medications'] = page_obj
+        context['medication_types'] = Medication.MedicationType.choices
+        context['prescription_types'] = Medication.PrescriptionType.choices
+        
+        return context
+
+
+class MedicationDetailPage(Page):
+    """
+    Detail page for individual medications.
+    
+    This page displays detailed information about a specific medication.
+    """
+    
+    # Relationship to Medication model
+    medication = models.OneToOneField(
+        'medications.Medication',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='detail_page',
+        verbose_name=_('Medication'),
+        help_text=_('Associated medication record')
+    )
+    
+    # Additional content
+    additional_info = RichTextField(
+        verbose_name=_('Additional Information'),
+        help_text=_('Additional information about the medication'),
+        blank=True
+    )
+    
+    # Page configuration
+    parent_page_types = ['medications.MedicationIndexPage']
+    subpage_types = []
+    
+    # Search configuration
+    search_fields = Page.search_fields + [
+        index.SearchField('additional_info'),
+        index.RelatedFields('medication', [
+            index.SearchField('name'),
+            index.SearchField('generic_name'),
+            index.SearchField('description'),
+        ]),
+    ]
+    
+    # Admin panels
+    content_panels = Page.content_panels + [
+        FieldPanel('medication'),
+        FieldPanel('additional_info'),
+    ]
+    
+    class Meta:
+        verbose_name = _('Medication Detail Page')
+        verbose_name_plural = _('Medication Detail Pages')
+    
+    def get_context(self, request, *args, **kwargs):
+        """Add medication details to the template context."""
+        context = super().get_context(request, *args, **kwargs)
+        context['medication'] = self.medication
+        return context
 
 
 class Medication(models.Model):

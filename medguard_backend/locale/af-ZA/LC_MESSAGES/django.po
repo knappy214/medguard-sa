@@ -502,30 +502,82 @@ msgstr "Notas oor hoe die waarskuwing opgelos is"
 msgid "Medication"
 msgstr "Medikasie"
 
-#: wagtail_hooks.py:167
-msgid "Medications"
-msgstr "Medikasie"
+
 
 #: wagtail_hooks.py:168
 msgid "Medication Schedule"
 msgstr "Medikasie Skedule"
 
-#: wagtail_hooks.py:169
-msgid "Medication Schedules"
-msgstr "Medikasie Skedules"
+
 
 #: wagtail_hooks.py:170
 msgid "Medication Log"
 msgstr "Medikasie Logboek"
 
-#: wagtail_hooks.py:171
-msgid "Medication Logs"
-msgstr "Medikasie Logboeke"
+
 
 #: wagtail_hooks.py:172
 msgid "Stock Alert"
 msgstr "Voorraad Waarskuwing"
 
-#: wagtail_hooks.py:173
-msgid "Stock Alerts"
-msgstr "Voorraad Waarskuwings" 
+
+
+#: medications/views.py:15
+msgid "Internationalization Test"
+msgstr "Internasionalisering Toets"
+
+#: medications/views.py:18
+msgid "Current Language"
+msgstr "Huidige Taal"
+
+#: medications/views.py:19
+msgid "Language Code"
+msgstr "Taal Kode"
+
+#: medications/views.py:20
+msgid "Language Name"
+msgstr "Taal Naam"
+
+#: medications/views.py:23
+msgid "Available Languages"
+msgstr "Beskikbare Tale"
+
+#: medications/views.py:28
+msgid "Current"
+msgstr "Huidig"
+
+#: medications/views.py:31
+msgid "Test Translations"
+msgstr "Toets Vertalings"
+
+#: medications/views.py:33
+msgid "Translation Key"
+msgstr "Vertaling Sleutel"
+
+#: medications/views.py:34
+msgid "Translated Text"
+msgstr "Vertalde Teks"
+
+#: medications/views.py:40
+msgid "Navigation"
+msgstr "Navigasie"
+
+#: medications/views.py:41
+msgid "Use the buttons below to navigate to different admin sections."
+msgstr "Gebruik die knoppies hieronder om na verskillende admin afdelings te navigeer."
+
+#: medications/views.py:44
+msgid "Go to Django Admin"
+msgstr "Gaan na Django Admin"
+
+#: medications/views.py:45
+msgid "Go to Wagtail Admin"
+msgstr "Gaan na Wagtail Admin"
+
+#: medications/views.py:46
+msgid "Go to Medications"
+msgstr "Gaan na Medikasie"
+
+#: medications/views.py:8
+msgid "Language"
+msgstr "Taal" 

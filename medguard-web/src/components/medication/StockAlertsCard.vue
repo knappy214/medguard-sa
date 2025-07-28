@@ -1,0 +1,219 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { StockAlert } from '@/types/medication'
+
+interface Props {
+  alerts: StockAlert[]
+  unreadAlerts: StockAlert[]
+}
+
+interface Emits {
+  (e: 'mark-as-read', alertId: string): void
+}
+
+const props = defineProps<Props>()
+const emit = defineEmits<Emits>()
+
+const { t } = useI18n()
+
+// Computed properties
+const sortedAlerts = computed(() => {
+  return [...props.alerts].sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  )
+})
+
+const getAlertIcon = (type: string) => {
+  switch (type) {
+    case 'low_stock':
+      return '⚠️'
+    case 'out_of_stock':
+      return '🚨'
+    case 'expiring_soon':
+      return '⏰'
+    default:
+      return 'ℹ️'
+  }
+}
+
+const getAlertColor = (severity: string) => {
+  switch (severity) {
+    case 'error':
+      return 'alert-error'
+    case 'warning':
+      return 'alert-warning'
+    case 'info':
+      return 'alert-info'
+    default:
+      return 'alert-info'
+  }
+}
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-ZA', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const handleMarkAsRead = (alertId: string) => {
+  emit('mark-as-read', alertId)
+}
+</script>
+
+<template>
+  <div class="card bg-base-100 shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title text-xl mb-4">
+        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        {{ t('dashboard.stockAlerts') }}
+        <span v-if="unreadAlerts.length > 0" class="badge badge-error badge-sm">
+          {{ unreadAlerts.length }}
+        </span>
+      </h2>
+
+      <!-- Alerts Summary -->
+      <div class="flex flex-wrap gap-2 mb-4">
+        <div class="badge badge-error gap-1">
+          <span>🚨</span>
+          {{ alerts.filter(a => a.severity === 'error').length }} Critical
+        </div>
+        <div class="badge badge-warning gap-1">
+          <span>⚠️</span>
+          {{ alerts.filter(a => a.severity === 'warning').length }} Warning
+        </div>
+        <div class="badge badge-info gap-1">
+          <span>ℹ️</span>
+          {{ alerts.filter(a => a.severity === 'info').length }} Info
+        </div>
+      </div>
+
+      <!-- Alerts List -->
+      <div v-if="sortedAlerts.length === 0" class="text-center py-8">
+        <div class="text-4xl mb-4">✅</div>
+        <p class="text-base-content-secondary">{{ t('dashboard.noAlerts') }}</p>
+      </div>
+
+      <div v-else class="space-y-3 max-h-96 overflow-y-auto">
+        <div
+          v-for="alert in sortedAlerts"
+          :key="alert.id"
+          :class="[
+            'alert transition-all duration-200',
+            getAlertColor(alert.severity),
+            !alert.isRead ? 'border-2' : ''
+          ]"
+        >
+          <div class="flex-1">
+            <div class="flex items-start justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">{{ getAlertIcon(alert.type) }}</span>
+                <h3 class="font-semibold text-base-content">
+                  {{ alert.medication.name }}
+                </h3>
+                <span v-if="!alert.isRead" class="badge badge-primary badge-xs">
+                  New
+                </span>
+              </div>
+              <button
+                v-if="!alert.isRead"
+                @click="handleMarkAsRead(alert.id)"
+                class="btn btn-ghost btn-xs"
+                :title="'Mark as read'"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </button>
+            </div>
+            
+            <p class="text-sm text-base-content mb-2">
+              {{ alert.message }}
+            </p>
+            
+            <div class="flex items-center justify-between text-xs text-base-content-secondary">
+              <span>{{ formatDate(alert.createdAt) }}</span>
+              <span class="capitalize">{{ alert.type.replace('_', ' ') }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="mt-4 space-y-2">
+        <button
+          v-if="unreadAlerts.length > 0"
+          @click="unreadAlerts.forEach(alert => handleMarkAsRead(alert.id))"
+          class="btn btn-outline btn-sm btn-block"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          Mark All as Read
+        </button>
+        
+        <button class="btn btn-primary btn-sm btn-block">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          {{ t('dashboard.refillReminder') }}
+        </button>
+      </div>
+
+      <!-- Alert Legend -->
+      <div class="mt-4 p-3 bg-base-200/50 rounded-lg">
+        <div class="flex items-start gap-2">
+          <svg class="w-5 h-5 text-base-content-secondary mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div class="text-sm text-base-content">
+            <p class="font-medium mb-2">Alert Types:</p>
+            <div class="space-y-1 text-xs">
+              <div class="flex items-center gap-2">
+                <span class="text-error">🚨</span>
+                <span>Critical - Out of stock</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-warning">⚠️</span>
+                <span>Warning - Low stock</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-info">ℹ️</span>
+                <span>Info - Expiring soon</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.card {
+  border-left: 4px solid;
+  border-left-color: hsl(var(--color-warning));
+}
+
+/* Custom scrollbar for alerts list */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  @apply bg-base-200 rounded-full;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  @apply bg-base-content/20 rounded-full;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  @apply bg-base-content/30;
+}
+</style> 

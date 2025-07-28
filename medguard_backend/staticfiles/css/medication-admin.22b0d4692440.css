@@ -1,0 +1,355 @@
+/* MedGuard SA Healthcare Theme - Admin Interface */
+
+:root {
+    /* Primary Healthcare Colors */
+    --medguard-primary: #2563EB;      /* Trustworthy Blue */
+    --medguard-secondary: #10B981;    /* Healing Green */
+    --medguard-accent: #F59E0B;       /* Warning Orange */
+    --medguard-danger: #EF4444;       /* Alert Red */
+    --medguard-neutral: #6B7280;      /* Neutral Gray */
+    --medguard-light: #F3F4F6;        /* Light Background */
+    --medguard-white: #FFFFFF;        /* Pure White */
+    
+    /* Accessibility Colors */
+    --medguard-text-primary: #1F2937;
+    --medguard-text-secondary: #4B5563;
+    --medguard-border: #D1D5DB;
+    --medguard-shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* Global Admin Styling */
+.wagtail-admin {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Medication Management Header */
+.medication-admin-header {
+    background: linear-gradient(135deg, var(--medguard-primary), var(--medguard-secondary));
+    color: var(--medguard-white);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px var(--medguard-shadow);
+}
+
+.medication-admin-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.medication-admin-header p {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+}
+
+/* Status Indicators */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-in-stock {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--medguard-secondary);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.status-low-stock {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--medguard-accent);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.status-out-of-stock {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--medguard-danger);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.status-expired {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--medguard-danger);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.status-expiring-soon {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--medguard-accent);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.status-valid {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--medguard-secondary);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Priority Indicators */
+.priority-high {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--medguard-danger);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.priority-medium {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--medguard-accent);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.priority-low {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--medguard-secondary);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Table Styling */
+.medication-table {
+    background: var(--medguard-white);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px var(--medguard-shadow);
+    overflow: hidden;
+}
+
+.medication-table th {
+    background-color: var(--medguard-light);
+    color: var(--medguard-text-primary);
+    font-weight: 600;
+    padding: 1rem;
+    border-bottom: 2px solid var(--medguard-border);
+}
+
+.medication-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--medguard-border);
+    vertical-align: middle;
+}
+
+.medication-table tr:hover {
+    background-color: rgba(37, 99, 235, 0.02);
+}
+
+/* Form Styling */
+.medication-form {
+    background: var(--medguard-white);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px var(--medguard-shadow);
+    padding: 2rem;
+}
+
+.medication-form .field {
+    margin-bottom: 1.5rem;
+}
+
+.medication-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--medguard-text-primary);
+}
+
+.medication-form input,
+.medication-form select,
+.medication-form textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--medguard-border);
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+}
+
+.medication-form input:focus,
+.medication-form select:focus,
+.medication-form textarea:focus {
+    outline: none;
+    border-color: var(--medguard-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Button Styling */
+.btn-primary {
+    background-color: var(--medguard-primary);
+    color: var(--medguard-white);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-secondary {
+    background-color: var(--medguard-secondary);
+    color: var(--medguard-white);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #059669;
+}
+
+.btn-danger {
+    background-color: var(--medguard-danger);
+    color: var(--medguard-white);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+}
+
+/* Filter Panel */
+.filter-panel {
+    background: var(--medguard-white);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px var(--medguard-shadow);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.filter-panel h3 {
+    margin: 0 0 1rem 0;
+    color: var(--medguard-text-primary);
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+/* Search Box */
+.search-box {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 1px solid var(--medguard-border);
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.search-box::before {
+    content: "🔍";
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--medguard-neutral);
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 2rem;
+    gap: 0.5rem;
+}
+
+.pagination a,
+.pagination span {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--medguard-border);
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--medguard-text-primary);
+    transition: all 0.2s ease;
+}
+
+.pagination a:hover {
+    background-color: var(--medguard-light);
+    border-color: var(--medguard-primary);
+}
+
+.pagination .current {
+    background-color: var(--medguard-primary);
+    color: var(--medguard-white);
+    border-color: var(--medguard-primary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .medication-admin-header {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .medication-admin-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .medication-table {
+        font-size: 0.875rem;
+    }
+    
+    .medication-table th,
+    .medication-table td {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .medication-form {
+        padding: 1rem;
+    }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .status-indicator {
+        border-width: 2px;
+    }
+    
+    .medication-table th {
+        background-color: var(--medguard-text-primary);
+        color: var(--medguard-white);
+    }
+}
+
+/* Print Styles */
+@media print {
+    .medication-admin-header,
+    .filter-panel,
+    .pagination {
+        display: none;
+    }
+    
+    .medication-table {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+    
+    .medication-table th,
+    .medication-table td {
+        border: 1px solid #000;
+    }
+} 
