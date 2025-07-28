@@ -41,6 +41,9 @@ urlpatterns += i18n_patterns(
     # Frontend medications views (with language prefix) - using distinct namespace
     path('medications/', include(('medications.urls', 'frontend_medications'), namespace='frontend_medications')),
     
+    # Home app views (including i18n test)
+    path('home/', include('home.urls')),
+    
     # Wagtail pages (including home, medications, notifications)
     path('', include('wagtail.urls')),
     

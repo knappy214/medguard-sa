@@ -1,0 +1,87 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MedGuard SA Internationalization Test Page">
+    <meta name="keywords" content="MedGuard, internationalization, i18n, Django, Wagtail">
+    <title>{% translate "MedGuard SA - Internationalization Test" %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .language-selector { margin-bottom: 30px; padding: 20px; background: #f5f5f5; border-radius: 5px; }
+        .content { margin: 20px 0; }
+        .translated-text { background: #e8f4fd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .current-language { font-weight: bold; color: #2563eb; }
+    </style>
+</head>
+<body>
+    <h1>{% translate "MedGuard SA Internationalization Test" %}</h1>
+    
+    <div class="language-selector">
+        <h2>{% translate "Language Selection" %}</h2>
+        <p class="current-language">{% translate "Current Language" %}: {{ LANGUAGE_CODE }} ({{ LANGUAGE_NAME }})</p>
+        
+        <form action="{% url 'set_language' %}" method="post">
+            {% csrf_token %}
+            <input name="next" type="hidden" value="{{ request.path }}">
+            <select name="language">
+                {% get_current_language as LANGUAGE_CODE %}
+                {% get_available_languages as LANGUAGES %}
+                {% get_language_info_list for LANGUAGES as languages %}
+                {% for language in languages %}
+                    <option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
+                        {{ language.name_local }} ({{ language.code }})
+                    </option>
+                {% endfor %}
+            </select>
+            <input type="submit" value="{% translate "Change Language" %}">
+        </form>
+    </div>
+
+    <div class="content">
+        <h2>{% translate "Translated Content" %}</h2>
+        
+        <div class="translated-text">
+            <strong>{% translate "Medications" %}</strong>: {% translate "Medication management system" %}
+        </div>
+        
+        <div class="translated-text">
+            <strong>{% translate "Medication Schedules" %}</strong>: {% translate "Schedule management for medications" %}
+        </div>
+        
+        <div class="translated-text">
+            <strong>{% translate "Stock Alerts" %}</strong>: {% translate "Alerts for medication stock levels" %}
+        </div>
+        
+        <div class="translated-text">
+            <strong>{% translate "Basic Information" %}</strong>: {% translate "Basic medication information" %}
+        </div>
+        
+        <div class="translated-text">
+            <strong>{% translate "Safety Information" %}</strong>: {% translate "Important safety information" %}
+        </div>
+    </div>
+
+    <div class="content">
+        <h2>{% translate "URL Information" %}</h2>
+        <p><strong>{% translate "Current URL" %}:</strong> {{ request.path }}</p>
+        <p><strong>{% translate "Language Code" %}:</strong> {{ LANGUAGE_CODE }}</p>
+        <p><strong>{% translate "Available Languages" %}:</strong> 
+            {% for lang_code, lang_name in LANGUAGES %}
+                {{ lang_name }} ({{ lang_code }}){% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        </p>
+    </div>
+
+    <div class="content">
+        <h2>{% translate "Language Links" %}</h2>
+        <p>{% translate "Switch language using these links:" %}</p>
+        {% for lang_code, lang_name in LANGUAGES %}
+            <a href="{% url 'set_language' %}?language={{ lang_code }}&next={{ request.path|urlencode }}">
+                {{ lang_name }}
+            </a>{% if not forloop.last %} | {% endif %}
+        {% endfor %}
+    </div>
+</body>
+</html> 

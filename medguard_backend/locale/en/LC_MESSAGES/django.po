@@ -1,0 +1,240 @@
+# English translations for MedGuard SA.
+# Copyright (C) 2025 MedGuard SA
+# This file is distributed under the same license as the MedGuard SA project.
+msgid ""
+msgstr ""
+"Project-Id-Version: MedGuard SA 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-07-28 13:00+0200\n"
+"PO-Revision-Date: 2025-07-28 13:00+0200\n"
+"Last-Translator: MedGuard SA Team\n"
+"Language-Team: en\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: wagtail_hooks/wagtail_hooks.py:84
+msgid "Medications"
+msgstr "Medications"
+
+#: wagtail_hooks/wagtail_hooks.py:85
+msgid "Medication Schedules"
+msgstr "Medication Schedules"
+
+#: wagtail_hooks/wagtail_hooks.py:86
+msgid "Medication Logs"
+msgstr "Medication Logs"
+
+#: wagtail_hooks/wagtail_hooks.py:87
+msgid "Stock Alerts"
+msgstr "Stock Alerts"
+
+#: wagtail_hooks/wagtail_hooks.py:88
+msgid "Medication Management"
+msgstr "Medication Management"
+
+#: wagtail_hooks/wagtail_hooks.py:89
+msgid "Basic Information"
+msgstr "Basic Information"
+
+#: wagtail_hooks/wagtail_hooks.py:90
+msgid "Dosage Information"
+msgstr "Dosage Information"
+
+#: wagtail_hooks/wagtail_hooks.py:91
+msgid "Stock Management"
+msgstr "Stock Management"
+
+#: wagtail_hooks/wagtail_hooks.py:92
+msgid "Additional Information"
+msgstr "Additional Information"
+
+#: wagtail_hooks/wagtail_hooks.py:93
+msgid "Safety Information"
+msgstr "Safety Information"
+
+#: wagtail_hooks/wagtail_hooks.py:94
+msgid "Storage and Handling"
+msgstr "Storage and Handling"
+
+#: wagtail_hooks/wagtail_hooks.py:95
+msgid "Patient and Medication"
+msgstr "Patient and Medication"
+
+#: wagtail_hooks/wagtail_hooks.py:96
+msgid "Schedule Information"
+msgstr "Schedule Information"
+
+#: wagtail_hooks/wagtail_hooks.py:97
+msgid "Days of Week"
+msgstr "Days of Week"
+
+#: wagtail_hooks/wagtail_hooks.py:98
+msgid "Schedule Period"
+msgstr "Schedule Period"
+
+#: wagtail_hooks/wagtail_hooks.py:99
+msgid "Status and Instructions"
+msgstr "Status and Instructions"
+
+#: wagtail_hooks/wagtail_hooks.py:100
+msgid "Timing Information"
+msgstr "Timing Information"
+
+#: wagtail_hooks/wagtail_hooks.py:101
+msgid "Dose Information"
+msgstr "Dose Information"
+
+#: wagtail_hooks/wagtail_hooks.py:102
+msgid "Notes and Observations"
+msgstr "Notes and Observations"
+
+#: wagtail_hooks/wagtail_hooks.py:103
+msgid "Alert Information"
+msgstr "Alert Information"
+
+#: wagtail_hooks/wagtail_hooks.py:104
+msgid "Alert Details"
+msgstr "Alert Details"
+
+#: wagtail_hooks/wagtail_hooks.py:105
+msgid "Stock Information"
+msgstr "Stock Information"
+
+#: wagtail_hooks/wagtail_hooks.py:106
+msgid "User Information"
+msgstr "User Information"
+
+#: wagtail_hooks/wagtail_hooks.py:107
+msgid "Resolution"
+msgstr "Resolution"
+
+#: wagtail_hooks/wagtail_hooks.py:108
+msgid "Stock Status"
+msgstr "Stock Status"
+
+#: wagtail_hooks/wagtail_hooks.py:109
+msgid "Low Stock"
+msgstr "Low Stock"
+
+#: wagtail_hooks/wagtail_hooks.py:110
+msgid "In Stock"
+msgstr "In Stock"
+
+#: wagtail_hooks/wagtail_hooks.py:111
+msgid "Expiration Status"
+msgstr "Expiration Status"
+
+#: wagtail_hooks/wagtail_hooks.py:112
+msgid "Expired"
+msgstr "Expired"
+
+#: wagtail_hooks/wagtail_hooks.py:113
+msgid "Expiring Soon"
+msgstr "Expiring Soon"
+
+#: wagtail_hooks/wagtail_hooks.py:114
+msgid "Valid"
+msgstr "Valid"
+
+#: wagtail_hooks/wagtail_hooks.py:115
+msgid "Active Status"
+msgstr "Active Status"
+
+#: wagtail_hooks/wagtail_hooks.py:116
+msgid "Active"
+msgstr "Active"
+
+#: wagtail_hooks/wagtail_hooks.py:117
+msgid "Inactive"
+msgstr "Inactive"
+
+#: wagtail_hooks/wagtail_hooks.py:118
+msgid "Take Today"
+msgstr "Take Today"
+
+#: wagtail_hooks/wagtail_hooks.py:119
+msgid "Today"
+msgstr "Today"
+
+#: wagtail_hooks/wagtail_hooks.py:120
+msgid "Not Today"
+msgstr "Not Today"
+
+#: wagtail_hooks/wagtail_hooks.py:121
+msgid "On Time"
+msgstr "On Time"
+
+#: wagtail_hooks/wagtail_hooks.py:122
+msgid "Late"
+msgstr "Late"
+
+#: wagtail_hooks/wagtail_hooks.py:123
+msgid "N/A"
+msgstr "N/A"
+
+#: wagtail_hooks/wagtail_hooks.py:124
+msgid "Adherence Score"
+msgstr "Adherence Score"
+
+#: medications/views.py:15
+msgid "Internationalization Test"
+msgstr "Internationalization Test"
+
+#: medications/views.py:18
+msgid "Current Language"
+msgstr "Current Language"
+
+#: medications/views.py:19
+msgid "Language Code"
+msgstr "Language Code"
+
+#: medications/views.py:20
+msgid "Language Name"
+msgstr "Language Name"
+
+#: medications/views.py:23
+msgid "Available Languages"
+msgstr "Available Languages"
+
+#: medications/views.py:28
+msgid "Current"
+msgstr "Current"
+
+#: medications/views.py:31
+msgid "Test Translations"
+msgstr "Test Translations"
+
+#: medications/views.py:33
+msgid "Translation Key"
+msgstr "Translation Key"
+
+#: medications/views.py:34
+msgid "Translated Text"
+msgstr "Translated Text"
+
+#: medications/views.py:40
+msgid "Navigation"
+msgstr "Navigation"
+
+#: medications/views.py:41
+msgid "Use the buttons below to navigate to different admin sections."
+msgstr "Use the buttons below to navigate to different admin sections."
+
+#: medications/views.py:44
+msgid "Go to Django Admin"
+msgstr "Go to Django Admin"
+
+#: medications/views.py:45
+msgid "Go to Wagtail Admin"
+msgstr "Go to Wagtail Admin"
+
+#: medications/views.py:46
+msgid "Go to Medications"
+msgstr "Go to Medications"
+
+#: medications/views.py:8
+msgid "Language"
+msgstr "Language" 

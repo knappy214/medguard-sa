@@ -89,6 +89,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n',
             ],
         },
     },
@@ -138,17 +139,23 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
-LANGUAGE_CODE = 'en-ZA'
+LANGUAGE_CODE = 'en'
 TIME_ZONE = 'Africa/Johannesburg'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# Supported languages
+# Supported languages for Django frontend
 LANGUAGES = [
-    ('en-ZA', _('English (South Africa)')),
-    ('af-ZA', _('Afrikaans (Suid-Afrika)')),
+    ('en', _('English')),
+    ('af', _('Afrikaans')),
 ]
+
+# Wagtail content languages (can be same as LANGUAGES or subset)
+WAGTAIL_CONTENT_LANGUAGES = LANGUAGES
+
+# Enable Wagtail internationalization
+WAGTAIL_I18N_ENABLED = True
 
 # Locale paths for translation files
 LOCALE_PATHS = [
