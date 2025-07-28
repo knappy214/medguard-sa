@@ -1,0 +1,10 @@
+---
+description: "Expo React-Native rules"
+globs:
+  - mobile/**/*.tsx
+---
+
+• Functional components with React 18 JSX; no classes.  
+• Use `expo-notifications` for reminders; schedule with `date-fns-tz`.  
+• Store persistent settings via `AsyncStorage` wrapper `useSettingsStore`.  
+• Do not create nested Expo apps; check `app.json` before scaffolding.

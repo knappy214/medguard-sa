@@ -1,0 +1,346 @@
+{% extends "wagtailadmin/base.html" %}
+{% load wagtailadmin_tags %}
+
+{% block content %}
+<div class="nice-padding">
+    <h1>{% blocktrans %}Bulk Actions - {{ model_name }}{% endblocktrans %}</h1>
+    
+    <div class="bulk-actions-panel">
+        <form method="post" class="bulk-actions-form">
+            {% csrf_token %}
+            
+            <div class="bulk-actions-header">
+                <h2>{% blocktrans %}Selected Items ({{ selected_count }}){% endblocktrans %}</h2>
+                <p>{% blocktrans %}Choose an action to perform on the selected items:{% endblocktrans %}</p>
+            </div>
+            
+            <div class="bulk-actions-content">
+                <div class="action-selection">
+                    <label for="bulk-action">{% trans "Action:" %}</label>
+                    <select name="action" id="bulk-action" class="bulk-action-select" required>
+                        <option value="">{% trans "Select an action..." %}</option>
+                        
+                        {% if model_name == "Medication" %}
+                            <option value="update_stock">{% trans "Update Stock Levels" %}</option>
+                            <option value="mark_expired">{% trans "Mark as Expired" %}</option>
+                            <option value="export_csv">{% trans "Export to CSV" %}</option>
+                            <option value="delete">{% trans "Delete Selected" %}</option>
+                        {% elif model_name == "MedicationSchedule" %}
+                            <option value="activate">{% trans "Activate Schedules" %}</option>
+                            <option value="deactivate">{% trans "Deactivate Schedules" %}</option>
+                            <option value="pause">{% trans "Pause Schedules" %}</option>
+                            <option value="delete">{% trans "Delete Selected" %}</option>
+                        {% elif model_name == "MedicationLog" %}
+                            <option value="mark_taken">{% trans "Mark as Taken" %}</option>
+                            <option value="mark_missed">{% trans "Mark as Missed" %}</option>
+                            <option value="export_csv">{% trans "Export to CSV" %}</option>
+                            <option value="delete">{% trans "Delete Selected" %}</option>
+                        {% elif model_name == "StockAlert" %}
+                            <option value="acknowledge">{% trans "Acknowledge Alerts" %}</option>
+                            <option value="resolve">{% trans "Resolve Alerts" %}</option>
+                            <option value="dismiss">{% trans "Dismiss Alerts" %}</option>
+                            <option value="delete">{% trans "Delete Selected" %}</option>
+                        {% endif %}
+                    </select>
+                </div>
+                
+                <div class="action-options hidden" id="action-options">
+                    <!-- Dynamic options will be loaded here -->
+                </div>
+                
+                <div class="selected-items-preview">
+                    <h3>{% trans "Selected Items:" %}</h3>
+                    <div class="items-list">
+                        {% for item in selected_items %}
+                            <div class="item-preview">
+                                <span class="item-name">{{ item }}</span>
+                                <span class="item-id">(ID: {{ item.id }})</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="bulk-actions-buttons">
+                    <button type="submit" class="button button-primary bulk-action-button" disabled>
+                        {% trans "Apply to selected" %}
+                    </button>
+                    <a href="{{ list_url }}" class="button button-secondary">
+                        {% trans "Cancel" %}
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .bulk-actions-panel {
+        background: white;
+        border: 1px solid var(--medguard-border);
+        border-radius: 8px;
+        padding: 2rem;
+        margin-top: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .bulk-actions-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--medguard-border);
+    }
+    
+    .bulk-actions-header h2 {
+        color: var(--medguard-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .action-selection {
+        margin-bottom: 2rem;
+    }
+    
+    .action-selection label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--medguard-neutral);
+    }
+    
+    .bulk-action-select {
+        width: 100%;
+        max-width: 400px;
+        padding: 0.75rem;
+        border: 1px solid var(--medguard-border);
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    
+    .action-options {
+        background-color: var(--medguard-light);
+        border: 1px solid var(--medguard-border);
+        border-radius: 6px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .selected-items-preview {
+        margin-bottom: 2rem;
+    }
+    
+    .selected-items-preview h3 {
+        color: var(--medguard-neutral);
+        margin-bottom: 1rem;
+    }
+    
+    .items-list {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid var(--medguard-border);
+        border-radius: 4px;
+        padding: 1rem;
+        background-color: var(--medguard-light);
+    }
+    
+    .item-preview {
+        padding: 0.5rem;
+        border-bottom: 1px solid var(--medguard-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .item-preview:last-child {
+        border-bottom: none;
+    }
+    
+    .item-name {
+        font-weight: 500;
+    }
+    
+    .item-id {
+        color: var(--medguard-neutral);
+        font-size: 0.875rem;
+    }
+    
+    .bulk-actions-buttons {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .bulk-action-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .option-group {
+        margin-bottom: 1rem;
+    }
+    
+    .option-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .option-group input,
+    .option-group select,
+    .option-group textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--medguard-border);
+        border-radius: 4px;
+    }
+    
+    .option-group textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+    
+    .warning-message {
+        background-color: #FEF3C7;
+        border: 1px solid #FDE68A;
+        color: var(--medguard-warning);
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+    
+    .danger-message {
+        background-color: #FEE2E2;
+        border: 1px solid #FECACA;
+        color: var(--medguard-danger);
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const actionSelect = document.getElementById('bulk-action');
+    const actionOptions = document.getElementById('action-options');
+    const submitButton = document.querySelector('.bulk-action-button');
+    
+    actionSelect.addEventListener('change', function() {
+        const action = this.value;
+        
+        if (action) {
+            showActionOptions(action);
+            submitButton.disabled = false;
+            submitButton.textContent = getActionButtonText(action);
+        } else {
+            actionOptions.style.display = 'none';
+            submitButton.disabled = true;
+            submitButton.textContent = '{% trans "Apply to selected" %}';
+        }
+    });
+    
+    function showActionOptions(action) {
+        let optionsHtml = '';
+        
+        switch(action) {
+            case 'update_stock':
+                optionsHtml = `
+                    <div class="option-group">
+                        <label for="stock_operation">{% trans "Operation:" %}</label>
+                        <select name="stock_operation" id="stock_operation" required>
+                            <option value="set">{% trans "Set to specific value" %}</option>
+                            <option value="add">{% trans "Add amount" %}</option>
+                            <option value="subtract">{% trans "Subtract amount" %}</option>
+                        </select>
+                    </div>
+                    <div class="option-group">
+                        <label for="stock_amount">{% trans "Amount:" %}</label>
+                        <input type="number" name="stock_amount" id="stock_amount" min="0" required>
+                    </div>
+                `;
+                break;
+                
+            case 'mark_expired':
+                optionsHtml = `
+                    <div class="warning-message">
+                        <strong>{% trans "Warning:" %}</strong> {% trans "This will mark all selected medications as expired. This action cannot be undone." %}
+                    </div>
+                    <div class="option-group">
+                        <label for="expiration_date">{% trans "Expiration Date:" %}</label>
+                        <input type="date" name="expiration_date" id="expiration_date" required>
+                    </div>
+                `;
+                break;
+                
+            case 'delete':
+                optionsHtml = `
+                    <div class="danger-message">
+                        <strong>{% trans "Danger:" %}</strong> {% trans "This action will permanently delete all selected items. This cannot be undone." %}
+                    </div>
+                    <div class="option-group">
+                        <label for="delete_confirmation">
+                            <input type="checkbox" name="delete_confirmation" id="delete_confirmation" required>
+                            {% trans "I understand that this action cannot be undone" %}
+                        </label>
+                    </div>
+                `;
+                break;
+                
+            case 'export_csv':
+                optionsHtml = `
+                    <div class="option-group">
+                        <label for="export_fields">{% trans "Fields to export:" %}</label>
+                        <select name="export_fields[]" id="export_fields" multiple>
+                            <option value="name">{% trans "Name" %}</option>
+                            <option value="type">{% trans "Type" %}</option>
+                            <option value="strength">{% trans "Strength" %}</option>
+                            <option value="stock">{% trans "Stock" %}</option>
+                            <option value="expiration">{% trans "Expiration Date" %}</option>
+                        </select>
+                    </div>
+                    <div class="option-group">
+                        <label for="export_filename">{% trans "Filename:" %}</label>
+                        <input type="text" name="export_filename" id="export_filename" value="export_{{ model_name|lower }}_{% now "Y-m-d" %}.csv">
+                    </div>
+                `;
+                break;
+                
+            case 'acknowledge':
+            case 'resolve':
+                optionsHtml = `
+                    <div class="option-group">
+                        <label for="resolution_notes">{% trans "Notes:" %}</label>
+                        <textarea name="resolution_notes" id="resolution_notes" placeholder="{% trans "Optional notes about this action..." %}"></textarea>
+                    </div>
+                `;
+                break;
+        }
+        
+        actionOptions.innerHTML = optionsHtml;
+        actionOptions.style.display = 'block';
+    }
+    
+    function getActionButtonText(action) {
+        const actionTexts = {
+            'update_stock': '{% trans "Update Stock" %}',
+            'mark_expired': '{% trans "Mark as Expired" %}',
+            'export_csv': '{% trans "Export to CSV" %}',
+            'delete': '{% trans "Delete Selected" %}',
+            'activate': '{% trans "Activate Schedules" %}',
+            'deactivate': '{% trans "Deactivate Schedules" %}',
+            'pause': '{% trans "Pause Schedules" %}',
+            'mark_taken': '{% trans "Mark as Taken" %}',
+            'mark_missed': '{% trans "Mark as Missed" %}',
+            'acknowledge': '{% trans "Acknowledge Alerts" %}',
+            'resolve': '{% trans "Resolve Alerts" %}',
+            'dismiss': '{% trans "Dismiss Alerts" %}'
+        };
+        
+        return actionTexts[action] || '{% trans "Apply Action" %}';
+    }
+    
+    // Set default date for expiration
+    const expirationDateInput = document.getElementById('expiration_date');
+    if (expirationDateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        expirationDateInput.value = today;
+    }
+    });
+</script>
+{% endblock content %} 

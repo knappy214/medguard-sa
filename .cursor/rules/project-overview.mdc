@@ -1,0 +1,19 @@
+---
+description: "MedGuard SA – tech stack & directory conventions"
+alwaysApply: true
+---
+
+## Stack
+Backend: Django 4 + Wagtail 6, PostgreSQL, Celery/Redis.  
+Web: Vue 3 + Vite + Tailwind v4 + DaisyUI v5.  
+Mobile: Expo SDK > 51, React Native + TypeScript.
+
+## Directory map
+backend/        → Django project “medguard_backend”  
+frontend/       → Vite Vue app “medguard-frontend” 
+mobile/         → Expo app “medguard-mobile” 
+infra/          → Docker, CI, Terraform  
+docs/           → Markdown & OpenAPI specs
+
+## I18N
+Supported locales: `en-ZA`, `af-ZA`. Use Django `LocaleMiddleware`; Vue I18n lazy-loads JSON; Expo uses `expo-localization`.  Strings **must** appear in translation files, never hard-coded.

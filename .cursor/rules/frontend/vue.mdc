@@ -1,0 +1,10 @@
+---
+description: "Vue 3 Composition-API patterns"
+globs:
+  - frontend/src/**/*.vue
+---
+
+• `<script setup lang="ts">`; no Options API.  
+• Props typed with `defineProps<{…}>`; emits declared.  
+• State via Pinia stores in `stores/`; composables in `composables/`.  
+• Use async components + `<Suspense>` for calendar and charts.

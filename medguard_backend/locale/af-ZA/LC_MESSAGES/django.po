@@ -1,0 +1,531 @@
+# Afrikaans (Suid-Afrika) translations for MedGuard SA.
+# Copyright (C) 2024 MedGuard SA
+# This file is distributed under the same license as the MedGuard SA project.
+msgid ""
+msgstr ""
+"Project-Id-Version: MedGuard SA 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 12:00+0200\n"
+"PO-Revision-Date: 2024-01-01 12:00+0200\n"
+"Last-Translator: MedGuard SA Team\n"
+"Language: af-ZA\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: wagtail_hooks.py:45
+msgid "Medications"
+msgstr "Medikasie"
+
+#: wagtail_hooks.py:46
+msgid "Medication Schedules"
+msgstr "Medikasie Skedules"
+
+#: wagtail_hooks.py:47
+msgid "Medication Logs"
+msgstr "Medikasie Logboeke"
+
+#: wagtail_hooks.py:48
+msgid "Stock Alerts"
+msgstr "Voorraad Waarskuwings"
+
+#: wagtail_hooks.py:49
+msgid "Medication Management"
+msgstr "Medikasie Bestuur"
+
+#: wagtail_hooks.py:50
+msgid "Basic Information"
+msgstr "Basiese Inligting"
+
+#: wagtail_hooks.py:51
+msgid "Dosage Information"
+msgstr "Dosis Inligting"
+
+#: wagtail_hooks.py:52
+msgid "Stock Management"
+msgstr "Voorraad Bestuur"
+
+#: wagtail_hooks.py:53
+msgid "Additional Information"
+msgstr "Bykomende Inligting"
+
+#: wagtail_hooks.py:54
+msgid "Safety Information"
+msgstr "Veiligheidsinligting"
+
+#: wagtail_hooks.py:55
+msgid "Storage and Handling"
+msgstr "Berging en Hantering"
+
+#: wagtail_hooks.py:56
+msgid "Patient and Medication"
+msgstr "Pasiënt en Medikasie"
+
+#: wagtail_hooks.py:57
+msgid "Schedule Information"
+msgstr "Skedule Inligting"
+
+#: wagtail_hooks.py:58
+msgid "Days of Week"
+msgstr "Dae van die Week"
+
+#: wagtail_hooks.py:59
+msgid "Schedule Period"
+msgstr "Skedule Tydperk"
+
+#: wagtail_hooks.py:60
+msgid "Status and Instructions"
+msgstr "Status en Instruksies"
+
+#: wagtail_hooks.py:61
+msgid "Timing Information"
+msgstr "Tydberekening Inligting"
+
+#: wagtail_hooks.py:62
+msgid "Dose Information"
+msgstr "Dosis Inligting"
+
+#: wagtail_hooks.py:63
+msgid "Notes and Observations"
+msgstr "Notas en Waarnemings"
+
+#: wagtail_hooks.py:64
+msgid "Alert Information"
+msgstr "Waarskuwing Inligting"
+
+#: wagtail_hooks.py:65
+msgid "Alert Details"
+msgstr "Waarskuwing Besonderhede"
+
+#: wagtail_hooks.py:66
+msgid "Stock Information"
+msgstr "Voorraad Inligting"
+
+#: wagtail_hooks.py:67
+msgid "User Information"
+msgstr "Gebruiker Inligting"
+
+#: wagtail_hooks.py:68
+msgid "Resolution"
+msgstr "Oplossing"
+
+#: wagtail_hooks.py:69
+msgid "Low Stock"
+msgstr "Lae Voorraad"
+
+#: wagtail_hooks.py:70
+msgid "In Stock"
+msgstr "In Voorraad"
+
+#: wagtail_hooks.py:71
+msgid "Expired"
+msgstr "Verval"
+
+#: wagtail_hooks.py:72
+msgid "Expiring Soon"
+msgstr "Verval Binnekort"
+
+#: wagtail_hooks.py:73
+msgid "Valid"
+msgstr "Geldig"
+
+#: wagtail_hooks.py:74
+msgid "Stock Status"
+msgstr "Voorraad Status"
+
+#: wagtail_hooks.py:75
+msgid "Expiration Status"
+msgstr "Verval Status"
+
+#: wagtail_hooks.py:76
+msgid "Active"
+msgstr "Aktief"
+
+#: wagtail_hooks.py:77
+msgid "Inactive"
+msgstr "Inaktief"
+
+#: wagtail_hooks.py:78
+msgid "Active Status"
+msgstr "Aktiewe Status"
+
+#: wagtail_hooks.py:79
+msgid "Today"
+msgstr "Vandag"
+
+#: wagtail_hooks.py:80
+msgid "Not Today"
+msgstr "Nie Vandag"
+
+#: wagtail_hooks.py:81
+msgid "Take Today"
+msgstr "Neem Vandag"
+
+#: wagtail_hooks.py:82
+msgid "On Time"
+msgstr "Betyds"
+
+#: wagtail_hooks.py:83
+msgid "Late"
+msgstr "Laat"
+
+#: wagtail_hooks.py:84
+msgid "N/A"
+msgstr "N/V"
+
+#: wagtail_hooks.py:85
+msgid "Adherence Score"
+msgstr "Nakoming Telling"
+
+#: wagtail_hooks.py:86
+msgid "Critical"
+msgstr "Krities"
+
+#: wagtail_hooks.py:87
+msgid "High"
+msgstr "Hoog"
+
+#: wagtail_hooks.py:88
+msgid "Medium"
+msgstr "Medium"
+
+#: wagtail_hooks.py:89
+msgid "Low"
+msgstr "Laag"
+
+#: wagtail_hooks.py:90
+msgid "Tablet"
+msgstr "Tablet"
+
+#: wagtail_hooks.py:91
+msgid "Capsule"
+msgstr "Kapsule"
+
+#: wagtail_hooks.py:92
+msgid "Liquid"
+msgstr "Vloeistof"
+
+#: wagtail_hooks.py:93
+msgid "Injection"
+msgstr "Injeksie"
+
+#: wagtail_hooks.py:94
+msgid "Inhaler"
+msgstr "Inhaleerder"
+
+#: wagtail_hooks.py:95
+msgid "Cream"
+msgstr "Room"
+
+#: wagtail_hooks.py:96
+msgid "Ointment"
+msgstr "Salf"
+
+#: wagtail_hooks.py:97
+msgid "Drops"
+msgstr "Druppels"
+
+#: wagtail_hooks.py:98
+msgid "Patch"
+msgstr "Pleister"
+
+#: wagtail_hooks.py:99
+msgid "Other"
+msgstr "Ander"
+
+#: wagtail_hooks.py:100
+msgid "Prescription Required"
+msgstr "Voorskrif Benodig"
+
+#: wagtail_hooks.py:101
+msgid "Over the Counter"
+msgstr "Oor die Toonbank"
+
+#: wagtail_hooks.py:102
+msgid "Supplement"
+msgstr "Aanvulling"
+
+#: wagtail_hooks.py:103
+msgid "Morning"
+msgstr "Oggend"
+
+#: wagtail_hooks.py:104
+msgid "Noon"
+msgstr "Middag"
+
+#: wagtail_hooks.py:105
+msgid "Night"
+msgstr "Nag"
+
+#: wagtail_hooks.py:106
+msgid "Custom Time"
+msgstr "Pasgemaakte Tyd"
+
+#: wagtail_hooks.py:107
+msgid "Paused"
+msgstr "Gepouseer"
+
+#: wagtail_hooks.py:108
+msgid "Completed"
+msgstr "Voltooi"
+
+#: wagtail_hooks.py:109
+msgid "Taken"
+msgstr "Geneem"
+
+#: wagtail_hooks.py:110
+msgid "Missed"
+msgstr "Gemis"
+
+#: wagtail_hooks.py:111
+msgid "Skipped"
+msgstr "Oorgeslaan"
+
+#: wagtail_hooks.py:112
+msgid "Partial Dose"
+msgstr "Gedeeltelike Dosis"
+
+#: wagtail_hooks.py:113
+msgid "Low Stock"
+msgstr "Lae Voorraad"
+
+#: wagtail_hooks.py:114
+msgid "Out of Stock"
+msgstr "Uit Voorraad"
+
+#: wagtail_hooks.py:115
+msgid "Expiring Soon"
+msgstr "Verval Binnekort"
+
+#: wagtail_hooks.py:116
+msgid "Acknowledged"
+msgstr "Erken"
+
+#: wagtail_hooks.py:117
+msgid "Resolved"
+msgstr "Opgelos"
+
+#: wagtail_hooks.py:118
+msgid "Dismissed"
+msgstr "Verwerp"
+
+#: wagtail_hooks.py:119
+msgid "Name of the medication"
+msgstr "Naam van die medikasie"
+
+#: wagtail_hooks.py:120
+msgid "Generic name of the medication"
+msgstr "Generiese naam van die medikasie"
+
+#: wagtail_hooks.py:121
+msgid "Brand name of the medication"
+msgstr "Handelsnaam van die medikasie"
+
+#: wagtail_hooks.py:122
+msgid "Type of medication"
+msgstr "Tipe medikasie"
+
+#: wagtail_hooks.py:123
+msgid "Type of prescription required"
+msgstr "Tipe voorskrif benodig"
+
+#: wagtail_hooks.py:124
+msgid "Strength of the medication (e.g., 500mg, 10mg/ml)"
+msgstr "Sterkte van die medikasie (bv., 500mg, 10mg/ml)"
+
+#: wagtail_hooks.py:125
+msgid "Unit of dosage (e.g., mg, ml, mcg)"
+msgstr "Eenheid van dosis (bv., mg, ml, mcg)"
+
+#: wagtail_hooks.py:126
+msgid "Current number of pills/units in stock"
+msgstr "Huidige aantal pille/eenhede in voorraad"
+
+#: wagtail_hooks.py:127
+msgid "Threshold for low stock alerts"
+msgstr "Drempel vir lae voorraad waarskuwings"
+
+#: wagtail_hooks.py:128
+msgid "Description of the medication"
+msgstr "Beskrywing van die medikasie"
+
+#: wagtail_hooks.py:129
+msgid "Active ingredients in the medication"
+msgstr "Aktiewe bestanddele in die medikasie"
+
+#: wagtail_hooks.py:130
+msgid "Manufacturer of the medication"
+msgstr "Vervaardiger van die medikasie"
+
+#: wagtail_hooks.py:131
+msgid "Common side effects"
+msgstr "Algemene newe-effekte"
+
+#: wagtail_hooks.py:132
+msgid "Contraindications and warnings"
+msgstr "Kontra-indikasies en waarskuwings"
+
+#: wagtail_hooks.py:133
+msgid "Storage instructions for the medication"
+msgstr "Berging instruksies vir die medikasie"
+
+#: wagtail_hooks.py:134
+msgid "Expiration date of the medication"
+msgstr "Verval datum van die medikasie"
+
+#: wagtail_hooks.py:135
+msgid "Patient for whom this schedule is created"
+msgstr "Pasiënt vir wie hierdie skedule geskep is"
+
+#: wagtail_hooks.py:136
+msgid "Medication to be taken"
+msgstr "Medikasie om te neem"
+
+#: wagtail_hooks.py:137
+msgid "When the medication should be taken"
+msgstr "Wanneer die medikasie geneem moet word"
+
+#: wagtail_hooks.py:138
+msgid "Custom time for medication (if timing is custom)"
+msgstr "Pasgemaakte tyd vir medikasie (as tydberekening pasgemaak is)"
+
+#: wagtail_hooks.py:139
+msgid "Amount of medication to take"
+msgstr "Hoeveelheid medikasie om te neem"
+
+#: wagtail_hooks.py:140
+msgid "How often to take the medication (e.g., daily, twice daily, weekly)"
+msgstr "Hoe dikwels om die medikasie te neem (bv., daagliks, twee keer daagliks, weekliks)"
+
+#: wagtail_hooks.py:141
+msgid "Date when medication schedule starts"
+msgstr "Datum wanneer medikasie skedule begin"
+
+#: wagtail_hooks.py:142
+msgid "Date when medication schedule ends (optional)"
+msgstr "Datum wanneer medikasie skedule eindig (opsioneel)"
+
+#: wagtail_hooks.py:143
+msgid "Current status of the medication schedule"
+msgstr "Huidige status van die medikasie skedule"
+
+#: wagtail_hooks.py:144
+msgid "Special instructions for taking the medication"
+msgstr "Spesiale instruksies vir die neem van die medikasie"
+
+#: wagtail_hooks.py:145
+msgid "Patient who took the medication"
+msgstr "Pasiënt wat die medikasie geneem het"
+
+#: wagtail_hooks.py:146
+msgid "Medication that was taken"
+msgstr "Medikasie wat geneem is"
+
+#: wagtail_hooks.py:147
+msgid "Associated medication schedule"
+msgstr "Geassosieerde medikasie skedule"
+
+#: wagtail_hooks.py:148
+msgid "When the medication was scheduled to be taken"
+msgstr "Wanneer die medikasie geskeduleer was om geneem te word"
+
+#: wagtail_hooks.py:149
+msgid "When the medication was actually taken"
+msgstr "Wanneer die medikasie werklik geneem is"
+
+#: wagtail_hooks.py:150
+msgid "Status of the medication dose"
+msgstr "Status van die medikasie dosis"
+
+#: wagtail_hooks.py:151
+msgid "Actual dosage taken"
+msgstr "Werklike dosis geneem"
+
+#: wagtail_hooks.py:152
+msgid "Notes about the medication dose"
+msgstr "Notas oor die medikasie dosis"
+
+#: wagtail_hooks.py:153
+msgid "Any side effects experienced"
+msgstr "Enige newe-effekte ervaar"
+
+#: wagtail_hooks.py:154
+msgid "Medication associated with this alert"
+msgstr "Medikasie geassosieer met hierdie waarskuwing"
+
+#: wagtail_hooks.py:155
+msgid "User who created the alert"
+msgstr "Gebruiker wat die waarskuwing geskep het"
+
+#: wagtail_hooks.py:156
+msgid "User who acknowledged the alert"
+msgstr "Gebruiker wat die waarskuwing erken het"
+
+#: wagtail_hooks.py:157
+msgid "Type of stock alert"
+msgstr "Tipe voorraad waarskuwing"
+
+#: wagtail_hooks.py:158
+msgid "Priority level of the alert"
+msgstr "Prioriteit vlak van die waarskuwing"
+
+#: wagtail_hooks.py:159
+msgid "Current status of the alert"
+msgstr "Huidige status van die waarskuwing"
+
+#: wagtail_hooks.py:160
+msgid "Title of the alert"
+msgstr "Titel van die waarskuwing"
+
+#: wagtail_hooks.py:161
+msgid "Detailed message of the alert"
+msgstr "Gedetailleerde boodskap van die waarskuwing"
+
+#: wagtail_hooks.py:162
+msgid "Current stock level when alert was created"
+msgstr "Huidige voorraad vlak toe waarskuwing geskep is"
+
+#: wagtail_hooks.py:163
+msgid "Threshold level that triggered the alert"
+msgstr "Drempel vlak wat die waarskuwing geaktiveer het"
+
+#: wagtail_hooks.py:164
+msgid "When the alert was resolved"
+msgstr "Wanneer die waarskuwing opgelos is"
+
+#: wagtail_hooks.py:165
+msgid "Notes about how the alert was resolved"
+msgstr "Notas oor hoe die waarskuwing opgelos is"
+
+#: wagtail_hooks.py:166
+msgid "Medication"
+msgstr "Medikasie"
+
+#: wagtail_hooks.py:167
+msgid "Medications"
+msgstr "Medikasie"
+
+#: wagtail_hooks.py:168
+msgid "Medication Schedule"
+msgstr "Medikasie Skedule"
+
+#: wagtail_hooks.py:169
+msgid "Medication Schedules"
+msgstr "Medikasie Skedules"
+
+#: wagtail_hooks.py:170
+msgid "Medication Log"
+msgstr "Medikasie Logboek"
+
+#: wagtail_hooks.py:171
+msgid "Medication Logs"
+msgstr "Medikasie Logboeke"
+
+#: wagtail_hooks.py:172
+msgid "Stock Alert"
+msgstr "Voorraad Waarskuwing"
+
+#: wagtail_hooks.py:173
+msgid "Stock Alerts"
+msgstr "Voorraad Waarskuwings" 

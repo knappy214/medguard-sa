@@ -1,0 +1,21 @@
+---
+description: "Django coding standards"
+globs:
+  - backend/**/*.py
+---
+
+# Models
+• One model per file if >150 LOC.  
+• Use `ForeignKey(..., on_delete=models.PROTECT)` for meds/stock links.
+
+# Views & APIs
+• DRF viewsets, never raw function views.  
+• All API endpoints versioned `/api/v1/…`.
+
+# Performance
+• Prevent N+1 queries via `select_related | prefetch_related`.  
+• Wrap long-running tasks in Celery.
+
+# Tests
+• Place tests beside code: `tests/test_<module>.py`.  
+• ≥ 90 % coverage gate in CI.

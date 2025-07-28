@@ -1,0 +1,9 @@
+---
+description: "Wagtail admin & i18n rules"
+globs:
+  - backend/**/wagtail_*.py
+---
+
+• Use `ModelAdmin` not `Page` for Medication, Schedule, StockAlert.  
+• Enable `locale` field and sync translations via `wagtail i18n`.  
+• RichTextFields: allow only bold | link | list.

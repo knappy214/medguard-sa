@@ -1,0 +1,10 @@
+---
+description: "Accessibility & color contrast (WCAG 2.1 AA)"
+alwaysApply: true
+---
+
+• All UI text contrast ≥ 4.5:1 (check with `@axe-core/react`).  
+• Do **not** rely on colour alone; add icons or patterns for alerts.  
+• Provide high-contrast toggle (dark / light).  
+• Primary palette: #2563EB blue, #10B981 green, #F59E0B orange, #EF4444 red, neutral grays – all tested for CVD.  
+• Localisation: ensure Afrikaans strings keep same meaning & line-length.

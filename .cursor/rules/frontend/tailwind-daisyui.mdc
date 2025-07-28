@@ -1,0 +1,9 @@
+---
+description: "Tailwind v4 + DaisyUI v5 styling guide"
+globs:
+  - frontend/src/**/*.{vue,css}
+---
+  
+• Always start layouts in mobile view (`sm:` upwards).  
+• Use arbitrary CSS only when Tailwind class not available.  
+• DaisyUI components → prefer semantic classes (`btn-primary`, `alert-warning`).

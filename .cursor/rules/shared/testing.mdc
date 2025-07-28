@@ -1,0 +1,9 @@
+---
+description: "Unified testing strategy"
+alwaysApply: false
+---
+
+• Python → `pytest-django` fixtures + factories.  
+• Web → Vitest + Testing-Library-Vue.  
+• Mobile → Jest + @testing-library/react-native.  
+• Each PR must add or update a test; failing coverage gate blocks merge.
