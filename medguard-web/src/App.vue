@@ -1,23 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { onMounted } from 'vue'
 import MedicationDashboard from './components/medication/MedicationDashboard.vue'
 import LanguageSwitcher from './components/common/LanguageSwitcher.vue'
+import { useLanguagePreference } from '@/composables/useLanguagePreference'
 
-const { locale } = useI18n()
-const currentLocale = ref('en-ZA')
-
-const switchLanguage = (newLocale: 'en-ZA' | 'af-ZA') => {
-  currentLocale.value = newLocale
-  locale.value = newLocale
-  localStorage.setItem('medguard-locale', newLocale)
-}
+const { initializeLocale } = useLanguagePreference()
 
 onMounted(() => {
-  const savedLocale = localStorage.getItem('medguard-locale')
-  if (savedLocale && (savedLocale === 'en-ZA' || savedLocale === 'af-ZA')) {
-    switchLanguage(savedLocale as 'en-ZA' | 'af-ZA')
-  }
+  initializeLocale()
 })
 </script>
 
@@ -38,10 +28,7 @@ onMounted(() => {
               </p>
             </div>
           </div>
-          <LanguageSwitcher 
-            :current-locale="currentLocale"
-            @switch-language="switchLanguage"
-          />
+          <LanguageSwitcher />
         </div>
       </div>
     </header>

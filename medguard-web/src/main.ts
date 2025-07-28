@@ -4,97 +4,96 @@ import { createApp } from 'vue'
 import { createI18n } from 'vue-i18n'
 import App from './App.vue'
 
-// i18n setup
-const messages = {
+// Import translation files
+import en from './locales/en.json'
+import af from './locales/af.json'
+
+// South African locale formatting
+const dateTimeFormats = {
   'en-ZA': {
-    dashboard: {
-      title: 'Medication Dashboard',
-      subtitle: 'Manage your medications safely',
-      todaySchedule: 'Today\'s Schedule',
-      medicationList: 'Medication List',
-      stockAlerts: 'Stock Alerts',
-      addMedication: 'Add Medication',
-      taken: 'Taken',
-      missed: 'Missed',
-      upcoming: 'Upcoming',
-      lowStock: 'Low Stock',
-      outOfStock: 'Out of Stock',
-      pillsRemaining: 'pills remaining',
-      noMedications: 'No medications scheduled',
-      noAlerts: 'No stock alerts',
-      markAsTaken: 'Mark as Taken',
-      markAsMissed: 'Mark as Missed',
-      editMedication: 'Edit',
-      deleteMedication: 'Delete',
-      refillReminder: 'Refill Reminder',
-      dosage: 'Dosage',
-      frequency: 'Frequency',
-      time: 'Time',
-      status: 'Status'
+    short: {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     },
-    common: {
-      loading: 'Loading...',
-      error: 'Error',
-      success: 'Success',
-      cancel: 'Cancel',
-      save: 'Save',
-      delete: 'Delete',
-      edit: 'Edit',
-      add: 'Add',
-      close: 'Close',
-      yes: 'Yes',
-      no: 'No',
-      confirm: 'Confirm'
+    long: {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long'
+    },
+    time: {
+      hour: '2-digit',
+      minute: '2-digit'
     }
   },
   'af-ZA': {
-    dashboard: {
-      title: 'Medikasie Dashboard',
-      subtitle: 'Bestuur jou medikasie veilig',
-      todaySchedule: 'Vandag se Skedule',
-      medicationList: 'Medikasie Lys',
-      stockAlerts: 'Voorraad Waarskuwings',
-      addMedication: 'Voeg Medikasie By',
-      taken: 'Geneem',
-      missed: 'Gemis',
-      upcoming: 'Komende',
-      lowStock: 'Lae Voorraad',
-      outOfStock: 'Uit Voorraad',
-      pillsRemaining: 'pille oor',
-      noMedications: 'Geen medikasie geskeduleer',
-      noAlerts: 'Geen voorraad waarskuwings',
-      markAsTaken: 'Merk as Geneem',
-      markAsMissed: 'Merk as Gemis',
-      editMedication: 'Redigeer',
-      deleteMedication: 'Verwyder',
-      refillReminder: 'Hervul Herinnering',
-      dosage: 'Dosis',
-      frequency: 'Frekwensie',
-      time: 'Tyd',
-      status: 'Status'
+    short: {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     },
-    common: {
-      loading: 'Laai...',
-      error: 'Fout',
-      success: 'Sukses',
-      cancel: 'Kanselleer',
-      save: 'Stoor',
-      delete: 'Verwyder',
-      edit: 'Redigeer',
-      add: 'Voeg By',
-      close: 'Sluit',
-      yes: 'Ja',
-      no: 'Nee',
-      confirm: 'Bevestig'
+    long: {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long'
+    },
+    time: {
+      hour: '2-digit',
+      minute: '2-digit'
     }
   }
 }
 
+const numberFormats = {
+  'en-ZA': {
+    currency: {
+      style: 'currency' as const,
+      currency: 'ZAR',
+      currencyDisplay: 'symbol' as const
+    },
+    decimal: {
+      style: 'decimal' as const,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    },
+    percent: {
+      style: 'percent' as const,
+      minimumFractionDigits: 2
+    }
+  },
+  'af-ZA': {
+    currency: {
+      style: 'currency' as const,
+      currency: 'ZAR',
+      currencyDisplay: 'symbol' as const
+    },
+    decimal: {
+      style: 'decimal' as const,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    },
+    percent: {
+      style: 'percent' as const,
+      minimumFractionDigits: 2
+    }
+  }
+}
+
+// i18n setup
 const i18n = createI18n({
   legacy: false,
   locale: 'en-ZA',
   fallbackLocale: 'en-ZA',
-  messages
+  messages: {
+    'en-ZA': en,
+    'af-ZA': af
+  },
+  dateTimeFormats,
+  numberFormats,
+  missingWarn: false,
+  fallbackWarn: false
 })
 
 const app = createApp(App)
