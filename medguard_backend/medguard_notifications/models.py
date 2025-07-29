@@ -549,3 +549,211 @@ class NotificationTemplate(models.Model):
             raise ValidationError({
                 'subject': _('Subject is required for email templates')
             })
+
+
+class UserNotificationPreferences(models.Model):
+    """
+    User notification preferences model for managing notification settings.
+    """
+    
+    # Notification channel choices
+    class Channel(models.TextChoices):
+        EMAIL = 'email', _('Email')
+        SMS = 'sms', _('SMS')
+        PUSH = 'push', _('Push Notification')
+        IN_APP = 'in_app', _('In-App Notification')
+    
+    # Time preference choices
+    class TimePreference(models.TextChoices):
+        IMMEDIATE = 'immediate', _('Immediate')
+        MORNING = 'morning', _('Morning (8:00 AM)')
+        AFTERNOON = 'afternoon', _('Afternoon (2:00 PM)')
+        EVENING = 'evening', _('Evening (8:00 PM)')
+        CUSTOM = 'custom', _('Custom Time')
+    
+    # Relationships
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='notification_preferences',
+        verbose_name=_('User'),
+        help_text=_('User who owns these preferences')
+    )
+    
+    # Email preferences
+    email_notifications_enabled = models.BooleanField(
+        default=True,
+        verbose_name=_('Email Notifications Enabled'),
+        help_text=_('Whether to send email notifications')
+    )
+    
+    email_time_preference = models.CharField(
+        max_length=20,
+        choices=TimePreference.choices,
+        default=TimePreference.IMMEDIATE,
+        verbose_name=_('Email Time Preference'),
+        help_text=_('When to send email notifications')
+    )
+    
+    email_custom_time = models.TimeField(
+        null=True,
+        blank=True,
+        verbose_name=_('Email Custom Time'),
+        help_text=_('Custom time for email notifications')
+    )
+    
+    # SMS preferences
+    sms_notifications_enabled = models.BooleanField(
+        default=False,
+        verbose_name=_('SMS Notifications Enabled'),
+        help_text=_('Whether to send SMS notifications')
+    )
+    
+    sms_phone_number = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name=_('SMS Phone Number'),
+        help_text=_('Phone number for SMS notifications')
+    )
+    
+    sms_time_preference = models.CharField(
+        max_length=20,
+        choices=TimePreference.choices,
+        default=TimePreference.IMMEDIATE,
+        verbose_name=_('SMS Time Preference'),
+        help_text=_('When to send SMS notifications')
+    )
+    
+    # Push notification preferences
+    push_notifications_enabled = models.BooleanField(
+        default=True,
+        verbose_name=_('Push Notifications Enabled'),
+        help_text=_('Whether to send push notifications')
+    )
+    
+    push_device_token = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name=_('Push Device Token'),
+        help_text=_('Device token for push notifications')
+    )
+    
+    # In-app notification preferences
+    in_app_notifications_enabled = models.BooleanField(
+        default=True,
+        verbose_name=_('In-App Notifications Enabled'),
+        help_text=_('Whether to show in-app notifications')
+    )
+    
+    # Notification type preferences
+    medication_reminders_enabled = models.BooleanField(
+        default=True,
+        verbose_name=_('Medication Reminders Enabled'),
+        help_text=_('Whether to receive medication reminders')
+    )
+    
+    stock_alerts_enabled = models.BooleanField(
+        default=True,
+        verbose_name=_('Stock Alerts Enabled'),
+        help_text=_('Whether to receive stock alerts')
+    )
+    
+    system_notifications_enabled = models.BooleanField(
+        default=True,
+        verbose_name=_('System Notifications Enabled'),
+        help_text=_('Whether to receive system notifications')
+    )
+    
+    # Quiet hours
+    quiet_hours_enabled = models.BooleanField(
+        default=False,
+        verbose_name=_('Quiet Hours Enabled'),
+        help_text=_('Whether to enable quiet hours')
+    )
+    
+    quiet_hours_start = models.TimeField(
+        null=True,
+        blank=True,
+        default='22:00',
+        verbose_name=_('Quiet Hours Start'),
+        help_text=_('Start time for quiet hours')
+    )
+    
+    quiet_hours_end = models.TimeField(
+        null=True,
+        blank=True,
+        default='08:00',
+        verbose_name=_('Quiet Hours End'),
+        help_text=_('End time for quiet hours')
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = _('User Notification Preference')
+        verbose_name_plural = _('User Notification Preferences')
+        db_table = 'user_notification_preferences'
+        indexes = [
+            models.Index(fields=['user']),
+            models.Index(fields=['email_notifications_enabled']),
+            models.Index(fields=['push_notifications_enabled']),
+        ]
+    
+    def __str__(self):
+        return f"Notification preferences for {self.user.username}"
+    
+    @property
+    def is_in_quiet_hours(self):
+        """Check if current time is within quiet hours."""
+        if not self.quiet_hours_enabled:
+            return False
+        
+        now = timezone.now().time()
+        start = self.quiet_hours_start
+        end = self.quiet_hours_end
+        
+        if start <= end:
+            return start <= now <= end
+        else:
+            # Quiet hours span midnight
+            return now >= start or now <= end
+    
+    def get_preferred_time(self, channel):
+        """Get the preferred time for a specific channel."""
+        if channel == self.Channel.EMAIL:
+            if self.email_time_preference == self.TimePreference.CUSTOM:
+                return self.email_custom_time
+            elif self.email_time_preference == self.TimePreference.MORNING:
+                return timezone.datetime.strptime('08:00', '%H:%M').time()
+            elif self.email_time_preference == self.TimePreference.AFTERNOON:
+                return timezone.datetime.strptime('14:00', '%H:%M').time()
+            elif self.email_time_preference == self.TimePreference.EVENING:
+                return timezone.datetime.strptime('20:00', '%H:%M').time()
+        elif channel == self.Channel.SMS:
+            if self.sms_time_preference == self.TimePreference.CUSTOM:
+                return self.email_custom_time  # Reuse email custom time for now
+            elif self.sms_time_preference == self.TimePreference.MORNING:
+                return timezone.datetime.strptime('08:00', '%H:%M').time()
+            elif self.sms_time_preference == self.TimePreference.AFTERNOON:
+                return timezone.datetime.strptime('14:00', '%H:%M').time()
+            elif self.sms_time_preference == self.TimePreference.EVENING:
+                return timezone.datetime.strptime('20:00', '%H:%M').time()
+        
+        return None  # Immediate delivery
+    
+    def clean(self):
+        """Validate notification preferences."""
+        if self.quiet_hours_enabled and (not self.quiet_hours_start or not self.quiet_hours_end):
+            raise ValidationError(_('Quiet hours start and end times are required when quiet hours are enabled.'))
+        
+        if self.email_time_preference == self.TimePreference.CUSTOM and not self.email_custom_time:
+            raise ValidationError(_('Custom time is required when email time preference is set to custom.'))
+        
+        if self.sms_notifications_enabled and not self.sms_phone_number:
+            raise ValidationError(_('SMS phone number is required when SMS notifications are enabled.'))
+        
+        if self.push_notifications_enabled and not self.push_device_token:
+            # Warning but not error - token might be set later
+            pass

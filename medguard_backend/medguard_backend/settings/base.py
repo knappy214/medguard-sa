@@ -50,12 +50,16 @@ THIRD_PARTY_APPS = [
     'django_filters',
     'rest_framework',
     'corsheaders',
+    # Modern notification system
+    'django_nyt',
+    'post_office',
+    'push_notifications',
 ]
 
 LOCAL_APPS = [
     'users',
     'medications',
-    'notifications',
+    'medguard_notifications',  # Re-enabled with modern implementation
     'home',  # Wagtail home app
     'search',  # Wagtail search app
     'wagtail_hooks',  # Wagtail admin customizations
@@ -326,13 +330,16 @@ LOGGING = {
 }
 
 # Email configuration
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'post_office.EmailBackend'  # Use post-office for queued emails
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'localhost')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@medguard-sa.com')
+
+# Wagtail admin notification settings
+WAGTAILADMIN_NOTIFICATION_FROM_EMAIL = DEFAULT_FROM_EMAIL
 
 # Celery configuration
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
@@ -342,13 +349,20 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
+# Background task configuration
+# Using Django's built-in async capabilities for now
+# Will implement a modern task queue solution later
+
 # Cache configuration
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': os.getenv('REDIS_URL', 'redis://localhost:6379/1'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'SOCKET_CONNECT_TIMEOUT': 5,
+            'SOCKET_TIMEOUT': 5,
+            'CONNECTION_POOL_KWARGS': {'max_connections': 100},
         }
     }
 }
@@ -360,4 +374,83 @@ SESSION_CACHE_ALIAS = 'default'
 # Admin site customization
 ADMIN_SITE_HEADER = "MedGuard SA Administration"
 ADMIN_SITE_TITLE = "MedGuard SA Admin Portal"
-ADMIN_INDEX_TITLE = "Welcome to MedGuard SA Administration" 
+ADMIN_INDEX_TITLE = "Welcome to MedGuard SA Administration"
+
+# =============================================================================
+# NOTIFICATION SYSTEM CONFIGURATION
+# =============================================================================
+
+# django-nyt configuration for in-app notifications
+NYT_USE_CHANNELS = True  # Enable real-time notifications via WebSockets
+NYT_NOTIFICATION_MAX_DAYS = 90  # Auto-purge notifications older than 90 days
+NYT_USE_JSONFIELD = True  # Use JSONField for notification data
+
+# django-post-office configuration for email queuing
+POST_OFFICE = {
+    'BACKENDS': {
+        'default': 'django.core.mail.backends.smtp.EmailBackend',
+        'console': 'django.core.mail.backends.console.EmailBackend',
+    },
+    'DEFAULT_PRIORITY': 'medium',
+    'LOG_LEVEL': 2,  # Log everything
+    'BATCH_SIZE': 100,  # Process emails in batches of 100
+    'THREADS_PER_PROCESS': 5,  # Number of threads per worker process
+    'DEFAULT_LOG_LEVEL': 2,
+    'CONTEXT_FIELD_CLASS': 'django.db.models.TextField',
+    'TEMPLATE_ENGINE': 'django',
+    'TEMPLATE_CACHE_TTL': 600,  # Cache templates for 10 minutes
+}
+
+# django-push-notifications configuration
+PUSH_NOTIFICATIONS_SETTINGS = {
+    'FCM_DJANGO_SETTINGS': {
+        'FCM_SERVER_KEY': os.getenv('FCM_SERVER_KEY', ''),
+        'DEFAULT_FIREBASE_APP': 'default',
+    },
+    'APNS_AUTH_KEY_PATH': os.getenv('APNS_AUTH_KEY_PATH', ''),
+    'APNS_AUTH_KEY_ID': os.getenv('APNS_AUTH_KEY_ID', ''),
+    'APNS_TEAM_ID': os.getenv('APNS_TEAM_ID', ''),
+    'APNS_TOPIC': os.getenv('APNS_TOPIC', 'com.medguard.sa'),
+    'WP_PRIVATE_KEY': os.getenv('WP_PRIVATE_KEY', ''),
+    'WP_CLAIMS': {
+        'sub': 'mailto:{}'.format(DEFAULT_FROM_EMAIL),
+    },
+}
+
+# Notification templates and settings
+NOTIFICATION_TEMPLATES = {
+    'medication_reminder': {
+        'email': 'notifications/email/medication_reminder.html',
+        'sms': 'notifications/sms/medication_reminder.txt',
+        'push': 'notifications/push/medication_reminder.json',
+    },
+    'stock_alert': {
+        'email': 'notifications/email/stock_alert.html',
+        'sms': 'notifications/sms/stock_alert.txt',
+        'push': 'notifications/push/stock_alert.json',
+    },
+    'system_maintenance': {
+        'email': 'notifications/email/system_maintenance.html',
+        'sms': 'notifications/sms/system_maintenance.txt',
+        'push': 'notifications/push/system_maintenance.json',
+    },
+}
+
+# Notification rate limiting
+NOTIFICATION_RATE_LIMITS = {
+    'email': {
+        'per_user_per_hour': 10,
+        'per_user_per_day': 50,
+        'global_per_hour': 1000,
+    },
+    'sms': {
+        'per_user_per_hour': 5,
+        'per_user_per_day': 20,
+        'global_per_hour': 500,
+    },
+    'push': {
+        'per_user_per_hour': 20,
+        'per_user_per_day': 100,
+        'global_per_hour': 2000,
+    },
+} 

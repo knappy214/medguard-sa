@@ -22,7 +22,7 @@ from django.db import models
 
 from users.models import User
 from medications.models import Medication, MedicationSchedule, MedicationLog, StockAlert
-from notifications.models import Notification, UserNotification, NotificationTemplate
+# from medguard_notifications.models import Notification, UserNotification, NotificationTemplate
 
 
 # ============================================================================
@@ -202,112 +202,112 @@ class StockAlertViewSet(ModelViewSet):
     ])
 
 
-class NotificationViewSet(ModelViewSet):
-    """ViewSet for managing notifications."""
-    model = Notification
-    icon = "mail"
-    menu_label = _("Notifications")
-    menu_name = "notifications"
-    add_to_admin_menu = True
-    menu_order = 200
-    
-    list_display = [
-        "title", "notification_type", "priority", "status", 
-        "is_active", "show_on_dashboard", "created_at"
-    ]
-    
-    list_filter = [
-        "notification_type", "priority", "status", "is_active", 
-        "show_on_dashboard", "require_acknowledgment"
-    ]
-    
-    search_fields = ["title", "content"]
-    
-    edit_handler = TabbedInterface([
-        ObjectList([
-            FieldPanel("title"),
-            FieldPanel("content"),
-            FieldPanel("notification_type"),
-            FieldPanel("priority"),
-        ], heading=_("Notification Details")),
-        ObjectList([
-            FieldPanel("status"),
-            FieldPanel("is_active"),
-            FieldPanel("show_on_dashboard"),
-            FieldPanel("require_acknowledgment"),
-        ], heading=_("Display Settings")),
-        ObjectList([
-            FieldPanel("target_users"),
-            FieldPanel("scheduled_at"),
-            FieldPanel("expires_at"),
-        ], heading=_("Targeting & Timing")),
-    ])
+# class NotificationViewSet(ModelViewSet):
+#     """ViewSet for managing notifications."""
+#     model = Notification
+#     icon = "mail"
+#     menu_label = _("Notifications")
+#     menu_name = "notifications"
+#     add_to_admin_menu = True
+#     menu_order = 200
+#     
+#     list_display = [
+#         "title", "notification_type", "priority", "status", 
+#         "is_active", "show_on_dashboard", "created_at"
+#     ]
+#     
+#     list_filter = [
+#         "notification_type", "priority", "status", "is_active", 
+#         "show_on_dashboard", "require_acknowledgment"
+#     ]
+#     
+#     search_fields = ["title", "content"]
+#     
+#     edit_handler = TabbedInterface([
+#         ObjectList([
+#             FieldPanel("title"),
+#             FieldPanel("content"),
+#             FieldPanel("notification_type"),
+#             FieldPanel("priority"),
+#         ], heading=_("Notification Details")),
+#         ObjectList([
+#             FieldPanel("status"),
+#             FieldPanel("is_active"),
+#             FieldPanel("show_on_dashboard"),
+#             FieldPanel("require_acknowledgment"),
+#         ], heading=_("Display Settings")),
+#         ObjectList([
+#             FieldPanel("target_users"),
+#             FieldPanel("scheduled_at"),
+#             FieldPanel("expires_at"),
+#         ], heading=_("Targeting & Timing")),
+#     ])
 
 
-class UserNotificationViewSet(ModelViewSet):
-    """ViewSet for managing user notifications."""
-    model = UserNotification
-    icon = "user"
-    menu_label = _("User Notifications")
-    menu_name = "user-notifications"
-    add_to_admin_menu = True
-    menu_order = 201
-    
-    list_display = [
-        "user", "notification", "status", "sent_at", 
-        "read_at", "acknowledged_at"
-    ]
-    
-    list_filter = [
-        "status", "sent_at", "read_at", "acknowledged_at"
-    ]
-    
-    search_fields = ["user__username", "notification__title"]
-    
-    edit_handler = TabbedInterface([
-        ObjectList([
-            FieldPanel("user"),
-            FieldPanel("notification"),
-            FieldPanel("status"),
-        ], heading=_("User & Notification")),
-        ObjectList([
-            FieldPanel("read_at"),
-            FieldPanel("acknowledged_at"),
-            FieldPanel("dismissed_at"),
-        ], heading=_("Timestamps")),
-    ])
+# class UserNotificationViewSet(ModelViewSet):
+#     """ViewSet for managing user notifications."""
+#     model = UserNotification
+#     icon = "user"
+#     menu_label = _("User Notifications")
+#     menu_name = "user-notifications"
+#     add_to_admin_menu = True
+#     menu_order = 201
+#     
+#     list_display = [
+#         "user", "notification", "status", "sent_at", 
+#         "read_at", "acknowledged_at"
+#     ]
+#     
+#     list_filter = [
+#         "status", "sent_at", "read_at", "acknowledged_at"
+#     ]
+#     
+#     search_fields = ["user__username", "notification__title"]
+#     
+#     edit_handler = TabbedInterface([
+#         ObjectList([
+#             FieldPanel("user"),
+#             FieldPanel("notification"),
+#             FieldPanel("status"),
+#         ], heading=_("User & Notification")),
+#         ObjectList([
+#             FieldPanel("read_at"),
+#             FieldPanel("acknowledged_at"),
+#             FieldPanel("dismissed_at"),
+#         ], heading=_("Timestamps")),
+#     ])
 
 
-class NotificationTemplateViewSet(ModelViewSet):
-    """ViewSet for managing notification templates."""
-    model = NotificationTemplate
-    icon = "doc-full-inverse"
-    menu_label = _("Notification Templates")
-    menu_name = "notification-templates"
-    add_to_admin_menu = True
-    menu_order = 202
-    
-    list_display = [
-        "name", "template_type", "is_active", "created_at"
-    ]
-    
-    list_filter = [
-        "template_type", "is_active", "created_at"
-    ]
-    
-    search_fields = ["name", "content"]
-    
-    edit_handler = TabbedInterface([
-        ObjectList([
-            FieldPanel("name"),
-            FieldPanel("template_type"),
-            FieldPanel("content"),
-        ], heading=_("Template Details")),
-        ObjectList([
-            FieldPanel("is_active"),
-            FieldPanel("variables"),
-        ], heading=_("Settings")),
-    ])
+# class NotificationTemplateViewSet(ModelViewSet):
+#     """ViewSet for managing notification templates."""
+#     model = NotificationTemplate
+#     icon = "doc-full-inverse"
+#     menu_label = _("Notification Templates")
+#     menu_name = "notification-templates"
+#     add_to_admin_menu = True
+#     menu_order = 202
+#     
+#     list_display = [
+#         "name", "template_type", "is_active", "created_at"
+#     ]
+#     
+#     list_filter = [
+#         "template_type", "is_active", "created_at"
+#     ]
+#     
+#     search_fields = ["name", "content"]
+#     
+#     edit_handler = TabbedInterface([
+#         ObjectList([
+#             FieldPanel("name"),
+#             FieldPanel("template_type"),
+#             FieldPanel("content"),
+#         ], heading=_("Template Details")),
+#         ObjectList([
+#             FieldPanel("is_active"),
+#             FieldPanel("variables"),
+#         ], heading=_("Settings")),
+#     ])
 
 
 class UserViewSet(ModelViewSet):
@@ -358,9 +358,9 @@ medication_viewset = MedicationViewSet("medication")
 medication_schedule_viewset = MedicationScheduleViewSet("medication-schedule")
 medication_log_viewset = MedicationLogViewSet("medication-log")
 stock_alert_viewset = StockAlertViewSet("stock-alert")
-notification_viewset = NotificationViewSet("notification")
-user_notification_viewset = UserNotificationViewSet("user-notification")
-notification_template_viewset = NotificationTemplateViewSet("notification-template")
+# notification_viewset = NotificationViewSet("notification")
+# user_notification_viewset = UserNotificationViewSet("user-notification")
+# notification_template_viewset = NotificationTemplateViewSet("notification-template")
 user_viewset = UserViewSet("user")
 
 
@@ -379,14 +379,14 @@ def register_medication_viewsets():
     ]
 
 
-@hooks.register("register_admin_viewset")
-def register_notification_viewsets():
-    """Register all notification-related viewsets."""
-    return [
-        notification_viewset,
-        user_notification_viewset,
-        notification_template_viewset,
-    ]
+# @hooks.register("register_admin_viewset")
+# def register_notification_viewsets():
+#     """Register all notification-related viewsets."""
+#     return [
+#         notification_viewset,
+#         user_notification_viewset,
+#         notification_template_viewset,
+#     ]
 
 
 @hooks.register("register_admin_viewset")

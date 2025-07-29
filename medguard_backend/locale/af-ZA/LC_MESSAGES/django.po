@@ -287,18 +287,10 @@ msgid "Partial Dose"
 msgstr "Gedeeltelike Dosis"
 
 #: wagtail_hooks.py:113
-msgid "Low Stock"
-msgstr "Lae Voorraad"
-
-#: wagtail_hooks.py:114
 msgid "Out of Stock"
 msgstr "Uit Voorraad"
 
 #: wagtail_hooks.py:115
-msgid "Expiring Soon"
-msgstr "Verval Binnekort"
-
-#: wagtail_hooks.py:116
 msgid "Acknowledged"
 msgstr "Erken"
 
@@ -580,4 +572,289 @@ msgstr "Gaan na Medikasie"
 
 #: medications/views.py:8
 msgid "Language"
-msgstr "Taal" 
+msgstr "Taal"
+
+# Notification System Translations
+#: notifications/models.py:24
+msgid "Introduction"
+msgstr "Inleiding"
+
+#: notifications/models.py:25
+msgid "Introduction text for the notifications page"
+msgstr "Inleiding teks vir die kennisgewings bladsy"
+
+#: notifications/models.py:44
+msgid "Notification Index Page"
+msgstr "Kennisgewing Indeks Bladsy"
+
+#: notifications/models.py:45
+msgid "Notification Index Pages"
+msgstr "Kennisgewing Indeks Bladsye"
+
+#: notifications/models.py:97
+msgid "Notification"
+msgstr "Kennisgewing"
+
+#: notifications/models.py:98
+msgid "Associated notification record"
+msgstr "Geassosieerde kennisgewing rekord"
+
+#: notifications/models.py:103
+msgid "Additional information about the notification"
+msgstr "Bykomende inligting oor die kennisgewing"
+
+#: notifications/models.py:128
+msgid "Notification Detail Page"
+msgstr "Kennisgewing Besonderhede Bladsy"
+
+#: notifications/models.py:129
+msgid "Notification Detail Pages"
+msgstr "Kennisgewing Besonderhede Bladsye"
+
+#: notifications/models.py:145
+msgid "System Notification"
+msgstr "Stelsel Kennisgewing"
+
+#: notifications/models.py:146
+msgid "Medication Alert"
+msgstr "Medikasie Waarskuwing"
+
+#: notifications/models.py:147
+msgid "Maintenance Notice"
+msgstr "Onderhoud Kennisgewing"
+
+#: notifications/models.py:149
+msgid "Security Alert"
+msgstr "Sekuriteit Waarskuwing"
+
+#: notifications/models.py:150
+msgid "General Announcement"
+msgstr "Algemene Aankondiging"
+
+#: notifications/models.py:154
+msgid "Medication Reminder"
+msgstr "Medikasie Herinnering"
+
+#: notifications/tasks.py:50
+msgid "Time to take your medication: {medication_name}"
+msgstr "Tyd om jou medikasie te neem: {medication_name}"
+
+#: notifications/tasks.py:176
+msgid "Low Stock Alert: {medication_name}"
+msgstr "Lae Voorraad Waarskuwing: {medication_name}"
+
+#: notifications/tasks.py:179
+msgid "Current stock: {current} units. Threshold: {threshold} units."
+msgstr "Huidige voorraad: {current} eenhede. Drempel: {threshold} eenhede."
+
+#: notifications/tasks.py:270
+msgid "Medication Expiring Soon: {medication_name}"
+msgstr "Medikasie Verval Binnekort: {medication_name}"
+
+#: notifications/tasks.py:273
+msgid "This medication expires in {days} days on {date}."
+msgstr "Hierdie medikasie verval binne {days} dae op {date}."
+
+#: notifications/utils.py:56
+msgid "Medikasie Herinnering"
+msgstr "Medikasie Herinnering"
+
+#: notifications/utils.py:57
+msgid "Tyd om jou medikasie te neem: {medication_name}"
+msgstr "Tyd om jou medikasie te neem: {medication_name}"
+
+#: notifications/utils.py:61
+msgid "Dosis"
+msgstr "Dosis"
+
+#: notifications/utils.py:63
+msgid "Instruksies"
+msgstr "Instruksies"
+
+#: notifications/utils.py:65
+msgid "Dosage"
+msgstr "Dosis"
+
+#: notifications/utils.py:72
+msgid "Instructions"
+msgstr "Instruksies"
+
+#: notifications/utils.py:80
+msgid "Lae Voorraad Waarskuwing: {medication_name}"
+msgstr "Lae Voorraad Waarskuwing: {medication_name}"
+
+#: notifications/utils.py:83
+msgid "Huidige voorraad: {current} eenhede. Drempel: {threshold} eenhede."
+msgstr "Huidige voorraad: {current} eenhede. Drempel: {threshold} eenhede."
+
+#: notifications/utils.py:88
+msgid "Medikasie Verval Binnekort: {medication_name}"
+msgstr "Medikasie Verval Binnekort: {medication_name}"
+
+#: notifications/utils.py:105
+msgid "Hierdie medikasie verval binne {days} dae op {date}."
+msgstr "Hierdie medikasie verval binne {days} dae op {date}."
+
+#: notifications/utils.py:110
+msgid "Stelsel Onderhoud"
+msgstr "Stelsel Onderhoud"
+
+#: notifications/utils.py:123
+msgid "Geskeduleerde onderhoud vanaand om {time}."
+msgstr "Geskeduleerde onderhoud vanaand om {time}."
+
+#: notifications/utils.py:127
+msgid "System Maintenance"
+msgstr "Stelsel Onderhoud"
+
+#: notifications/utils.py:128
+msgid "Scheduled maintenance tonight at {time}."
+msgstr "Geskeduleerde onderhoud vanaand om {time}."
+
+#: notifications/utils.py:135
+msgid "Kennisgewing"
+msgstr "Kennisgewing"
+
+#: notifications/utils.py:136
+msgid "Jy het 'n nuwe kennisgewing ontvang."
+msgstr "Jy het 'n nuwe kennisgewing ontvang."
+
+#: notifications/utils.py:138
+msgid "You have received a new notification."
+msgstr "Jy het 'n nuwe kennisgewing ontvang."
+
+#: notifications/utils.py:175
+msgid "oggend"
+msgstr "oggend"
+
+#: notifications/utils.py:182
+msgid "middag"
+msgstr "middag"
+
+#: notifications/utils.py:183
+msgid "aand"
+msgstr "aand"
+
+#: notifications/utils.py:184
+msgid "nag"
+msgstr "nag"
+
+#: notifications/utils.py:187
+msgid "Neem"
+msgstr "Neem"
+
+#: notifications/utils.py:190
+msgid "morning"
+msgstr "oggend"
+
+#: notifications/utils.py:202
+msgid "afternoon"
+msgstr "middag"
+
+#: notifications/utils.py:203
+msgid "evening"
+msgstr "aand"
+
+#: notifications/utils.py:204
+msgid "night"
+msgstr "nag"
+
+#: notifications/utils.py:207
+msgid "Take"
+msgstr "Neem"
+
+#: notifications/utils.py:210
+msgid "Laag"
+msgstr "Laag"
+
+#: notifications/utils.py:245
+msgid "Hoog"
+msgstr "Hoog"
+
+#: notifications/utils.py:247
+msgid "Kritiek"
+msgstr "Kritiek"
+
+#: notifications/utils.py:271
+msgid "Stelsel Kennisgewing"
+msgstr "Stelsel Kennisgewing"
+
+#: notifications/utils.py:282
+msgid "Medikasie Waarskuwing"
+msgstr "Medikasie Waarskuwing"
+
+#: notifications/utils.py:283
+msgid "Voorraad Waarskuwing"
+msgstr "Voorraad Waarskuwing"
+
+#: notifications/utils.py:284
+msgid "Onderhoud Kennisgewing"
+msgstr "Onderhoud Kennisgewing"
+
+#: notifications/utils.py:285
+msgid "Sekuriteit Waarskuwing"
+msgstr "Sekuriteit Waarskuwing"
+
+#: notifications/utils.py:286
+msgid "Algemene Aankondiging"
+msgstr "Algemene Aankondiging"
+
+#: notifications/utils.py:311
+msgid "Onmiddellik"
+msgstr "Onmiddellik"
+
+#: notifications/utils.py:312
+msgid "Oggend (08:00)"
+msgstr "Oggend (08:00)"
+
+#: notifications/utils.py:313
+msgid "Middag (14:00)"
+msgstr "Middag (14:00)"
+
+#: notifications/utils.py:314
+msgid "Aand (20:00)"
+msgstr "Aand (20:00)"
+
+#: notifications/utils.py:315
+msgid "Aangepaste Tyd"
+msgstr "Aangepaste Tyd"
+
+#: notifications/utils.py:319
+msgid "Immediate"
+msgstr "Onmiddellik"
+
+#: notifications/utils.py:320
+msgid "Morning (8:00 AM)"
+msgstr "Oggend (08:00)"
+
+#: notifications/utils.py:321
+msgid "Afternoon (2:00 PM)"
+msgstr "Middag (14:00)"
+
+#: notifications/utils.py:322
+msgid "Evening (8:00 PM)"
+msgstr "Aand (20:00)"
+
+#: notifications/utils.py:323
+msgid "MedGuard SA notification"
+msgstr "MedGuard SA kennisgewing"
+
+#: templates/notifications/email/default_notification.html:81
+msgid "Please acknowledge this notification by logging into your account."
+msgstr "Kennisgewing moet erken word deur in te teken op jou rekening."
+
+#: templates/notifications/email/default_notification.html:84
+msgid "View in Dashboard"
+msgstr "Bekyk in Dashboard"
+
+#: templates/notifications/email/default_notification.html:88
+msgid "This notification was sent by"
+msgstr "Hierdie kennisgewing is gestuur deur"
+
+#: templates/notifications/email/default_notification.html:89
+msgid "If you have any questions, please contact our support team."
+msgstr "As jy enige vrae het, kontak asseblief ons ondersteuningspan."
+
+#: templates/notifications/email/default_notification.html:90
+msgid "All rights reserved."
+msgstr "Alle regte voorbehou." 

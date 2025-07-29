@@ -68,7 +68,7 @@ class HomePage(Page):
     parent_page_types = ['wagtailcore.Page']
     subpage_types = [
         'medications.MedicationIndexPage',
-        'notifications.NotificationIndexPage',
+        # 'medguard_notifications.NotificationIndexPage',  # Temporarily disabled
     ]
     
     # Search configuration
@@ -116,7 +116,7 @@ class HomePage(Page):
         
         # Add recent notifications (if any)
         try:
-            from notifications.models import Notification
+            from medguard_notifications.models import Notification
             context['recent_notifications'] = Notification.objects.filter(
                 is_active=True
             )[:5]

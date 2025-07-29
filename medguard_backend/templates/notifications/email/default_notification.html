@@ -1,0 +1,95 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% trans "MedGuard SA notification" %}">
+    <meta name="keywords" content="medguard, healthcare, notification, south africa">
+    <title>{{ notification.title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #2563EB;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 0 0 5px 5px;
+        }
+        .notification-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2563EB;
+        }
+        .notification-content {
+            margin-bottom: 20px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #666;
+        }
+        .button {
+            display: inline-block;
+            background-color: #2563EB;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .priority-high {
+            border-left: 4px solid #EF4444;
+        }
+        .priority-medium {
+            border-left: 4px solid #F59E0B;
+        }
+        .priority-low {
+            border-left: 4px solid #10B981;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ site_name }}</h1>
+    </div>
+    
+    <div class="content priority-{{ notification.priority }}">
+        <div class="notification-title">
+            {{ notification.title }}
+        </div>
+        
+        <div class="notification-content">
+            {{ notification.content|safe }}
+        </div>
+        
+        {% if notification.require_acknowledgment %}
+        <p><strong>{% trans "Please acknowledge this notification by logging into your account." %}</strong></p>
+        {% endif %}
+        
+        <a href="{{ site_url }}/admin/" class="button">{% trans "View in Dashboard" %}</a>
+    </div>
+    
+    <div class="footer">
+        <p>{% trans "This notification was sent by" %} {{ site_name }}.</p>
+        <p>{% trans "If you have any questions, please contact our support team." %}</p>
+        <p>© {% now "Y" %} {{ site_name }}. {% trans "All rights reserved." %}</p>
+    </div>
+</body>
+</html> 

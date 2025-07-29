@@ -29,7 +29,7 @@ urlpatterns = [
     
     # API endpoints (without language prefix) - using distinct namespaces
     path('api/', include(('medications.urls', 'api_medications'), namespace='api_medications')),
-    path('api/', include(('notifications.urls', 'api_notifications'), namespace='api_notifications')),
+    # path('api/', include(('medguard_notifications.urls', 'api_notifications'), namespace='api_notifications')),
     path('api/', include(('users.urls', 'api_users'), namespace='api_users')),
 ]
 
