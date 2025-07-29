@@ -4,6 +4,7 @@ import type {
   MedicationSchedule, 
   StockAlert, 
   MedicationFormData,
+  StockAnalytics,
   ApiResponse,
   PaginatedResponse 
 } from '@/types/medication'
@@ -154,6 +155,31 @@ export const medicationApi = {
       console.error('Failed to update stock:', error)
       return false
     }
+  },
+
+  // Get stock analytics for a medication
+  async getStockAnalytics(medicationId: string): Promise<StockAnalytics> {
+    try {
+      const response = await api.get<ApiResponse<StockAnalytics>>(`/medications/${medicationId}/analytics/`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch stock analytics:', error)
+      // Return default analytics object
+      return {
+        daily_usage_rate: 0,
+        weekly_usage_rate: 0,
+        monthly_usage_rate: 0,
+        days_until_stockout: null,
+        predicted_stockout_date: null,
+        recommended_order_quantity: 0,
+        recommended_order_date: null,
+        seasonal_factor: 1.0,
+        usage_volatility: 0,
+        stockout_confidence: 0,
+        last_calculated: null,
+        calculation_window_days: 90
+      }
+    }
   }
 }
 
@@ -166,6 +192,7 @@ export const mockMedications: Medication[] = [
     frequency: 'Every 6 hours',
     time: '08:00, 14:00, 20:00',
     stock: 45,
+    pill_count: 45,
     minStock: 20,
     instructions: 'Take with food. Do not exceed 4 tablets per day.',
     category: 'Pain Relief',
@@ -180,6 +207,7 @@ export const mockMedications: Medication[] = [
     frequency: 'Twice daily',
     time: '08:00, 20:00',
     stock: 12,
+    pill_count: 12,
     minStock: 15,
     instructions: 'Take on an empty stomach. Complete the full course.',
     category: 'Antibiotic',
@@ -194,6 +222,7 @@ export const mockMedications: Medication[] = [
     frequency: 'Once daily',
     time: '08:00',
     stock: 30,
+    pill_count: 30,
     minStock: 10,
     instructions: 'Take with breakfast for better absorption.',
     category: 'Vitamin',
@@ -208,6 +237,7 @@ export const mockMedications: Medication[] = [
     frequency: 'Every 8 hours',
     time: '08:00, 16:00, 00:00',
     stock: 5,
+    pill_count: 5,
     minStock: 20,
     instructions: 'Take with food. Do not take on empty stomach.',
     category: 'Pain Relief',

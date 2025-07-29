@@ -786,3 +786,611 @@ class StockAlert(models.Model):
             raise ValidationError({
                 'acknowledged_by': _('Acknowledged by must be set when status is acknowledged')
             })
+
+
+class StockTransaction(models.Model):
+    """
+    Stock transaction model for tracking all stock movements with detailed analytics.
+    """
+    
+    # Transaction type choices
+    class TransactionType(models.TextChoices):
+        PURCHASE = 'purchase', _('Purchase')
+        SALE = 'sale', _('Sale')
+        ADJUSTMENT = 'adjustment', _('Adjustment')
+        TRANSFER = 'transfer', _('Transfer')
+        EXPIRY = 'expiry', _('Expiry')
+        DAMAGE = 'damage', _('Damage')
+        RETURN = 'return', _('Return')
+        PRESCRIPTION_FILLED = 'prescription_filled', _('Prescription Filled')
+        DOSE_TAKEN = 'dose_taken', _('Dose Taken')
+    
+    # Relationships
+    medication = models.ForeignKey(
+        Medication,
+        on_delete=models.CASCADE,
+        related_name='stock_transactions',
+        help_text=_('Medication involved in this transaction')
+    )
+    
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='stock_transactions',
+        help_text=_('User who initiated this transaction')
+    )
+    
+    # Transaction details
+    transaction_type = models.CharField(
+        max_length=30,
+        choices=TransactionType.choices,
+        help_text=_('Type of stock transaction')
+    )
+    
+    quantity = models.IntegerField(
+        help_text=_('Quantity involved in the transaction (positive for additions, negative for removals)')
+    )
+    
+    unit_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_('Unit price for the transaction')
+    )
+    
+    total_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_('Total amount for the transaction')
+    )
+    
+    # Stock levels before and after
+    stock_before = models.PositiveIntegerField(
+        help_text=_('Stock level before this transaction')
+    )
+    
+    stock_after = models.PositiveIntegerField(
+        help_text=_('Stock level after this transaction')
+    )
+    
+    # Reference information
+    reference_number = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text=_('Reference number for the transaction (invoice, prescription, etc.)')
+    )
+    
+    batch_number = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text=_('Batch number for the medication')
+    )
+    
+    expiry_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text=_('Expiry date for this batch')
+    )
+    
+    # Notes and metadata
+    notes = models.TextField(
+        blank=True,
+        help_text=_('Additional notes about the transaction')
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = _('Stock Transaction')
+        verbose_name_plural = _('Stock Transactions')
+        db_table = 'stock_transactions'
+        indexes = [
+            models.Index(fields=['medication', 'transaction_type']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['batch_number']),
+            models.Index(fields=['expiry_date']),
+        ]
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.medication.name} - {self.get_transaction_type_display()} ({self.quantity})"
+    
+    def save(self, *args, **kwargs):
+        """Override save to update medication stock and calculate totals."""
+        if not self.pk:  # New transaction
+            self.stock_before = self.medication.pill_count
+            self.stock_after = self.stock_before + self.quantity
+            
+            # Calculate total amount if unit price is provided
+            if self.unit_price and not self.total_amount:
+                self.total_amount = self.unit_price * abs(self.quantity)
+        
+        super().save(*args, **kwargs)
+        
+        # Update medication stock
+        self.medication.pill_count = self.stock_after
+        self.medication.save(update_fields=['pill_count'])
+    
+    @property
+    def is_addition(self):
+        """Check if this transaction adds stock."""
+        return self.quantity > 0
+    
+    @property
+    def is_removal(self):
+        """Check if this transaction removes stock."""
+        return self.quantity < 0
+
+
+class StockAnalytics(models.Model):
+    """
+    Stock analytics model for storing calculated metrics and predictions.
+    """
+    
+    # Relationships
+    medication = models.OneToOneField(
+        Medication,
+        on_delete=models.CASCADE,
+        related_name='stock_analytics',
+        help_text=_('Medication for these analytics')
+    )
+    
+    # Usage patterns
+    daily_usage_rate = models.FloatField(
+        default=0.0,
+        help_text=_('Average daily usage rate (units per day)')
+    )
+    
+    weekly_usage_rate = models.FloatField(
+        default=0.0,
+        help_text=_('Average weekly usage rate (units per week)')
+    )
+    
+    monthly_usage_rate = models.FloatField(
+        default=0.0,
+        help_text=_('Average monthly usage rate (units per month)')
+    )
+    
+    # Stock predictions
+    days_until_stockout = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=_('Predicted days until stock runs out')
+    )
+    
+    predicted_stockout_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text=_('Predicted date when stock will run out')
+    )
+    
+    recommended_order_quantity = models.PositiveIntegerField(
+        default=0,
+        help_text=_('Recommended quantity to order')
+    )
+    
+    recommended_order_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text=_('Recommended date to place order')
+    )
+    
+    # Seasonal patterns
+    seasonal_factor = models.FloatField(
+        default=1.0,
+        help_text=_('Seasonal adjustment factor for usage patterns')
+    )
+    
+    # Variability metrics
+    usage_volatility = models.FloatField(
+        default=0.0,
+        help_text=_('Standard deviation of daily usage')
+    )
+    
+    # Confidence intervals
+    stockout_confidence = models.FloatField(
+        default=0.0,
+        help_text=_('Confidence level for stockout prediction (0-1)')
+    )
+    
+    # Last calculation
+    last_calculated = models.DateTimeField(
+        auto_now=True,
+        help_text=_('When these analytics were last calculated')
+    )
+    
+    # Calculation parameters
+    calculation_window_days = models.PositiveIntegerField(
+        default=90,
+        help_text=_('Number of days to use for calculations')
+    )
+    
+    class Meta:
+        verbose_name = _('Stock Analytics')
+        verbose_name_plural = _('Stock Analytics')
+        db_table = 'stock_analytics'
+        indexes = [
+            models.Index(fields=['medication']),
+            models.Index(fields=['last_calculated']),
+            models.Index(fields=['days_until_stockout']),
+        ]
+    
+    def __str__(self):
+        return f"Analytics for {self.medication.name}"
+    
+    @property
+    def is_stockout_imminent(self):
+        """Check if stockout is predicted within 7 days."""
+        return self.days_until_stockout is not None and self.days_until_stockout <= 7
+    
+    @property
+    def is_order_needed(self):
+        """Check if an order is recommended within 14 days."""
+        return (self.recommended_order_date and 
+                self.recommended_order_date <= timezone.now().date() + timezone.timedelta(days=14))
+
+
+class PharmacyIntegration(models.Model):
+    """
+    Pharmacy integration model for managing connections to external pharmacy systems.
+    """
+    
+    # Integration type choices
+    class IntegrationType(models.TextChoices):
+        API = 'api', _('API Integration')
+        EDI = 'edi', _('EDI Integration')
+        MANUAL = 'manual', _('Manual Integration')
+        WEBHOOK = 'webhook', _('Webhook Integration')
+    
+    # Status choices
+    class Status(models.TextChoices):
+        ACTIVE = 'active', _('Active')
+        INACTIVE = 'inactive', _('Inactive')
+        TESTING = 'testing', _('Testing')
+        ERROR = 'error', _('Error')
+    
+    # Basic information
+    name = models.CharField(
+        max_length=200,
+        help_text=_('Name of the pharmacy integration')
+    )
+    
+    pharmacy_name = models.CharField(
+        max_length=200,
+        help_text=_('Name of the pharmacy')
+    )
+    
+    integration_type = models.CharField(
+        max_length=20,
+        choices=IntegrationType.choices,
+        default=IntegrationType.API,
+        help_text=_('Type of integration')
+    )
+    
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.INACTIVE,
+        help_text=_('Current status of the integration')
+    )
+    
+    # Connection details
+    api_endpoint = models.URLField(
+        blank=True,
+        help_text=_('API endpoint for the integration')
+    )
+    
+    api_key = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text=_('API key for authentication')
+    )
+    
+    webhook_url = models.URLField(
+        blank=True,
+        help_text=_('Webhook URL for receiving updates')
+    )
+    
+    # Configuration
+    auto_order_enabled = models.BooleanField(
+        default=False,
+        help_text=_('Whether to enable automatic ordering')
+    )
+    
+    order_threshold = models.PositiveIntegerField(
+        default=10,
+        help_text=_('Stock threshold for automatic ordering')
+    )
+    
+    order_quantity_multiplier = models.FloatField(
+        default=1.0,
+        help_text=_('Multiplier for order quantities')
+    )
+    
+    # Scheduling
+    order_lead_time_days = models.PositiveIntegerField(
+        default=3,
+        help_text=_('Expected lead time for orders in days')
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_sync = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name = _('Pharmacy Integration')
+        verbose_name_plural = _('Pharmacy Integrations')
+        db_table = 'pharmacy_integrations'
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['integration_type']),
+            models.Index(fields=['last_sync']),
+        ]
+        ordering = ['name']
+    
+    def __str__(self):
+        return f"{self.pharmacy_name} - {self.get_integration_type_display()}"
+
+
+class PrescriptionRenewal(models.Model):
+    """
+    Prescription renewal model for tracking prescription renewals and reminders.
+    """
+    
+    # Status choices
+    class Status(models.TextChoices):
+        ACTIVE = 'active', _('Active')
+        PENDING_RENEWAL = 'pending_renewal', _('Pending Renewal')
+        RENEWED = 'renewed', _('Renewed')
+        EXPIRED = 'expired', _('Expired')
+        CANCELLED = 'cancelled', _('Cancelled')
+    
+    # Priority choices
+    class Priority(models.TextChoices):
+        LOW = 'low', _('Low')
+        MEDIUM = 'medium', _('Medium')
+        HIGH = 'high', _('High')
+        URGENT = 'urgent', _('Urgent')
+    
+    # Relationships
+    patient = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='prescription_renewals',
+        limit_choices_to={'user_type': User.UserType.PATIENT},
+        help_text=_('Patient for this prescription')
+    )
+    
+    medication = models.ForeignKey(
+        Medication,
+        on_delete=models.CASCADE,
+        related_name='prescription_renewals',
+        help_text=_('Medication for this prescription')
+    )
+    
+    # Prescription details
+    prescription_number = models.CharField(
+        max_length=100,
+        help_text=_('Prescription number')
+    )
+    
+    prescribed_by = models.CharField(
+        max_length=200,
+        help_text=_('Name of the prescribing doctor')
+    )
+    
+    prescribed_date = models.DateField(
+        help_text=_('Date when prescription was issued')
+    )
+    
+    expiry_date = models.DateField(
+        help_text=_('Date when prescription expires')
+    )
+    
+    # Renewal information
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.ACTIVE,
+        help_text=_('Current status of the prescription')
+    )
+    
+    priority = models.CharField(
+        max_length=20,
+        choices=Priority.choices,
+        default=Priority.MEDIUM,
+        help_text=_('Priority level for renewal')
+    )
+    
+    # Reminder settings
+    reminder_days_before = models.PositiveIntegerField(
+        default=30,
+        help_text=_('Days before expiry to start sending reminders')
+    )
+    
+    last_reminder_sent = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_('When the last reminder was sent')
+    )
+    
+    # Renewal tracking
+    renewed_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text=_('Date when prescription was renewed')
+    )
+    
+    new_expiry_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text=_('New expiry date after renewal')
+    )
+    
+    # Notes
+    notes = models.TextField(
+        blank=True,
+        help_text=_('Additional notes about the prescription')
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = _('Prescription Renewal')
+        verbose_name_plural = _('Prescription Renewals')
+        db_table = 'prescription_renewals'
+        indexes = [
+            models.Index(fields=['patient', 'medication']),
+            models.Index(fields=['status']),
+            models.Index(fields=['priority']),
+            models.Index(fields=['expiry_date']),
+            models.Index(fields=['prescribed_date']),
+        ]
+        ordering = ['expiry_date']
+    
+    def __str__(self):
+        return f"{self.patient.get_full_name()} - {self.medication.name} ({self.prescription_number})"
+    
+    @property
+    def is_expired(self):
+        """Check if prescription is expired."""
+        return self.expiry_date < timezone.now().date()
+    
+    @property
+    def is_expiring_soon(self):
+        """Check if prescription is expiring within reminder period."""
+        from datetime import timedelta
+        reminder_date = self.expiry_date - timedelta(days=self.reminder_days_before)
+        return reminder_date <= timezone.now().date() <= self.expiry_date
+    
+    @property
+    def days_until_expiry(self):
+        """Calculate days until prescription expires."""
+        return (self.expiry_date - timezone.now().date()).days
+    
+    @property
+    def needs_renewal(self):
+        """Check if prescription needs renewal."""
+        return self.status == self.Status.ACTIVE and self.is_expiring_soon
+    
+    def renew(self, new_expiry_date):
+        """Renew the prescription."""
+        self.status = self.Status.RENEWED
+        self.renewed_date = timezone.now().date()
+        self.new_expiry_date = new_expiry_date
+        self.save()
+
+
+class StockVisualization(models.Model):
+    """
+    Stock visualization model for storing chart data and analytics.
+    """
+    
+    # Chart type choices
+    class ChartType(models.TextChoices):
+        LINE = 'line', _('Line Chart')
+        BAR = 'bar', _('Bar Chart')
+        PIE = 'pie', _('Pie Chart')
+        SCATTER = 'scatter', _('Scatter Plot')
+        HEATMAP = 'heatmap', _('Heatmap')
+    
+    # Relationships
+    medication = models.ForeignKey(
+        Medication,
+        on_delete=models.CASCADE,
+        related_name='stock_visualizations',
+        help_text=_('Medication for this visualization')
+    )
+    
+    # Chart configuration
+    chart_type = models.CharField(
+        max_length=20,
+        choices=ChartType.choices,
+        default=ChartType.LINE,
+        help_text=_('Type of chart to display')
+    )
+    
+    title = models.CharField(
+        max_length=200,
+        help_text=_('Title of the chart')
+    )
+    
+    description = models.TextField(
+        blank=True,
+        help_text=_('Description of the chart')
+    )
+    
+    # Chart data (JSON format)
+    chart_data = models.JSONField(
+        default=dict,
+        help_text=_('Chart data in JSON format')
+    )
+    
+    # Chart options
+    chart_options = models.JSONField(
+        default=dict,
+        help_text=_('Chart configuration options')
+    )
+    
+    # Time range
+    start_date = models.DateField(
+        help_text=_('Start date for the chart data')
+    )
+    
+    end_date = models.DateField(
+        help_text=_('End date for the chart data')
+    )
+    
+    # Settings
+    is_active = models.BooleanField(
+        default=True,
+        help_text=_('Whether this visualization is active')
+    )
+    
+    auto_refresh = models.BooleanField(
+        default=True,
+        help_text=_('Whether to automatically refresh this chart')
+    )
+    
+    refresh_interval_hours = models.PositiveIntegerField(
+        default=24,
+        help_text=_('Hours between automatic refreshes')
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_generated = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name = _('Stock Visualization')
+        verbose_name_plural = _('Stock Visualizations')
+        db_table = 'stock_visualizations'
+        indexes = [
+            models.Index(fields=['medication', 'chart_type']),
+            models.Index(fields=['is_active']),
+            models.Index(fields=['last_generated']),
+        ]
+        ordering = ['title']
+    
+    def __str__(self):
+        return f"{self.medication.name} - {self.title}"
+    
+    @property
+    def needs_refresh(self):
+        """Check if chart needs to be refreshed."""
+        if not self.auto_refresh or not self.last_generated:
+            return False
+        
+        from datetime import timedelta
+        refresh_time = self.last_generated + timedelta(hours=self.refresh_interval_hours)
+        return timezone.now() > refresh_time

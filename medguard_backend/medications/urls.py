@@ -8,6 +8,8 @@ router.register(r'medications', views.MedicationViewSet)
 router.register(r'schedules', views.MedicationScheduleViewSet, basename='medication-schedule')
 router.register(r'logs', views.MedicationLogViewSet, basename='medication-log')
 router.register(r'alerts', views.StockAlertViewSet)
+router.register(r'pharmacy-integrations', views.PharmacyIntegrationViewSet)
+router.register(r'stock-analytics', views.StockAnalyticsViewSet, basename='stock-analytics')
 
 # Combined URL patterns that work for both API and regular views
 urlpatterns = [

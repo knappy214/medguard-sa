@@ -10,7 +10,10 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from django.db.models import F, Q
 
-from .models import Medication, MedicationSchedule, MedicationLog, StockAlert
+from .models import (
+    Medication, MedicationSchedule, MedicationLog, StockAlert,
+    StockAnalytics, StockVisualization, PharmacyIntegration
+)
 
 User = get_user_model()
 
@@ -161,6 +164,68 @@ class StockAlertDetailSerializer(StockAlertSerializer):
     
     class Meta(StockAlertSerializer.Meta):
         fields = StockAlertSerializer.Meta.fields
+
+
+class StockAnalyticsSerializer(serializers.ModelSerializer):
+    """Serializer for StockAnalytics model."""
+    
+    medication = MedicationSerializer(read_only=True)
+    
+    class Meta:
+        model = StockAnalytics
+        fields = [
+            'id', 'medication', 'daily_usage_rate', 'weekly_usage_rate',
+            'monthly_usage_rate', 'days_until_stockout', 'predicted_stockout_date',
+            'recommended_order_quantity', 'recommended_order_date',
+            'seasonal_factor', 'usage_volatility', 'stockout_confidence',
+            'last_calculated', 'calculation_window_days', 'is_stockout_imminent',
+            'is_order_needed'
+        ]
+        read_only_fields = [
+            'id', 'is_stockout_imminent', 'is_order_needed', 'last_calculated'
+        ]
+
+
+class StockVisualizationSerializer(serializers.ModelSerializer):
+    """Serializer for StockVisualization model."""
+    
+    medication = MedicationSerializer(read_only=True)
+    
+    class Meta:
+        model = StockVisualization
+        fields = [
+            'id', 'medication', 'chart_type', 'title', 'description',
+            'chart_data', 'chart_options', 'start_date', 'end_date',
+            'is_active', 'auto_refresh', 'refresh_interval_hours',
+            'last_generated', 'needs_refresh', 'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'id', 'needs_refresh', 'last_generated', 'created_at', 'updated_at'
+        ]
+
+
+class PharmacyIntegrationSerializer(serializers.ModelSerializer):
+    """Serializer for PharmacyIntegration model."""
+    
+    class Meta:
+        model = PharmacyIntegration
+        fields = [
+            'id', 'name', 'pharmacy_name', 'integration_type', 'status',
+            'api_endpoint', 'api_key', 'webhook_url', 'auto_order_enabled',
+            'order_threshold', 'order_quantity_multiplier', 'order_lead_time_days',
+            'last_sync', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'last_sync', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'api_key': {'write_only': True}
+        }
+    
+    def to_representation(self, instance):
+        """Remove sensitive data from response."""
+        data = super().to_representation(instance)
+        if 'api_key' in data:
+            data['api_key'] = '***' if instance.api_key else None
+        return data
 
 
 class MedicationStatsSerializer(serializers.Serializer):

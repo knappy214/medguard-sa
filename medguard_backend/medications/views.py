@@ -6,17 +6,22 @@ This module contains API views for managing medications, schedules, logs, and al
 
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
-from django.db.models import Q, Count, Avg, F
+from django.db.models import Q, Count, Avg, F, Sum
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+from decimal import Decimal
+import logging
 
-from .models import Medication, MedicationSchedule, MedicationLog, StockAlert
+logger = logging.getLogger(__name__)
+
+from .models import Medication, MedicationSchedule, MedicationLog, StockAlert, StockAnalytics, PharmacyIntegration
 from .serializers import (
     MedicationSerializer,
     MedicationDetailSerializer,
@@ -26,8 +31,11 @@ from .serializers import (
     MedicationLogDetailSerializer,
     StockAlertSerializer,
     StockAlertDetailSerializer,
-    MedicationStatsSerializer
+    MedicationStatsSerializer,
+    StockAnalyticsSerializer,
+    StockVisualizationSerializer
 )
+from .services import IntelligentStockService, StockAnalyticsService
 
 
 class MedicationViewSet(viewsets.ModelViewSet):
@@ -132,6 +140,147 @@ class MedicationViewSet(viewsets.ModelViewSet):
         alerts = StockAlert.objects.filter(medication=medication)
         serializer = StockAlertSerializer(alerts, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def analytics(self, request, pk=None):
+        """
+        Get stock analytics for a specific medication.
+        """
+        try:
+            medication = self.get_object()
+            service = IntelligentStockService()
+            
+            # Get or create stock analytics
+            analytics, created = StockAnalytics.objects.get_or_create(
+                medication=medication,
+                defaults={
+                    'daily_usage_rate': 0.0,
+                    'weekly_usage_rate': 0.0,
+                    'monthly_usage_rate': 0.0,
+                    'calculation_window_days': 90
+                }
+            )
+            
+            # Update analytics if needed (older than 24 hours)
+            if created or not analytics.last_calculated or \
+               (timezone.now() - analytics.last_calculated).days > 0:
+                service.update_stock_analytics(medication)
+                analytics.refresh_from_db()
+            
+            serializer = StockAnalyticsSerializer(analytics)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'])
+    def predict_stockout(self, request, pk=None):
+        """
+        Get stock depletion prediction for a medication.
+        """
+        try:
+            medication = self.get_object()
+            days_ahead = request.data.get('days_ahead', 90)
+            
+            service = IntelligentStockService()
+            prediction = service.predict_stock_depletion(medication, days_ahead)
+            
+            return Response(prediction)
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'])
+    def record_dose(self, request, pk=None):
+        """
+        Record a dose taken and update stock accordingly.
+        """
+        try:
+            medication = self.get_object()
+            dosage_amount = Decimal(request.data.get('dosage_amount', 1))
+            notes = request.data.get('notes', '')
+            schedule_id = request.data.get('schedule_id')
+            
+            service = IntelligentStockService()
+            
+            # Get schedule if provided
+            schedule = None
+            if schedule_id:
+                try:
+                    schedule = MedicationSchedule.objects.get(id=schedule_id)
+                except MedicationSchedule.DoesNotExist:
+                    pass
+            
+            # Record the dose
+            transaction = service.record_dose_taken(
+                patient=request.user,
+                medication=medication,
+                dosage_amount=dosage_amount,
+                schedule=schedule,
+                notes=notes
+            )
+            
+            return Response({
+                'message': 'Dose recorded successfully',
+                'transaction_id': transaction.id,
+                'new_stock': medication.pill_count
+            })
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['get'])
+    def usage_patterns(self, request, pk=None):
+        """
+        Get usage pattern analysis for a medication.
+        """
+        try:
+            medication = self.get_object()
+            days = int(request.query_params.get('days', 90))
+            
+            service = IntelligentStockService()
+            patterns = service.analyze_usage_patterns(medication, days)
+            
+            return Response(patterns)
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['get'])
+    def stock_visualization(self, request, pk=None):
+        """
+        Get stock visualization data for a medication.
+        """
+        try:
+            medication = self.get_object()
+            chart_type = request.query_params.get('chart_type', 'line')
+            days = int(request.query_params.get('days', 30))
+            
+            service = IntelligentStockService()
+            visualization = service.generate_stock_visualization(
+                medication, chart_type, days
+            )
+            
+            serializer = StockVisualizationSerializer(visualization)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class MedicationScheduleViewSet(viewsets.ModelViewSet):
@@ -365,6 +514,193 @@ class StockAlertViewSet(viewsets.ModelViewSet):
         alert.dismiss()
         serializer = self.get_serializer(alert)
         return Response(serializer.data)
+
+
+class PharmacyIntegrationViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing pharmacy integrations.
+    """
+    queryset = PharmacyIntegration.objects.all()
+    serializer_class = PharmacyIntegrationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        """Filter integrations based on user permissions."""
+        if self.request.user.is_staff:
+            return PharmacyIntegration.objects.all()
+        return PharmacyIntegration.objects.filter(status='active')
+    
+    @action(detail=True, methods=['post'])
+    def test_connection(self, request, pk=None):
+        """
+        Test the connection to a pharmacy integration.
+        """
+        try:
+            integration = self.get_object()
+            service = IntelligentStockService()
+            
+            # Test the integration
+            success = service.integrate_with_pharmacy(None, integration)
+            
+            if success:
+                integration.status = 'active'
+                integration.last_sync = timezone.now()
+                integration.save()
+                
+                return Response({
+                    'message': 'Connection test successful',
+                    'status': 'active'
+                })
+            else:
+                integration.status = 'error'
+                integration.save()
+                
+                return Response({
+                    'message': 'Connection test failed',
+                    'status': 'error'
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'])
+    def sync_stock(self, request, pk=None):
+        """
+        Sync stock levels with pharmacy integration.
+        """
+        try:
+            integration = self.get_object()
+            medication_ids = request.data.get('medication_ids', [])
+            
+            service = IntelligentStockService()
+            synced_count = 0
+            
+            if medication_ids:
+                medications = Medication.objects.filter(id__in=medication_ids)
+            else:
+                medications = Medication.objects.all()
+            
+            for medication in medications:
+                try:
+                    success = service.integrate_with_pharmacy(medication, integration)
+                    if success:
+                        synced_count += 1
+                except Exception as e:
+                    logger.error(f"Failed to sync medication {medication.id}: {e}")
+                    continue
+            
+            integration.last_sync = timezone.now()
+            integration.save()
+            
+            return Response({
+                'message': f'Successfully synced {synced_count} medications',
+                'synced_count': synced_count,
+                'total_count': len(medications)
+            })
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class StockAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet for stock analytics data.
+    """
+    queryset = StockAnalytics.objects.all()
+    serializer_class = StockAnalyticsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    @method_decorator(cache_page(60 * 15))  # Cache for 15 minutes
+    @action(detail=False, methods=['get'])
+    def dashboard(self, request):
+        """
+        Get dashboard analytics summary.
+        """
+        try:
+            analytics_service = StockAnalyticsService()
+            
+            # Get date range from query params
+            end_date = date.today()
+            start_date = end_date - timedelta(days=30)
+            
+            if 'start_date' in request.query_params:
+                start_date = datetime.strptime(
+                    request.query_params['start_date'], '%Y-%m-%d'
+                ).date()
+            
+            if 'end_date' in request.query_params:
+                end_date = datetime.strptime(
+                    request.query_params['end_date'], '%Y-%m-%d'
+                ).date()
+            
+            # Generate comprehensive report
+            report = analytics_service.generate_stock_report(
+                start_date, end_date
+            )
+            
+            return Response(report)
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=False, methods=['get'])
+    def low_stock_alerts(self, request):
+        """
+        Get medications with low stock alerts.
+        """
+        try:
+            medications = Medication.objects.filter(
+                pill_count__lte=F('low_stock_threshold')
+            ).select_related('stock_analytics')
+            
+            data = []
+            for medication in medications:
+                analytics = getattr(medication, 'stock_analytics', None)
+                data.append({
+                    'medication': MedicationSerializer(medication).data,
+                    'analytics': StockAnalyticsSerializer(analytics).data if analytics else None,
+                    'days_until_stockout': analytics.days_until_stockout if analytics else None
+                })
+            
+            return Response(data)
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=False, methods=['get'])
+    def expiring_soon(self, request):
+        """
+        Get medications expiring soon.
+        """
+        try:
+            days_threshold = int(request.query_params.get('days', 30))
+            threshold_date = date.today() + timedelta(days=days_threshold)
+            
+            medications = Medication.objects.filter(
+                expiration_date__lte=threshold_date,
+                expiration_date__gte=date.today()
+            ).order_by('expiration_date')
+            
+            serializer = MedicationSerializer(medications, many=True)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 # Legacy views for backward compatibility

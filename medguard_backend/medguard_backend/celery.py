@@ -36,6 +36,18 @@ app.conf.update(
         'medguard_notifications.tasks.send_medication_reminders': {'queue': 'reminders'},
         'medguard_notifications.tasks.send_stock_alerts': {'queue': 'alerts'},
         'medguard_notifications.tasks.update_notification_statistics': {'queue': 'maintenance'},
+        # Stock management tasks
+        'medications.tasks.update_stock_analytics': {'queue': 'analytics'},
+        'medications.tasks.predict_stock_depletion': {'queue': 'analytics'},
+        'medications.tasks.analyze_usage_patterns': {'queue': 'analytics'},
+        'medications.tasks.generate_stock_visualizations': {'queue': 'visualization'},
+        'medications.tasks.refresh_stock_visualizations': {'queue': 'visualization'},
+        'medications.tasks.check_prescription_renewals': {'queue': 'renewals'},
+        'medications.tasks.integrate_with_pharmacy': {'queue': 'pharmacy'},
+        'medications.tasks.sync_pharmacy_integrations': {'queue': 'pharmacy'},
+        'medications.tasks.monitor_stock_levels': {'queue': 'monitoring'},
+        'medications.tasks.generate_stock_report': {'queue': 'reports'},
+        'medications.tasks.cleanup_old_transactions': {'queue': 'maintenance'},
     },
     
     # Task serialization
@@ -98,6 +110,47 @@ app.conf.update(
         'update-notification-statistics': {
             'task': 'medguard_notifications.tasks.update_notification_statistics',
             'schedule': 3600.0,  # Every hour
+            'options': {'queue': 'maintenance'},
+        },
+        # Stock management periodic tasks
+        'update-stock-analytics': {
+            'task': 'medications.tasks.update_stock_analytics',
+            'schedule': 3600.0,  # Every hour
+            'options': {'queue': 'analytics'},
+        },
+        'predict-stock-depletion': {
+            'task': 'medications.tasks.predict_stock_depletion',
+            'schedule': 86400.0,  # Daily at 2:00 AM
+            'options': {'queue': 'analytics'},
+        },
+        'check-prescription-renewals': {
+            'task': 'medications.tasks.check_prescription_renewals',
+            'schedule': 3600.0,  # Every hour
+            'options': {'queue': 'renewals'},
+        },
+        'monitor-stock-levels': {
+            'task': 'medications.tasks.monitor_stock_levels',
+            'schedule': 1800.0,  # Every 30 minutes
+            'options': {'queue': 'monitoring'},
+        },
+        'generate-stock-visualizations': {
+            'task': 'medications.tasks.generate_stock_visualizations',
+            'schedule': 7200.0,  # Every 2 hours
+            'options': {'queue': 'visualization'},
+        },
+        'refresh-stock-visualizations': {
+            'task': 'medications.tasks.refresh_stock_visualizations',
+            'schedule': 14400.0,  # Every 4 hours
+            'options': {'queue': 'visualization'},
+        },
+        'sync-pharmacy-integrations': {
+            'task': 'medications.tasks.sync_pharmacy_integrations',
+            'schedule': 7200.0,  # Every 2 hours
+            'options': {'queue': 'pharmacy'},
+        },
+        'cleanup-old-transactions': {
+            'task': 'medications.tasks.cleanup_old_transactions',
+            'schedule': 604800.0,  # Weekly
             'options': {'queue': 'maintenance'},
         },
     },

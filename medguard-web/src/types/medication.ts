@@ -5,6 +5,7 @@ export interface Medication {
   frequency: string
   time: string
   stock: number
+  pill_count: number // Added for backend compatibility
   minStock: number
   instructions: string
   category: string
@@ -32,6 +33,21 @@ export interface StockAlert {
   severity: 'warning' | 'error' | 'info'
   createdAt: string
   isRead: boolean
+}
+
+export interface StockAnalytics {
+  daily_usage_rate: number
+  weekly_usage_rate: number
+  monthly_usage_rate: number
+  days_until_stockout: number | null
+  predicted_stockout_date: string | null
+  recommended_order_quantity: number
+  recommended_order_date: string | null
+  seasonal_factor: number
+  usage_volatility: number
+  stockout_confidence: number
+  last_calculated: string | null
+  calculation_window_days: number
 }
 
 export interface MedicationFormData {
