@@ -6,6 +6,7 @@ This file contains all the common settings shared across all environments.
 
 import os
 from pathlib import Path
+from datetime import timedelta
 from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -39,7 +40,7 @@ WAGTAIL_APPS = [
     'wagtail.documents',
     'wagtail.images',
     'wagtail.search',
-    'wagtail.admin',
+    'wagtail.admin',  # Re-enabled
     'wagtail',
     'wagtail.contrib.settings',  # For site-wide settings
     'modelcluster',
@@ -49,6 +50,7 @@ WAGTAIL_APPS = [
 THIRD_PARTY_APPS = [
     'django_filters',
     'rest_framework',
+    'rest_framework_simplejwt',  # JWT authentication
     'corsheaders',
     # Modern notification system
     'django_nyt',
@@ -60,6 +62,7 @@ LOCAL_APPS = [
     'users',
     'medications',
     'medguard_notifications',  # Re-enabled with modern implementation
+    'security',  # HIPAA-compliant security package
     'home',  # Wagtail home app
     'search',  # Wagtail search app
     'wagtail_hooks',  # Wagtail admin customizations
@@ -78,6 +81,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'wagtail.contrib.redirects.middleware.RedirectMiddleware',
+    'security.audit.AuditMiddleware',  # HIPAA audit logging
 ]
 
 ROOT_URLCONF = 'medguard_backend.urls'
@@ -114,6 +118,7 @@ DATABASES = {
         'CONN_MAX_AGE': 600,  # 10 minutes
         'OPTIONS': {
             'client_encoding': 'UTF8',
+            'sslmode': 'disable',  # Disable SSL for development
         },
     }
 }
@@ -130,7 +135,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
         'OPTIONS': {
-            'min_length': 8,
+            'min_length': 12,  # Increased for HIPAA compliance
         }
     },
     {
@@ -139,6 +144,14 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+]
+
+# Enhanced password hashing for HIPAA compliance
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
 ]
 
 # Internationalization
@@ -237,14 +250,14 @@ STORAGES = {
     },
 }
 
-# REST Framework settings
+# REST Framework settings with HIPAA-compliant security
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'security.jwt_auth.HIPAACompliantJWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'security.permissions.HIPAACompliantPermission',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
@@ -262,6 +275,47 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.FormParser',
         'rest_framework.parsers.MultiPartParser',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+    },
+}
+
+# JWT Settings for HIPAA compliance
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Short lifetime for security
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'JWK_URL': None,
+    'LEEWAY': 0,
+    
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+    
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+    
+    'JTI_CLAIM': 'jti',
+    
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
 # CORS settings
@@ -274,12 +328,59 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-# Security settings
+# Enhanced security settings for HIPAA compliance
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
-# Logging configuration
+# SSL/HTTPS settings (for production)
+SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False').lower() == 'true'
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
+CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False').lower() == 'true'
+
+# HSTS settings
+SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '0'))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'False').lower() == 'true'
+SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', 'False').lower() == 'true'
+
+# Content Security Policy
+SECURE_CSP = {
+    'default-src': ["'self'"],
+    'script-src': ["'self'", "'unsafe-inline'"],
+    'style-src': ["'self'", "'unsafe-inline'"],
+    'img-src': ["'self'", "data:", "https:"],
+    'font-src': ["'self'"],
+    'connect-src': ["'self'"],
+    'frame-src': ["'none'"],
+    'object-src': ["'none'"],
+}
+
+# Session security settings
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 3600  # 1 hour for HIPAA compliance
+
+# CSRF settings
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:8080',
+    'http://127.0.0.1:8080',
+]
+
+# Security headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+X_CONTENT_TYPE_OPTIONS = 'nosniff'
+X_XSS_PROTECTION = '1; mode=block'
+
+# Logging configuration with security focus
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -292,6 +393,10 @@ LOGGING = {
             'format': '{levelname} {message}',
             'style': '{',
         },
+        'security': {
+            'format': 'SECURITY {levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
     },
     'handlers': {
         'file': {
@@ -299,6 +404,12 @@ LOGGING = {
             'class': 'logging.FileHandler',
             'filename': BASE_DIR / 'logs' / 'django.log',
             'formatter': 'verbose',
+        },
+        'security_file': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'security.log',
+            'formatter': 'security',
         },
         'console': {
             'level': 'DEBUG',
@@ -313,6 +424,16 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['security_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'security': {
+            'handlers': ['console', 'file', 'security_file'],
             'level': 'INFO',
             'propagate': False,
         },
@@ -363,6 +484,7 @@ CACHES = {
             'SOCKET_CONNECT_TIMEOUT': 5,
             'SOCKET_TIMEOUT': 5,
             'CONNECTION_POOL_KWARGS': {'max_connections': 100},
+            'PARSER_CLASS': 'redis.connection.HiredisParser',
         }
     }
 }
@@ -375,6 +497,45 @@ SESSION_CACHE_ALIAS = 'default'
 ADMIN_SITE_HEADER = "MedGuard SA Administration"
 ADMIN_SITE_TITLE = "MedGuard SA Admin Portal"
 ADMIN_INDEX_TITLE = "Welcome to MedGuard SA Administration"
+
+# =============================================================================
+# HIPAA COMPLIANCE SECURITY SETTINGS
+# =============================================================================
+
+# Encryption settings
+ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY', SECRET_KEY)
+ANONYMIZATION_SALT = os.getenv('ANONYMIZATION_SALT', 'medguard_sa_anonymization_salt')
+
+# Audit trail settings
+AUDIT_LOG_RETENTION_DAYS = 2555  # 7 years for HIPAA compliance
+AUDIT_LOG_ENCRYPTION = True
+AUDIT_LOG_COMPRESSION = True
+
+# Data retention settings
+DATA_RETENTION_DAYS = 2555  # 7 years for HIPAA compliance
+AUTOMATIC_DATA_PURGE = True
+PURGE_SCHEDULE_HOURS = 24
+
+# Access control settings
+MAX_LOGIN_ATTEMPTS = 5
+LOGIN_LOCKOUT_DURATION_MINUTES = 30
+PASSWORD_EXPIRY_DAYS = 90
+FORCE_PASSWORD_CHANGE_ON_FIRST_LOGIN = True
+
+# Session security
+SESSION_TIMEOUT_MINUTES = 60
+INACTIVE_SESSION_TIMEOUT_MINUTES = 15
+CONCURRENT_SESSION_LIMIT = 3
+
+# API rate limiting
+API_RATE_LIMIT_PER_MINUTE = 100
+API_RATE_LIMIT_PER_HOUR = 1000
+API_RATE_LIMIT_PER_DAY = 10000
+
+# Data export settings
+MAX_EXPORT_RECORDS = 10000
+EXPORT_RETENTION_DAYS = 7
+EXPORT_ENCRYPTION_REQUIRED = True
 
 # =============================================================================
 # NOTIFICATION SYSTEM CONFIGURATION
@@ -433,6 +594,11 @@ NOTIFICATION_TEMPLATES = {
         'email': 'notifications/email/system_maintenance.html',
         'sms': 'notifications/sms/system_maintenance.txt',
         'push': 'notifications/push/system_maintenance.json',
+    },
+    'security_alert': {
+        'email': 'notifications/email/security_alert.html',
+        'sms': 'notifications/sms/security_alert.txt',
+        'push': 'notifications/push/security_alert.json',
     },
 }
 

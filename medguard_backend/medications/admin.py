@@ -4,7 +4,11 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.db.models import Count, Q
 from django.utils import timezone
-from .models import Medication, MedicationSchedule, MedicationLog, StockAlert
+from .models import (
+    Medication, MedicationSchedule, MedicationLog, StockAlert,
+    StockTransaction, StockAnalytics, PharmacyIntegration, 
+    PrescriptionRenewal, StockVisualization
+)
 
 
 @admin.register(Medication)

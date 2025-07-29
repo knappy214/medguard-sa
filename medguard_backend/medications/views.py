@@ -21,7 +21,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from .models import Medication, MedicationSchedule, MedicationLog, StockAlert, StockAnalytics, PharmacyIntegration
+from .models import (
+    Medication, MedicationSchedule, MedicationLog, StockAlert, 
+    StockAnalytics, PharmacyIntegration, StockTransaction,
+    PrescriptionRenewal, StockVisualization
+)
 from .serializers import (
     MedicationSerializer,
     MedicationDetailSerializer,
@@ -33,7 +37,8 @@ from .serializers import (
     StockAlertDetailSerializer,
     MedicationStatsSerializer,
     StockAnalyticsSerializer,
-    StockVisualizationSerializer
+    StockVisualizationSerializer,
+    PharmacyIntegrationSerializer
 )
 from .services import IntelligentStockService, StockAnalyticsService
 

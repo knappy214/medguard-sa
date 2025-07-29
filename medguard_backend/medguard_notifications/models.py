@@ -29,7 +29,7 @@ class NotificationIndexPage(Page):
     
     # Page configuration
     parent_page_types = ['home.HomePage']
-    subpage_types = ['notifications.NotificationDetailPage']
+    subpage_types = ['medguard_notifications.NotificationDetailPage']
     
     # Search configuration
     search_fields = Page.search_fields + [
@@ -91,7 +91,7 @@ class NotificationDetailPage(Page):
     
     # Relationship to Notification model
     notification = models.OneToOneField(
-        'notifications.Notification',
+        'medguard_notifications.Notification',
         on_delete=models.SET_NULL,
         null=True,
         related_name='detail_page',
@@ -107,7 +107,7 @@ class NotificationDetailPage(Page):
     )
     
     # Page configuration
-    parent_page_types = ['notifications.NotificationIndexPage']
+    parent_page_types = ['medguard_notifications.NotificationIndexPage']
     subpage_types = []
     
     # Search configuration
@@ -266,7 +266,7 @@ class Notification(models.Model):
     class Meta:
         verbose_name = _('Notification')
         verbose_name_plural = _('Notifications')
-        db_table = 'notifications'
+        db_table = 'medguard_notifications'
         indexes = [
             models.Index(fields=['notification_type']),
             models.Index(fields=['priority']),
@@ -384,7 +384,7 @@ class UserNotification(models.Model):
     class Meta:
         verbose_name = _('User Notification')
         verbose_name_plural = _('User Notifications')
-        db_table = 'user_notifications'
+        db_table = 'medguard_user_notifications'
         indexes = [
             models.Index(fields=['user', 'notification']),
             models.Index(fields=['user', 'status']),
@@ -516,7 +516,7 @@ class NotificationTemplate(models.Model):
     class Meta:
         verbose_name = _('Notification Template')
         verbose_name_plural = _('Notification Templates')
-        db_table = 'notification_templates'
+        db_table = 'medguard_notification_templates'
         indexes = [
             models.Index(fields=['template_type']),
             models.Index(fields=['is_active']),
@@ -694,7 +694,7 @@ class UserNotificationPreferences(models.Model):
     class Meta:
         verbose_name = _('User Notification Preference')
         verbose_name_plural = _('User Notification Preferences')
-        db_table = 'user_notification_preferences'
+        db_table = 'medguard_user_notification_preferences'
         indexes = [
             models.Index(fields=['user']),
             models.Index(fields=['email_notifications_enabled']),

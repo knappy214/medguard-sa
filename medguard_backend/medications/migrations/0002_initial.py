@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='medicationlog',
             name='patient',
-            field=models.ForeignKey(help_text='Patient who took the medication', limit_choices_to={'user_type': 'patient'}, on_delete=django.db.models.deletion.CASCADE, related_name='medication_logs', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(help_text='Patient who took the medication', on_delete=django.db.models.deletion.CASCADE, related_name='medication_logs', to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddField(
             model_name='medicationschedule',
@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='medicationschedule',
             name='patient',
-            field=models.ForeignKey(help_text='Patient for whom this schedule is created', limit_choices_to={'user_type': 'patient'}, on_delete=django.db.models.deletion.CASCADE, related_name='medication_schedules', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(help_text='Patient for whom this schedule is created', on_delete=django.db.models.deletion.CASCADE, related_name='medication_schedules', to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddField(
             model_name='medicationlog',

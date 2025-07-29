@@ -1,4 +1,5 @@
 import axios from 'axios'
+import authService from './authService'
 import type { 
   Medication, 
   MedicationSchedule, 
@@ -17,19 +18,57 @@ const api = axios.create({
   },
 })
 
-// Request interceptor to add auth token
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('auth_token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+// Request interceptor to add auth token and security headers
+api.interceptors.request.use(async (config) => {
+  try {
+    // Get access token from auth service
+    const token = await authService.getAccessToken()
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    
+    // Add HIPAA security headers
+    config.headers['X-Security-Level'] = 'HIPAA'
+    config.headers['X-Client-Version'] = '1.0.0'
+    
+    // Add timestamp for request tracking
+    config.headers['X-Request-Timestamp'] = Date.now().toString()
+    
+    return config
+  } catch (error) {
+    console.error('Failed to add authentication headers:', error)
+    return config
   }
-  return config
 })
 
-// Response interceptor for error handling
+// Response interceptor for error handling and security logging
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response) => {
+    // Log successful API calls for audit trail
+    authService.logSecurityEvent('API_SUCCESS', {
+      endpoint: response.config.url,
+      method: response.config.method,
+      statusCode: response.status
+    })
+    return response
+  },
+  async (error) => {
+    // Log failed API calls for security monitoring
+    authService.logSecurityEvent('API_ERROR', {
+      endpoint: error.config?.url,
+      method: error.config?.method,
+      statusCode: error.response?.status,
+      error: error.message
+    })
+    
+    // Handle authentication errors
+    if (error.response?.status === 401) {
+      console.error('Authentication error - redirecting to login')
+      await authService.logout('Authentication failed')
+      // Redirect to login page
+      window.location.href = '/login'
+    }
+    
     console.error('API Error:', error)
     return Promise.reject(error)
   }
@@ -127,7 +166,7 @@ export const medicationApi = {
   // Get stock alerts
   async getStockAlerts(): Promise<StockAlert[]> {
     try {
-      const response = await api.get<ApiResponse<StockAlert[]>>('/medications/alerts/')
+      const response = await api.get<ApiResponse<StockAlert[]>>('/medications/alerts/stock/')
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch stock alerts:', error)
@@ -146,10 +185,10 @@ export const medicationApi = {
     }
   },
 
-  // Update medication stock
+  // Update stock level
   async updateStock(medicationId: string, newStock: number): Promise<boolean> {
     try {
-      await api.patch(`/medications/${medicationId}/stock/`, { stock: newStock })
+      await api.put(`/medications/${medicationId}/stock/`, { stock: newStock })
       return true
     } catch (error) {
       console.error('Failed to update stock:', error)
@@ -157,28 +196,127 @@ export const medicationApi = {
     }
   },
 
-  // Get stock analytics for a medication
+  // Get stock analytics
   async getStockAnalytics(medicationId: string): Promise<StockAnalytics> {
     try {
       const response = await api.get<ApiResponse<StockAnalytics>>(`/medications/${medicationId}/analytics/`)
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch stock analytics:', error)
-      // Return default analytics object
-      return {
-        daily_usage_rate: 0,
-        weekly_usage_rate: 0,
-        monthly_usage_rate: 0,
-        days_until_stockout: null,
-        predicted_stockout_date: null,
-        recommended_order_quantity: 0,
-        recommended_order_date: null,
-        seasonal_factor: 1.0,
-        usage_volatility: 0,
-        stockout_confidence: 0,
-        last_calculated: null,
-        calculation_window_days: 90
-      }
+      throw error
+    }
+  },
+
+  // Get paginated medications
+  async getMedicationsPaginated(page: number = 1, pageSize: number = 10): Promise<PaginatedResponse<Medication>> {
+    try {
+      const response = await api.get<ApiResponse<PaginatedResponse<Medication>>>('/medications/', {
+        params: { page, page_size: pageSize }
+      })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch paginated medications:', error)
+      throw error
+    }
+  },
+
+  // Search medications
+  async searchMedications(query: string): Promise<Medication[]> {
+    try {
+      const response = await api.get<ApiResponse<Medication[]>>('/medications/search/', {
+        params: { q: query }
+      })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to search medications:', error)
+      return []
+    }
+  },
+
+  // Get medication history
+  async getMedicationHistory(medicationId: string): Promise<any[]> {
+    try {
+      const response = await api.get<ApiResponse<any[]>>(`/medications/${medicationId}/history/`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch medication history:', error)
+      return []
+    }
+  },
+
+  // Export medication data
+  async exportMedicationData(format: 'json' | 'csv' = 'json'): Promise<Blob> {
+    try {
+      const response = await api.get('/medications/export/', {
+        params: { format },
+        responseType: 'blob'
+      })
+      return response.data
+    } catch (error) {
+      console.error('Failed to export medication data:', error)
+      throw error
+    }
+  },
+
+  // Import medication data
+  async importMedicationData(file: File): Promise<boolean> {
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      await api.post('/medications/import/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      return true
+    } catch (error) {
+      console.error('Failed to import medication data:', error)
+      return false
+    }
+  },
+
+  // Get medication statistics
+  async getMedicationStats(): Promise<any> {
+    try {
+      const response = await api.get<ApiResponse<any>>('/medications/stats/')
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch medication statistics:', error)
+      return {}
+    }
+  },
+
+  // Get medication reminders
+  async getMedicationReminders(): Promise<any[]> {
+    try {
+      const response = await api.get<ApiResponse<any[]>>('/medications/reminders/')
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch medication reminders:', error)
+      return []
+    }
+  },
+
+  // Set medication reminder
+  async setMedicationReminder(medicationId: string, reminderData: any): Promise<boolean> {
+    try {
+      await api.post(`/medications/${medicationId}/reminders/`, reminderData)
+      return true
+    } catch (error) {
+      console.error('Failed to set medication reminder:', error)
+      return false
+    }
+  },
+
+  // Delete medication reminder
+  async deleteMedicationReminder(reminderId: string): Promise<boolean> {
+    try {
+      await api.delete(`/medications/reminders/${reminderId}/`)
+      return true
+    } catch (error) {
+      console.error('Failed to delete medication reminder:', error)
+      return false
     }
   }
 }

@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/', include(('medications.urls', 'api_medications'), namespace='api_medications')),
     # path('api/', include(('medguard_notifications.urls', 'api_notifications'), namespace='api_notifications')),
     path('api/', include(('users.urls', 'api_users'), namespace='api_users')),
+    path('api/', include(('security.urls', 'api_security'), namespace='api_security')),
 ]
 
 # Translatable URLs (with language prefix)

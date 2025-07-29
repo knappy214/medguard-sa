@@ -12,7 +12,8 @@ from django.db.models import F, Q
 
 from .models import (
     Medication, MedicationSchedule, MedicationLog, StockAlert,
-    StockAnalytics, StockVisualization, PharmacyIntegration
+    StockAnalytics, StockVisualization, PharmacyIntegration,
+    StockTransaction, PrescriptionRenewal
 )
 
 User = get_user_model()
