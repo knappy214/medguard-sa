@@ -474,7 +474,7 @@ CELERY_TIMEZONE = TIME_ZONE
 # Using Django's built-in async capabilities for now
 # Will implement a modern task queue solution later
 
-# Cache configuration
+# Multi-tier Redis cache configuration for optimal performance
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -483,10 +483,96 @@ CACHES = {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
             'SOCKET_CONNECT_TIMEOUT': 5,
             'SOCKET_TIMEOUT': 5,
-            'CONNECTION_POOL_KWARGS': {'max_connections': 100},
+            'CONNECTION_POOL_KWARGS': {
+                'max_connections': 100,
+                'retry_on_timeout': True,
+                'socket_keepalive': True,
+                'socket_keepalive_options': {
+                    'TCP_KEEPIDLE': 1,
+                    'TCP_KEEPINTVL': 3,
+                    'TCP_KEEPCNT': 5,
+                }
+            },
             'PARSER_CLASS': 'redis.connection.HiredisParser',
-        }
-    }
+            'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
+            'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
+            'MASTER_CACHE': os.getenv('REDIS_MASTER_URL', 'redis://localhost:6379/1'),
+            'SLAVE_CACHE': os.getenv('REDIS_SLAVE_URL', 'redis://localhost:6379/2'),
+            'REDIS_CLIENT_KWARGS': {
+                'health_check_interval': 30,
+                'socket_keepalive': True,
+                'socket_keepalive_options': {
+                    'TCP_KEEPIDLE': 1,
+                    'TCP_KEEPINTVL': 3,
+                    'TCP_KEEPCNT': 5,
+                }
+            }
+        },
+        'KEY_PREFIX': 'medguard_sa',
+        'TIMEOUT': 300,  # 5 minutes default
+        'VERSION': 1,
+    },
+    'sessions': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.getenv('REDIS_URL', 'redis://localhost:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_KWARGS': {'max_connections': 50},
+        },
+        'KEY_PREFIX': 'session',
+        'TIMEOUT': 3600,  # 1 hour for sessions
+    },
+    'medications': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.getenv('REDIS_URL', 'redis://localhost:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_KWARGS': {'max_connections': 20},
+        },
+        'KEY_PREFIX': 'medications',
+        'TIMEOUT': 1800,  # 30 minutes for medication data
+    },
+    'analytics': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.getenv('REDIS_URL', 'redis://localhost:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_KWARGS': {'max_connections': 10},
+        },
+        'KEY_PREFIX': 'analytics',
+        'TIMEOUT': 3600,  # 1 hour for analytics
+    },
+    'image_processing': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.getenv('REDIS_IMAGE_URL', 'redis://localhost:6379/3'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_KWARGS': {'max_connections': 20},
+            'COMPRESSOR': 'django_redis.compressors.lz4.Lz4Compressor',
+        },
+        'KEY_PREFIX': 'image_processing',
+        'TIMEOUT': 1800,  # 30 minutes for image processing
+    },
+    'celery_results': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.getenv('REDIS_CELERY_URL', 'redis://localhost:6379/4'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_KWARGS': {'max_connections': 50},
+        },
+        'KEY_PREFIX': 'celery_results',
+        'TIMEOUT': 7200,  # 2 hours for Celery results
+    },
+    'rate_limiting': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.getenv('REDIS_RATE_URL', 'redis://localhost:6379/5'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_KWARGS': {'max_connections': 30},
+        },
+        'KEY_PREFIX': 'rate_limit',
+        'TIMEOUT': 60,  # 1 minute for rate limiting
+    },
 }
 
 # Session configuration

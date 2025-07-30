@@ -1,10 +1,9 @@
 # Core Django and Wagtail
-# Using latest stable versions for cutting-edge technology
 Django==5.2.4
 wagtail==7.0.2
 
-# Database
-psycopg2-binary==2.9.10
+# Database (SQLite for development)
+# psycopg2-binary==2.9.10  # Commented out for now
 
 # Wagtail dependencies
 django-modelcluster==6.4
@@ -17,7 +16,6 @@ Willow==1.11.0
 
 # Image processing
 Pillow==11.3.0
-pillow_heif==1.0.0
 
 # Environment and configuration
 python-dotenv==1.0.0
@@ -31,15 +29,9 @@ django-cors-headers==4.7.0
 # Filtering and search
 django-filter==25.1
 
-# Modern notification system (Django 5 + Wagtail 7 compatible)
+# Modern notification system
 django-nyt==1.4.2
 django-post-office==3.9.1
-django-push-notifications==3.0.2
-
-# Background tasks and async processing
-celery==5.3.6
-redis==5.0.1
-django-redis==5.4.0
 
 # Email and templating
 django-templated-email==0.4.9
@@ -52,7 +44,6 @@ beautifulsoup4==4.13.4
 httpx==0.27.0
 
 # Development and testing
-django-stubs-ext==5.2.2
 django-debug-toolbar==4.4.0
 
 # Wagtail admin enhancements
@@ -66,13 +57,5 @@ filetype==1.2.0
 defusedxml==0.7.1
 cryptography==42.0.5
 
-# Data analysis and processing
-pandas==2.2.1
-numpy==1.26.4
-scikit-learn==1.4.1
-
-# System monitoring
-psutil==6.1.0
-
 # Internationalization
-anyascii==0.3.3
+anyascii==0.3.3 

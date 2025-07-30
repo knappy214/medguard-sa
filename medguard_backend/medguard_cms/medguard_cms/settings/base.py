@@ -23,7 +23,7 @@ sys.path.insert(0, BASE_DIR)
 
 # Load environment variables
 from dotenv import load_dotenv
-load_dotenv(os.path.join(BASE_DIR, '.env'))
+load_dotenv(os.path.join(BASE_DIR, '..', '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -63,10 +63,10 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     
-    # Custom apps
-    "users",
-    "medications",
-    "notifications",
+    # Custom apps - commented out for now to get basic setup working
+    # "users",
+    # "medications", 
+    # "notifications",
 ]
 
 MIDDLEWARE = [
@@ -115,9 +115,6 @@ DATABASES = {
         "PASSWORD": os.getenv('DB_PASSWORD', ''),
         "HOST": os.getenv('DB_HOST', 'localhost'),
         "PORT": os.getenv('DB_PORT', '5432'),
-        "OPTIONS": {
-            "charset": "utf8",
-        },
     }
 }
 

@@ -28,7 +28,7 @@ const sortedSchedule = computed(() => {
 })
 
 const formatTime = (dateString: string) => {
-  return new Date(dateString).toLocaleTimeString('en-ZA', {
+  return new Date(dateString).toLocaleTimeString('en', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true
@@ -79,7 +79,7 @@ const isOverdue = (scheduledTime: string) => {
 <template>
   <div class="card bg-base-100 shadow-sm">
     <div class="card-body">
-      <h2 class="card-title text-xl mb-4">
+      <h2 class="card-title text-xl mb-4 text-base-content">
         <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
@@ -105,7 +105,7 @@ const isOverdue = (scheduledTime: string) => {
       <!-- Schedule List -->
       <div v-if="sortedSchedule.length === 0" class="text-center py-8">
         <div class="text-4xl mb-4">📅</div>
-        <p class="text-base-content-secondary">{{ t('dashboard.noMedications') }}</p>
+        <p class="text-base-content/70">{{ t('dashboard.noMedications') }}</p>
       </div>
 
       <div v-else class="space-y-3">
@@ -132,7 +132,7 @@ const isOverdue = (scheduledTime: string) => {
               </span>
             </div>
             
-            <div class="text-sm text-base-content-secondary space-y-1">
+            <div class="text-sm text-base-content/70 space-y-1">
               <p>{{ item.medication.dosage }} • {{ item.medication.frequency }}</p>
               <p class="flex items-center gap-1">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,19 +191,9 @@ const isOverdue = (scheduledTime: string) => {
 
       <!-- Instructions -->
       <div class="mt-4 p-3 bg-info/10 border border-info/20 rounded-lg">
-        <div class="flex items-start gap-2">
-          <svg class="w-5 h-5 text-info mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div class="text-sm text-base-content">
-            <p class="font-medium mb-1">Quick Actions:</p>
-            <ul class="space-y-1 text-xs">
-              <li>• Click the checkmark to mark medication as taken</li>
-              <li>• Click the X to mark medication as missed</li>
-              <li>• Overdue medications are highlighted in orange</li>
-            </ul>
-          </div>
-        </div>
+        <p class="text-sm text-base-content/80">
+          <strong>Tip:</strong> Click the buttons to mark medications as taken or missed. This helps track your medication adherence.
+        </p>
       </div>
     </div>
   </div>

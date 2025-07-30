@@ -472,7 +472,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.pharmacy-integration {
-  @apply w-full;
+.pharmacy-card {
+  width: 100%;
 }
 </style> 

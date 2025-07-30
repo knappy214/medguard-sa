@@ -264,18 +264,24 @@ onMounted(() => {
 
 <style scoped>
 .stock-analytics {
-  @apply w-full;
+  width: 100%;
 }
 
-.stat {
-  @apply text-center;
+.analytics-card {
+  width: 100%;
 }
 
-.stat-value {
-  @apply text-2xl font-bold;
+.analytics-title {
+  text-align: center;
 }
 
-.stat-desc {
-  @apply text-sm opacity-70;
+.analytics-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.analytics-label {
+  font-size: 0.875rem;
+  opacity: 0.7;
 }
 </style> 

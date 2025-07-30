@@ -6,14 +6,17 @@ This module contains API views for managing medications, schedules, logs, and al
 
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
-from django.db.models import Q, Count, Avg, F, Sum
+from django.db.models import Q, Count, Avg, F, Sum, Prefetch
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django.core.paginator import Paginator
+from django.core.cache import cache
 from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from datetime import datetime, timedelta, date
 from decimal import Decimal
@@ -40,7 +43,17 @@ from .serializers import (
     StockVisualizationSerializer,
     PharmacyIntegrationSerializer
 )
-from .services import IntelligentStockService, StockAnalyticsService
+from .services import IntelligentStockService, StockAnalyticsService, MedicationCacheService
+
+
+class OptimizedPagination(PageNumberPagination):
+    """
+    Optimized pagination for large datasets.
+    """
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+    page_query_param = 'page'
 
 
 class MedicationViewSet(viewsets.ModelViewSet):
@@ -50,7 +63,12 @@ class MedicationViewSet(viewsets.ModelViewSet):
     Provides CRUD operations for medication management with filtering and search capabilities.
     """
     
-    queryset = Medication.objects.all()
+    queryset = Medication.objects.select_related().prefetch_related(
+        'schedules',
+        'logs',
+        'stock_alerts',
+        'stock_transactions'
+    )
     serializer_class = MedicationSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -58,6 +76,32 @@ class MedicationViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'generic_name', 'brand_name', 'description', 'active_ingredients']
     ordering_fields = ['name', 'created_at', 'updated_at', 'pill_count']
     ordering = ['name']
+    pagination_class = OptimizedPagination
+    
+    def get_queryset(self):
+        """
+        Optimize queryset with select_related and prefetch_related.
+        """
+        queryset = super().get_queryset()
+        
+        # Apply lazy loading optimizations
+        if self.action == 'list':
+            # For list view, only fetch essential fields
+            queryset = queryset.only(
+                'id', 'name', 'generic_name', 'medication_type', 
+                'prescription_type', 'strength', 'pill_count', 
+                'low_stock_threshold', 'manufacturer', 'created_at'
+            )
+        elif self.action == 'retrieve':
+            # For detail view, fetch all related data
+            queryset = queryset.select_related().prefetch_related(
+                Prefetch('schedules', queryset=MedicationSchedule.objects.filter(status='active')),
+                Prefetch('logs', queryset=MedicationLog.objects.order_by('-scheduled_time')[:10]),
+                Prefetch('stock_alerts', queryset=StockAlert.objects.filter(status='active')),
+                'stock_transactions'
+            )
+        
+        return queryset
     
     def get_serializer_class(self):
         """Return appropriate serializer based on action."""
@@ -65,115 +109,202 @@ class MedicationViewSet(viewsets.ModelViewSet):
             return MedicationDetailSerializer
         return MedicationSerializer
     
+    @cache_page(60 * 15)  # Cache for 15 minutes
     @action(detail=False, methods=['get'])
     def low_stock(self, request):
         """Get medications with low stock."""
-        medications = self.get_queryset().filter(
-            pill_count__lte=F('low_stock_threshold')
-        )
-        serializer = self.get_serializer(medications, many=True)
-        return Response(serializer.data)
+        cache_key = f"medications_low_stock_{request.user.id}"
+        cached_data = cache.get(cache_key)
+        
+        if cached_data is None:
+            medications = self.get_queryset().filter(
+                pill_count__lte=F('low_stock_threshold')
+            ).only('id', 'name', 'pill_count', 'low_stock_threshold')
+            
+            serializer = self.get_serializer(medications, many=True)
+            cached_data = serializer.data
+            cache.set(cache_key, cached_data, 300)  # Cache for 5 minutes
+        
+        return Response(cached_data)
     
+    @cache_page(60 * 30)  # Cache for 30 minutes
     @action(detail=False, methods=['get'])
     def expiring_soon(self, request):
         """Get medications expiring soon (within 30 days)."""
-        thirty_days_from_now = timezone.now().date() + timedelta(days=30)
-        medications = self.get_queryset().filter(
-            expiration_date__lte=thirty_days_from_now,
-            expiration_date__gte=timezone.now().date()
-        )
-        serializer = self.get_serializer(medications, many=True)
-        return Response(serializer.data)
+        cache_key = f"medications_expiring_soon_{request.user.id}"
+        cached_data = cache.get(cache_key)
+        
+        if cached_data is None:
+            thirty_days_from_now = timezone.now().date() + timedelta(days=30)
+            medications = self.get_queryset().filter(
+                expiration_date__lte=thirty_days_from_now,
+                expiration_date__gte=timezone.now().date()
+            ).only('id', 'name', 'expiration_date', 'pill_count')
+            
+            serializer = self.get_serializer(medications, many=True)
+            cached_data = serializer.data
+            cache.set(cache_key, cached_data, 600)  # Cache for 10 minutes
+        
+        return Response(cached_data)
     
+    @cache_page(60 * 60)  # Cache for 1 hour
     @action(detail=False, methods=['get'])
     def expired(self, request):
         """Get expired medications."""
-        medications = self.get_queryset().filter(
-            expiration_date__lt=timezone.now().date()
-        )
-        serializer = self.get_serializer(medications, many=True)
-        return Response(serializer.data)
+        cache_key = f"medications_expired_{request.user.id}"
+        cached_data = cache.get(cache_key)
+        
+        if cached_data is None:
+            medications = self.get_queryset().filter(
+                expiration_date__lt=timezone.now().date()
+            ).only('id', 'name', 'expiration_date', 'pill_count')
+            
+            serializer = self.get_serializer(medications, many=True)
+            cached_data = serializer.data
+            cache.set(cache_key, cached_data, 1800)  # Cache for 30 minutes
+        
+        return Response(cached_data)
     
-    @action(detail=True, methods=['post'])
-    def update_stock(self, request, pk=None):
-        """Update medication stock count."""
-        medication = self.get_object()
-        new_count = request.data.get('pill_count')
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        """Get medication statistics with lazy loading."""
+        cache_key = f"medication_stats_{request.user.id}"
+        cached_stats = cache.get(cache_key)
         
-        if new_count is None:
-            return Response(
-                {'error': 'pill_count is required'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        if cached_stats is None:
+            # Use lazy loading for statistics
+            total_medications = self.get_queryset().count()
+            low_stock_count = self.get_queryset().filter(
+                pill_count__lte=F('low_stock_threshold')
+            ).count()
+            expiring_soon_count = self.get_queryset().filter(
+                expiration_date__lte=timezone.now().date() + timedelta(days=30),
+                expiration_date__gte=timezone.now().date()
+            ).count()
+            
+            cached_stats = {
+                'total_medications': total_medications,
+                'low_stock_count': low_stock_count,
+                'expiring_soon_count': expiring_soon_count,
+                'last_updated': timezone.now().isoformat()
+            }
+            cache.set(cache_key, cached_stats, 900)  # Cache for 15 minutes
         
-        try:
-            new_count = int(new_count)
-            if new_count < 0:
-                raise ValueError("Stock count cannot be negative")
-        except (ValueError, TypeError):
-            return Response(
-                {'error': 'Invalid pill_count value'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        medication.pill_count = new_count
-        medication.save()
-        
-        serializer = self.get_serializer(medication)
-        return Response(serializer.data)
+        return Response(cached_stats)
     
     @action(detail=True, methods=['get'])
     def schedules(self, request, pk=None):
-        """Get all schedules for a specific medication."""
+        """Get all schedules for a specific medication with lazy loading."""
         medication = self.get_object()
-        schedules = MedicationSchedule.objects.filter(medication=medication)
-        serializer = MedicationScheduleSerializer(schedules, many=True)
-        return Response(serializer.data)
+        
+        # Use lazy loading for schedules
+        schedules = MedicationSchedule.objects.filter(
+            medication=medication
+        ).select_related('patient').only(
+            'id', 'timing', 'status', 'start_date', 'end_date',
+            'patient__id', 'patient__first_name', 'patient__last_name'
+        )
+        
+        # Paginate schedules
+        paginator = Paginator(schedules, 10)
+        page_number = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+        
+        serializer = MedicationScheduleSerializer(page_obj, many=True)
+        return Response({
+            'results': serializer.data,
+            'count': paginator.count,
+            'next': page_obj.has_next(),
+            'previous': page_obj.has_previous(),
+        })
     
     @action(detail=True, methods=['get'])
     def logs(self, request, pk=None):
-        """Get all logs for a specific medication."""
+        """Get all logs for a specific medication with lazy loading."""
         medication = self.get_object()
-        logs = MedicationLog.objects.filter(medication=medication)
-        serializer = MedicationLogSerializer(logs, many=True)
-        return Response(serializer.data)
+        
+        # Use lazy loading for logs
+        logs = MedicationLog.objects.filter(
+            medication=medication
+        ).select_related('patient').only(
+            'id', 'scheduled_time', 'actual_time', 'status', 'dosage_taken',
+            'patient__id', 'patient__first_name', 'patient__last_name'
+        ).order_by('-scheduled_time')
+        
+        # Paginate logs
+        paginator = Paginator(logs, 20)
+        page_number = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+        
+        serializer = MedicationLogSerializer(page_obj, many=True)
+        return Response({
+            'results': serializer.data,
+            'count': paginator.count,
+            'next': page_obj.has_next(),
+            'previous': page_obj.has_previous(),
+        })
     
     @action(detail=True, methods=['get'])
     def alerts(self, request, pk=None):
-        """Get all alerts for a specific medication."""
+        """Get all alerts for a specific medication with lazy loading."""
         medication = self.get_object()
-        alerts = StockAlert.objects.filter(medication=medication)
-        serializer = StockAlertSerializer(alerts, many=True)
-        return Response(serializer.data)
+        
+        # Use lazy loading for alerts
+        alerts = StockAlert.objects.filter(
+            medication=medication
+        ).select_related('created_by').only(
+            'id', 'alert_type', 'priority', 'status', 'created_at',
+            'created_by__id', 'created_by__first_name', 'created_by__last_name'
+        ).order_by('-created_at')
+        
+        # Paginate alerts
+        paginator = Paginator(alerts, 10)
+        page_number = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+        
+        serializer = StockAlertSerializer(page_obj, many=True)
+        return Response({
+            'results': serializer.data,
+            'count': paginator.count,
+            'next': page_obj.has_next(),
+            'previous': page_obj.has_previous(),
+        })
 
     @action(detail=True, methods=['get'])
     def analytics(self, request, pk=None):
         """
-        Get stock analytics for a specific medication.
+        Get stock analytics for a specific medication with caching.
         """
         try:
             medication = self.get_object()
-            service = IntelligentStockService()
+            cache_key = f"medication_analytics_{medication.id}"
+            cached_analytics = cache.get(cache_key)
             
-            # Get or create stock analytics
-            analytics, created = StockAnalytics.objects.get_or_create(
-                medication=medication,
-                defaults={
-                    'daily_usage_rate': 0.0,
-                    'weekly_usage_rate': 0.0,
-                    'monthly_usage_rate': 0.0,
-                    'calculation_window_days': 90
-                }
-            )
+            if cached_analytics is None:
+                service = IntelligentStockService()
+                
+                # Get or create stock analytics
+                analytics, created = StockAnalytics.objects.get_or_create(
+                    medication=medication,
+                    defaults={
+                        'daily_usage_rate': 0.0,
+                        'weekly_usage_rate': 0.0,
+                        'monthly_usage_rate': 0.0,
+                        'calculation_window_days': 90
+                    }
+                )
+                
+                # Update analytics if needed (older than 24 hours)
+                if created or not analytics.last_calculated or \
+                   (timezone.now() - analytics.last_calculated).days > 0:
+                    service.update_stock_analytics(medication)
+                    analytics.refresh_from_db()
+                
+                serializer = StockAnalyticsSerializer(analytics)
+                cached_analytics = serializer.data
+                cache.set(cache_key, cached_analytics, 3600)  # Cache for 1 hour
             
-            # Update analytics if needed (older than 24 hours)
-            if created or not analytics.last_calculated or \
-               (timezone.now() - analytics.last_calculated).days > 0:
-                service.update_stock_analytics(medication)
-                analytics.refresh_from_db()
-            
-            serializer = StockAnalyticsSerializer(analytics)
-            return Response(serializer.data)
+            return Response(cached_analytics)
             
         except Exception as e:
             return Response(
@@ -188,12 +319,50 @@ class MedicationViewSet(viewsets.ModelViewSet):
         """
         try:
             medication = self.get_object()
-            days_ahead = request.data.get('days_ahead', 90)
+            cache_key = f"stockout_prediction_{medication.id}"
+            cached_prediction = cache.get(cache_key)
             
-            service = IntelligentStockService()
-            prediction = service.predict_stock_depletion(medication, days_ahead)
+            if cached_prediction is None:
+                service = IntelligentStockService()
+                prediction = service.predict_stock_depletion(medication)
+                cached_prediction = prediction
+                cache.set(cache_key, cached_prediction, 1800)  # Cache for 30 minutes
             
-            return Response(prediction)
+            return Response(cached_prediction)
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=True, methods=['get'])
+    def stock_visualization(self, request, pk=None):
+        """
+        Get stock visualization data for a medication.
+        """
+        try:
+            medication = self.get_object()
+            cache_key = f"stock_visualization_{medication.id}"
+            cached_visualization = cache.get(cache_key)
+            
+            if cached_visualization is None:
+                visualization, created = StockVisualization.objects.get_or_create(
+                    medication=medication,
+                    defaults={'chart_data': {}, 'last_updated': timezone.now()}
+                )
+                
+                if created or (timezone.now() - visualization.last_updated).hours > 4:
+                    # Update visualization data
+                    from .tasks import generate_stock_visualizations
+                    generate_stock_visualizations.delay(medication.id)
+                    visualization.refresh_from_db()
+                
+                serializer = StockVisualizationSerializer(visualization)
+                cached_visualization = serializer.data
+                cache.set(cache_key, cached_visualization, 14400)  # Cache for 4 hours
+            
+            return Response(cached_visualization)
             
         except Exception as e:
             return Response(
@@ -256,30 +425,6 @@ class MedicationViewSet(viewsets.ModelViewSet):
             patterns = service.analyze_usage_patterns(medication, days)
             
             return Response(patterns)
-            
-        except Exception as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-    
-    @action(detail=True, methods=['get'])
-    def stock_visualization(self, request, pk=None):
-        """
-        Get stock visualization data for a medication.
-        """
-        try:
-            medication = self.get_object()
-            chart_type = request.query_params.get('chart_type', 'line')
-            days = int(request.query_params.get('days', 30))
-            
-            service = IntelligentStockService()
-            visualization = service.generate_stock_visualization(
-                medication, chart_type, days
-            )
-            
-            serializer = StockVisualizationSerializer(visualization)
-            return Response(serializer.data)
             
         except Exception as e:
             return Response(

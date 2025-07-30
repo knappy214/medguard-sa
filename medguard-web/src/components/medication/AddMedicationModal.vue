@@ -348,25 +348,25 @@ const frequencies = [
 
 <style scoped>
 .modal-backdrop {
-  @apply bg-base-content/20;
+  background-color: hsl(var(--color-base-content) / 0.2);
 }
 
 .form-control {
-  @apply w-full;
+  width: 100%;
 }
 
 /* Custom styling for form elements */
 .input:focus,
 .select:focus,
 .textarea:focus {
-  @apply border-primary;
-  @apply ring-2 ring-primary/20;
+  border-color: hsl(var(--color-primary));
+  box-shadow: 0 0 0 2px hsl(var(--color-primary) / 0.2);
 }
 
 .input-error:focus,
 .select-error:focus,
 .textarea-error:focus {
-  @apply border-error;
-  @apply ring-2 ring-error/20;
+  border-color: hsl(var(--color-error));
+  box-shadow: 0 0 0 2px hsl(var(--color-error) / 0.2);
 }
 </style> 

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Test page for MedGuard SA favicon verification">
+    <meta name="keywords" content="favicon, test, medguard, healthcare">
+    <title>MedGuard SA Favicon Test</title>
+    
+    <!-- Favicon Configuration -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1.0" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .favicon-display {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .favicon-display img {
+            width: 32px;
+            height: 32px;
+        }
+        .instructions {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #2563EB;
+        }
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>MedGuard SA Favicon Test</h1>
+    
+    <div class="favicon-display">
+        <img src="/favicon.svg" alt="MedGuard SA Favicon" width="32" height="32" />
+        <div>
+            <h3>Current Favicon</h3>
+            <p>If you can see the MedGuard SA shield logo above, the favicon is working correctly!</p>
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <h3>If the favicon is still showing the Vue logo:</h3>
+        <ol>
+            <li><strong>Hard refresh</strong> the page: Ctrl+F5 (Windows) or Cmd+Shift+R (Mac)</li>
+            <li><strong>Clear browser cache</strong> for this site</li>
+            <li><strong>Check browser tab</strong> - the favicon should show the MedGuard shield</li>
+            <li><strong>Try incognito/private mode</strong> to bypass cache</li>
+            <li><strong>Wait a few minutes</strong> - some browsers cache favicons aggressively</li>
+        </ol>
+    </div>
+    
+    <h2>Favicon Files</h2>
+    <ul>
+        <li><strong>SVG Favicon:</strong> <code>/favicon.svg</code> - Vector format, scales perfectly</li>
+        <li><strong>PNG Favicons:</strong> <code>/favicon-32x32.png</code> and <code>/favicon-16x16.png</code> - Raster formats for older browsers</li>
+        <li><strong>Apple Touch Icon:</strong> <code>/apple-touch-icon.png</code> - For iOS devices</li>
+        <li><strong>Web Manifest:</strong> <code>/site.webmanifest</code> - PWA configuration</li>
+    </ul>
+    
+    <h2>Expected Result</h2>
+    <p>The browser tab should display a shield icon with:</p>
+    <ul>
+        <li>Green left side (#10B981) with white medical cross</li>
+        <li>Blue right side (#2563EB) with pill/capsule design</li>
+        <li>White border around the shield</li>
+        <li>Subtle drop shadow for depth</li>
+    </ul>
+    
+    <p><a href="/">← Back to MedGuard SA</a></p>
+</body>
+</html> 

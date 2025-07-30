@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from decimal import Decimal
+from datetime import timedelta
 import uuid
 
 # Wagtail imports
@@ -253,6 +254,113 @@ class Medication(models.Model):
         help_text=_('Storage instructions for the medication')
     )
     
+    # Image fields for medication photos
+    medication_image = models.ImageField(
+        upload_to='medications/images/',
+        blank=True,
+        null=True,
+        help_text=_('Primary medication image')
+    )
+    
+    medication_image_thumbnail = models.ImageField(
+        upload_to='medications/thumbnails/',
+        blank=True,
+        null=True,
+        help_text=_('Thumbnail version of medication image')
+    )
+    
+    medication_image_webp = models.ImageField(
+        upload_to='medications/webp/',
+        blank=True,
+        null=True,
+        help_text=_('WebP optimized version of medication image')
+    )
+    
+    medication_image_avif = models.ImageField(
+        upload_to='medications/avif/',
+        blank=True,
+        null=True,
+        help_text=_('AVIF optimized version of medication image')
+    )
+    
+    medication_image_jpeg_xl = models.ImageField(
+        upload_to='medications/jxl/',
+        blank=True,
+        null=True,
+        help_text=_('JPEG XL optimized version of medication image')
+    )
+    
+    medication_image_original = models.ImageField(
+        upload_to='medications/original/',
+        blank=True,
+        null=True,
+        help_text=_('Original unprocessed medication image')
+    )
+    
+    image_alt_text = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text=_('Alt text for medication image accessibility')
+    )
+    
+    image_processing_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', _('Pending')),
+            ('processing', _('Processing')),
+            ('completed', _('Completed')),
+            ('failed', _('Failed')),
+        ],
+        default='pending',
+        help_text=_('Status of image processing')
+    )
+    
+    image_processing_priority = models.CharField(
+        max_length=10,
+        choices=[
+            ('low', _('Low')),
+            ('medium', _('Medium')),
+            ('high', _('High')),
+            ('urgent', _('Urgent'))
+        ],
+        default='medium',
+        help_text=_('Priority level for image processing')
+    )
+    
+    image_processing_attempts = models.PositiveIntegerField(
+        default=0,
+        help_text=_('Number of image processing attempts')
+    )
+    
+    image_processing_last_attempt = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text=_('Last time image processing was attempted')
+    )
+    
+    image_processing_error = models.TextField(
+        blank=True,
+        help_text=_('Last error message from image processing')
+    )
+    
+    image_metadata = models.JSONField(
+        default=dict,
+        help_text=_('Metadata about the medication image (dimensions, format, etc.)')
+    )
+    
+    image_optimization_level = models.CharField(
+        max_length=10,
+        choices=[
+            ('none', _('None')),
+            ('basic', _('Basic')),
+            ('standard', _('Standard')),
+            ('high', _('High')),
+            ('maximum', _('Maximum'))
+        ],
+        default='standard',
+        help_text=_('Level of image optimization applied')
+    )
+    
     expiration_date = models.DateField(
         null=True,
         blank=True,
@@ -268,10 +376,26 @@ class Medication(models.Model):
         verbose_name_plural = _('Medications')
         db_table = 'medications'
         indexes = [
+            # Single field indexes for basic queries
             models.Index(fields=['name']),
             models.Index(fields=['generic_name']),
             models.Index(fields=['medication_type']),
             models.Index(fields=['prescription_type']),
+            models.Index(fields=['manufacturer']),
+            models.Index(fields=['expiration_date']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['updated_at']),
+            
+            # Composite indexes for complex queries
+            models.Index(fields=['medication_type', 'prescription_type']),
+            models.Index(fields=['pill_count', 'low_stock_threshold']),
+            models.Index(fields=['expiration_date', 'pill_count']),
+            models.Index(fields=['manufacturer', 'medication_type']),
+            models.Index(fields=['name', 'generic_name']),
+            
+            # Additional composite indexes for performance
+            models.Index(fields=['pill_count', 'low_stock_threshold'], name='medication_stock_threshold_idx'),
+            models.Index(fields=['expiration_date', 'pill_count'], name='medication_expiry_stock_idx'),
         ]
         ordering = ['name']
     

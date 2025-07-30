@@ -20,6 +20,12 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.db.models import Q, Sum, Avg, Count, F
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
+from django.conf import settings
+from PIL import Image, ImageOps
+import io
+import os
+from celery import shared_task
 
 from .models import (
     Medication, StockTransaction, StockAnalytics, PharmacyIntegration,
@@ -758,3 +764,277 @@ class StockAnalyticsService:
             })
         
         return recommendations 
+
+
+class ImageOptimizationService:
+    """
+    Service for optimizing medication images.
+    
+    Provides methods for:
+    - Creating thumbnails
+    - Converting to WebP format
+    - Compressing images
+    - Generating alt text
+    """
+    
+    THUMBNAIL_SIZE = (150, 150)
+    WEBP_QUALITY = 85
+    MAX_IMAGE_SIZE = (800, 800)
+    
+    @classmethod
+    def optimize_medication_image(cls, medication):
+        """
+        Optimize medication image by creating thumbnails and WebP versions.
+        
+        Args:
+            medication: Medication instance with image
+        """
+        if not medication.medication_image:
+            return False
+            
+        try:
+            # Update processing status
+            medication.image_processing_status = 'processing'
+            medication.save(update_fields=['image_processing_status'])
+            
+            # Open original image
+            with Image.open(medication.medication_image.path) as img:
+                # Convert to RGB if necessary
+                if img.mode in ('RGBA', 'LA', 'P'):
+                    img = img.convert('RGB')
+                
+                # Create thumbnail
+                thumbnail = cls._create_thumbnail(img)
+                if thumbnail:
+                    # Save thumbnail
+                    thumbnail_path = f'medications/thumbnails/{os.path.basename(medication.medication_image.name)}'
+                    thumbnail.save(thumbnail_path, 'JPEG', quality=85, optimize=True)
+                    medication.medication_image_thumbnail = thumbnail_path
+                
+                # Create WebP version
+                webp_path = f'medications/webp/{os.path.splitext(os.path.basename(medication.medication_image.name))[0]}.webp'
+                img.save(webp_path, 'WEBP', quality=cls.WEBP_QUALITY, optimize=True)
+                medication.medication_image_webp = webp_path
+                
+                # Generate alt text if not provided
+                if not medication.image_alt_text:
+                    medication.image_alt_text = cls._generate_alt_text(medication)
+                
+                # Update status
+                medication.image_processing_status = 'completed'
+                medication.save()
+                
+                logger.info(f"Successfully optimized image for medication {medication.id}")
+                return True
+                
+        except Exception as e:
+            logger.error(f"Error optimizing image for medication {medication.id}: {str(e)}")
+            medication.image_processing_status = 'failed'
+            medication.save(update_fields=['image_processing_status'])
+            return False
+    
+    @classmethod
+    def _create_thumbnail(cls, img):
+        """Create a thumbnail from the original image."""
+        try:
+            # Resize while maintaining aspect ratio
+            img.thumbnail(cls.THUMBNAIL_SIZE, Image.Resampling.LANCZOS)
+            return img
+        except Exception as e:
+            logger.error(f"Error creating thumbnail: {str(e)}")
+            return None
+    
+    @classmethod
+    def _generate_alt_text(cls, medication):
+        """Generate alt text for medication image."""
+        return f"Image of {medication.name} {medication.strength} {medication.medication_type}"
+
+
+class MedicationCacheService:
+    """
+    Service for caching medication data efficiently.
+    """
+    
+    CACHE_TIMEOUT = 1800  # 30 minutes
+    CACHE_PREFIX = 'medication'
+    
+    @classmethod
+    def get_medication_list(cls, filters: Dict[str, Any] = None) -> List[Dict]:
+        """
+        Get cached medication list with optional filters.
+        
+        Args:
+            filters: Optional filters to apply
+            
+        Returns:
+            List of medication dictionaries
+        """
+        cache_key = cls._get_cache_key('list', filters)
+        cached_data = cache.get(cache_key)
+        
+        if cached_data is None:
+            from .models import Medication
+            queryset = Medication.objects.all()
+            
+            if filters:
+                queryset = cls._apply_filters(queryset, filters)
+            
+            cached_data = list(queryset.values())
+            cache.set(cache_key, cached_data, cls.CACHE_TIMEOUT)
+        
+        return cached_data
+    
+    @classmethod
+    def get_medication_detail(cls, medication_id: int) -> Optional[Dict]:
+        """
+        Get cached medication detail.
+        
+        Args:
+            medication_id: Medication ID
+            
+        Returns:
+            Medication dictionary or None
+        """
+        cache_key = cls._get_cache_key('detail', medication_id)
+        cached_data = cache.get(cache_key)
+        
+        if cached_data is None:
+            from .models import Medication
+            try:
+                medication = Medication.objects.get(id=medication_id)
+                cached_data = {
+                    'id': medication.id,
+                    'name': medication.name,
+                    'generic_name': medication.generic_name,
+                    'brand_name': medication.brand_name,
+                    'medication_type': medication.medication_type,
+                    'prescription_type': medication.prescription_type,
+                    'strength': medication.strength,
+                    'dosage_unit': medication.dosage_unit,
+                    'pill_count': medication.pill_count,
+                    'low_stock_threshold': medication.low_stock_threshold,
+                    'manufacturer': medication.manufacturer,
+                    'description': medication.description,
+                    'active_ingredients': medication.active_ingredients,
+                    'side_effects': medication.side_effects,
+                    'contraindications': medication.contraindications,
+                    'storage_instructions': medication.storage_instructions,
+                    'expiration_date': medication.expiration_date.isoformat() if medication.expiration_date else None,
+                    'is_low_stock': medication.is_low_stock,
+                    'is_expired': medication.is_expired,
+                    'is_expiring_soon': medication.is_expiring_soon,
+                    'image_url': medication.medication_image.url if medication.medication_image else None,
+                    'thumbnail_url': medication.medication_image_thumbnail.url if medication.medication_image_thumbnail else None,
+                    'webp_url': medication.medication_image_webp.url if medication.medication_image_webp else None,
+                    'image_alt_text': medication.image_alt_text,
+                    'created_at': medication.created_at.isoformat(),
+                    'updated_at': medication.updated_at.isoformat(),
+                }
+                cache.set(cache_key, cached_data, cls.CACHE_TIMEOUT)
+            except Medication.DoesNotExist:
+                return None
+        
+        return cached_data
+    
+    @classmethod
+    def invalidate_medication_cache(cls, medication_id: int = None):
+        """
+        Invalidate medication cache.
+        
+        Args:
+            medication_id: Specific medication ID or None for all
+        """
+        if medication_id:
+            # Invalidate specific medication
+            cache.delete(cls._get_cache_key('detail', medication_id))
+        else:
+            # Invalidate all medication caches
+            cache.delete_pattern(f"{cls.CACHE_PREFIX}:*")
+    
+    @classmethod
+    def _get_cache_key(cls, key_type: str, identifier: Any) -> str:
+        """Generate cache key."""
+        return f"{cls.CACHE_PREFIX}:{key_type}:{identifier}"
+    
+    @classmethod
+    def _apply_filters(cls, queryset, filters: Dict[str, Any]):
+        """Apply filters to queryset."""
+        if 'medication_type' in filters:
+            queryset = queryset.filter(medication_type=filters['medication_type'])
+        
+        if 'prescription_type' in filters:
+            queryset = queryset.filter(prescription_type=filters['prescription_type'])
+        
+        if 'manufacturer' in filters:
+            queryset = queryset.filter(manufacturer__icontains=filters['manufacturer'])
+        
+        if 'search' in filters:
+            queryset = queryset.filter(
+                Q(name__icontains=filters['search']) |
+                Q(generic_name__icontains=filters['search']) |
+                Q(description__icontains=filters['search'])
+            )
+        
+        if 'low_stock' in filters and filters['low_stock']:
+            queryset = queryset.filter(pill_count__lte=F('low_stock_threshold'))
+        
+        if 'expiring_soon' in filters and filters['expiring_soon']:
+            thirty_days_from_now = timezone.now().date() + timedelta(days=30)
+            queryset = queryset.filter(
+                expiration_date__lte=thirty_days_from_now,
+                expiration_date__gte=timezone.now().date()
+            )
+        
+        return queryset
+
+
+@shared_task
+def optimize_medication_images():
+    """
+    Background task to optimize medication images.
+    """
+    from .models import Medication
+    
+    medications = Medication.objects.filter(
+        medication_image__isnull=False,
+        image_processing_status__in=['pending', 'failed']
+    )
+    
+    for medication in medications:
+        ImageOptimizationService.optimize_medication_image(medication)
+
+
+@shared_task
+def cleanup_old_medication_images():
+    """
+    Background task to cleanup old medication images.
+    """
+    from .models import Medication
+    from django.core.files.storage import default_storage
+    
+    # Find medications with old images that need cleanup
+    cutoff_date = timezone.now() - timedelta(days=30)
+    old_medications = Medication.objects.filter(
+        updated_at__lt=cutoff_date,
+        medication_image__isnull=False
+    )
+    
+    for medication in old_medications:
+        # Cleanup old image files
+        if medication.medication_image:
+            try:
+                default_storage.delete(medication.medication_image.path)
+            except Exception as e:
+                logger.error(f"Error deleting old image for medication {medication.id}: {str(e)}")
+        
+        if medication.medication_image_thumbnail:
+            try:
+                default_storage.delete(medication.medication_image_thumbnail.path)
+            except Exception as e:
+                logger.error(f"Error deleting old thumbnail for medication {medication.id}: {str(e)}")
+        
+        if medication.medication_image_webp:
+            try:
+                default_storage.delete(medication.medication_image_webp.path)
+            except Exception as e:
+                logger.error(f"Error deleting old WebP for medication {medication.id}: {str(e)}") 

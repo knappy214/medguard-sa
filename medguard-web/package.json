@@ -16,17 +16,20 @@
     "@tailwindcss/vite": "^4.1.11",
     "axios": "^1.11.0",
     "crypto-js": "^4.2.0",
-    "daisyui": "^5.0.48",
+    "daisyui": "^5.0.50",
+    "pinia": "^3.0.3",
     "tailwindcss": "^4.1.11",
     "vue": "^3.5.17",
-    "vue-i18n": "^9.14.5"
+    "vue-i18n": "^11.1.11"
   },
   "devDependencies": {
     "@intlify/unplugin-vue-i18n": "^6.0.8",
+    "@tailwindcss/postcss": "^4.1.11",
     "@tsconfig/node22": "^22.0.2",
     "@types/node": "^22.15.32",
     "@vitejs/plugin-vue": "^6.0.0",
     "@vue/tsconfig": "^0.7.0",
+    "autoprefixer": "^10.4.21",
     "npm-run-all2": "^8.0.4",
     "prettier": "3.5.3",
     "typescript": "~5.8.0",

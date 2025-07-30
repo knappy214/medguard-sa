@@ -51,7 +51,7 @@ const getAlertColor = (severity: string) => {
 }
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-ZA', {
+  return new Date(dateString).toLocaleDateString('en', {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -67,7 +67,7 @@ const handleMarkAsRead = (alertId: string) => {
 <template>
   <div class="card bg-base-100 shadow-sm">
     <div class="card-body">
-      <h2 class="card-title text-xl mb-4">
+      <h2 class="card-title text-xl mb-4 text-base-content">
         <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
@@ -96,7 +96,7 @@ const handleMarkAsRead = (alertId: string) => {
       <!-- Alerts List -->
       <div v-if="sortedAlerts.length === 0" class="text-center py-8">
         <div class="text-4xl mb-4">✅</div>
-        <p class="text-base-content-secondary">{{ t('dashboard.noAlerts') }}</p>
+        <p class="text-base-content/70">{{ t('dashboard.noAlerts') }}</p>
       </div>
 
       <div v-else class="space-y-3 max-h-96 overflow-y-auto">
@@ -136,7 +136,7 @@ const handleMarkAsRead = (alertId: string) => {
               {{ alert.message }}
             </p>
             
-            <div class="flex items-center justify-between text-xs text-base-content-secondary">
+            <div class="flex items-center justify-between text-xs text-base-content/60">
               <span>{{ formatDate(alert.createdAt) }}</span>
               <span class="capitalize">{{ alert.type.replace('_', ' ') }}</span>
             </div>
@@ -166,29 +166,10 @@ const handleMarkAsRead = (alertId: string) => {
       </div>
 
       <!-- Alert Legend -->
-      <div class="mt-4 p-3 bg-base-200/50 rounded-lg">
-        <div class="flex items-start gap-2">
-          <svg class="w-5 h-5 text-base-content-secondary mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div class="text-sm text-base-content">
-            <p class="font-medium mb-2">Alert Types:</p>
-            <div class="space-y-1 text-xs">
-              <div class="flex items-center gap-2">
-                <span class="text-error">🚨</span>
-                <span>Critical - Out of stock</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-warning">⚠️</span>
-                <span>Warning - Low stock</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-info">ℹ️</span>
-                <span>Info - Expiring soon</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="mt-4 p-3 bg-base-200/50 border border-base-300 rounded-lg">
+        <p class="text-sm text-base-content/80">
+          <strong>Legend:</strong> 🚨 Critical alerts require immediate attention. ⚠️ Warning alerts indicate low stock. ℹ️ Info alerts provide general updates.
+        </p>
       </div>
     </div>
   </div>
@@ -206,14 +187,16 @@ const handleMarkAsRead = (alertId: string) => {
 }
 
 .overflow-y-auto::-webkit-scrollbar-track {
-  @apply bg-base-200 rounded-full;
+  background-color: hsl(var(--color-base-200));
+  border-radius: 9999px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
-  @apply bg-base-content/20 rounded-full;
+  background-color: hsl(var(--color-base-content) / 0.2);
+  border-radius: 9999px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  @apply bg-base-content/30;
+  background-color: hsl(var(--color-base-content) / 0.3);
 }
 </style> 
