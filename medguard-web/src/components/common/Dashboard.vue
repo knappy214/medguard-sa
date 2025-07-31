@@ -1,58 +1,69 @@
 <template>
-  <div class="dashboard-container">
-    <div class="dashboard-header">
-      <h1>🏥 MedGuard SA Dashboard</h1>
-      <div class="user-info">
-        <span v-if="authService.authenticated">
-          Welcome, {{ authService.currentUser?.name || 'User' }}!
+  <div class="container mx-auto p-8">
+    <div class="flex justify-between items-center mb-8 pb-4 border-b border-base-300">
+      <div class="flex items-center gap-4">
+        <Logo size="lg" :show-text="false" />
+        <h1 class="text-4xl font-bold text-primary">MedGuard SA Dashboard</h1>
+      </div>
+      <div class="flex items-center gap-4">
+        <span v-if="isAuthenticated" class="text-base-content">
+          Welcome, {{ currentUser?.name || 'User' }}!
         </span>
-        <button @click="handleLogout" class="logout-button">
+        <button @click="handleLogout" class="btn btn-error btn-outline">
           Logout
         </button>
       </div>
     </div>
 
-    <div v-if="authService.authenticated" class="dashboard-content">
-      <div class="user-card">
-        <h2>User Information</h2>
-        <div class="user-details">
-          <p><strong>ID:</strong> {{ authService.currentUser?.id }}</p>
-          <p><strong>Email:</strong> {{ authService.currentUser?.email }}</p>
-          <p><strong>Name:</strong> {{ authService.currentUser?.name }}</p>
-          <p><strong>User Type:</strong> {{ authService.currentUser?.userType }}</p>
-          <p><strong>Last Login:</strong> {{ formatDate(authService.currentUser?.lastLogin) }}</p>
-          <p><strong>MFA Enabled:</strong> {{ authService.currentUser?.mfaEnabled ? 'Yes' : 'No' }}</p>
+    <div v-if="isAuthenticated" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="card bg-base-100 shadow-lg">
+        <div class="card-body">
+          <h2 class="card-title text-xl">User Information</h2>
+          <div class="space-y-2">
+            <p><strong>ID:</strong> {{ currentUser?.id }}</p>
+            <p><strong>Email:</strong> {{ currentUser?.email }}</p>
+            <p><strong>Name:</strong> {{ currentUser?.name }}</p>
+            <p><strong>User Type:</strong> {{ currentUser?.userType }}</p>
+            <p><strong>Last Login:</strong> {{ formatDate(currentUser?.lastLogin) }}</p>
+            <p><strong>MFA Enabled:</strong> {{ currentUser?.mfaEnabled ? 'Yes' : 'No' }}</p>
+          </div>
         </div>
       </div>
 
-      <div class="permissions-card">
-        <h2>Permissions</h2>
-        <div class="permissions-list">
-          <span 
-            v-for="permission in authService.currentUser?.permissions" 
-            :key="permission"
-            class="permission-tag"
-          >
-            {{ permission }}
-          </span>
+      <div class="card bg-base-100 shadow-lg">
+        <div class="card-body">
+          <h2 class="card-title text-xl">Permissions</h2>
+          <div class="flex flex-wrap gap-2">
+            <span 
+              v-for="permission in currentUser?.permissions" 
+              :key="permission"
+              class="badge badge-primary"
+            >
+              {{ permission }}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div class="security-card">
-        <h2>Security Information</h2>
-        <div class="security-details">
-          <p><strong>Device ID:</strong> {{ securitySettings.deviceId }}</p>
-          <p><strong>Session Timeout:</strong> {{ formatDuration(securitySettings.sessionTimeout) }}</p>
-          <p><strong>Last Activity:</strong> {{ formatDate(securitySettings.lastActivity) }}</p>
+      <div class="card bg-base-100 shadow-lg">
+        <div class="card-body">
+          <h2 class="card-title text-xl">Security Information</h2>
+          <div class="space-y-2">
+            <p><strong>Device ID:</strong> {{ securitySettings.deviceId }}</p>
+            <p><strong>Session Timeout:</strong> {{ formatDuration(securitySettings.sessionTimeout) }}</p>
+            <p><strong>Last Activity:</strong> {{ formatDate(securitySettings.lastActivity) }}</p>
+          </div>
         </div>
       </div>
     </div>
 
-    <div v-else class="login-prompt">
-      <p>Please log in to access the dashboard.</p>
-      <router-link to="/login" class="login-link">
-        Go to Login
-      </router-link>
+    <div v-else class="card bg-base-100 shadow-lg">
+      <div class="card-body text-center py-16">
+        <p class="text-lg text-base-content/70 mb-4">Please log in to access the dashboard.</p>
+        <router-link to="/login" class="btn btn-primary">
+          Go to Login
+        </router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -61,9 +72,13 @@
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import authService from '@/services/authService'
+import Logo from '@/components/common/Logo.vue'
 
 const router = useRouter()
 
+// Create computed properties to properly access auth service data
+const currentUser = computed(() => authService.currentUser.value)
+const isAuthenticated = computed(() => authService.authenticated.value)
 const securitySettings = computed(() => authService.getSecuritySettings())
 
 const handleLogout = async () => {
@@ -91,7 +106,7 @@ const formatDuration = (milliseconds: number) => {
 
 onMounted(() => {
   // Check if user is already authenticated
-  if (!authService.authenticated.value) {
+  if (!isAuthenticated.value) {
     console.log('User not authenticated, redirecting to login')
     router.push('/login')
   }

@@ -32,6 +32,38 @@ LOGGING['loggers']['medguard_backend']['level'] = 'DEBUG'
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
+# Allow custom HIPAA security headers explicitly
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'X-Security-Level',      # Custom HIPAA security header (exact case)
+    'X-Client-Version',      # Custom HIPAA security header (exact case)
+    'X-Request-Timestamp',   # Custom HIPAA security header (exact case)
+]
+
+# Additional CORS settings for development
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_EXPOSE_HEADERS = [
+    'X-Security-Level',
+    'X-Client-Version',
+    'X-Request-Timestamp',
+]
+
 # Development-specific cache settings
 CACHES = {
     'default': {

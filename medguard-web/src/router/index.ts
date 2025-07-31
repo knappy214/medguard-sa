@@ -9,6 +9,7 @@ import PasswordResetForm from '@/components/auth/PasswordResetForm.vue'
 import ProfileForm from '@/components/auth/ProfileForm.vue'
 import Dashboard from '@/components/common/Dashboard.vue'
 import MedicationDashboard from '@/components/medication/MedicationDashboard.vue'
+import ErrorPage from '@/components/common/ErrorPage.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -56,6 +57,13 @@ const routes: RouteRecordRaw[] = [
     name: 'Medications',
     component: MedicationDashboard,
     meta: { requiresAuth: true }
+  },
+  // Catch-all route for 404 errors
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: ErrorPage,
+    meta: { requiresAuth: false }
   }
 ]
 
@@ -65,17 +73,29 @@ const router = createRouter({
 })
 
 // Navigation guard for authentication
-router.beforeEach((to, from, next) => {
-  const requiresAuth = to.meta.requiresAuth !== false
-  
-  if (requiresAuth && !authService.authenticated.value) {
-    // Redirect to login if authentication is required but user is not authenticated
-    next('/login')
-  } else if ((to.path === '/login' || to.path === '/register') && authService.authenticated.value) {
-    // Redirect to dashboard if user is already authenticated and trying to access auth pages
-    next('/dashboard')
-  } else {
+router.beforeEach(async (to, from, next) => {
+  // Skip auth check for login and register pages
+  if (to.meta.requiresAuth === false) {
     next()
+    return
+  }
+
+  // Check if user is authenticated
+  if (authService.authenticated.value) {
+    next()
+  } else {
+    // Try to restore session
+    try {
+      await authService.restoreSession()
+      if (authService.authenticated.value) {
+        next()
+      } else {
+        next('/login')
+      }
+    } catch (error) {
+      console.error('Failed to restore session:', error)
+      next('/login')
+    }
   }
 })
 

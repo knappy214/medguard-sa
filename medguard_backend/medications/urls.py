@@ -4,12 +4,12 @@ from . import views
 
 # API router for medications
 router = DefaultRouter()
-router.register(r'medications', views.MedicationViewSet)
 router.register(r'schedules', views.MedicationScheduleViewSet, basename='medication-schedule')
 router.register(r'logs', views.MedicationLogViewSet, basename='medication-log')
 router.register(r'alerts', views.StockAlertViewSet)
 router.register(r'pharmacy-integrations', views.PharmacyIntegrationViewSet)
 router.register(r'stock-analytics', views.StockAnalyticsViewSet, basename='stock-analytics')
+router.register(r'', views.MedicationViewSet, basename='medication')
 
 # Combined URL patterns that work for both API and regular views
 urlpatterns = [
@@ -21,4 +21,6 @@ urlpatterns = [
     path('working-i18n-test/', views.working_i18n_test, name='working_i18n_test'),
     path('api-i18n-test/', views.api_i18n_test, name='api_i18n_test'),
     path('set-language/', views.set_language_ajax, name='set_language_ajax'),
+    path('test-cors/', views.test_cors, name='test_cors'),
+    path('test-medication-auth/', views.test_medication_auth, name='test_medication_auth'),
 ] 

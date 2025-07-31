@@ -65,7 +65,12 @@ class HIPAACompliantJWTAuthentication(JWTAuthentication):
         if self._is_token_blacklisted(token):
             raise AuthenticationFailed('Token has been revoked')
         
-        # Validate IP address (if stored in token)
+        # In development, skip strict IP and device fingerprint validation
+        # These checks are too restrictive for development environments
+        if settings.DEBUG:
+            return
+        
+        # Validate IP address (if stored in token) - only in production
         if not self._validate_ip_address(request, token):
             raise AuthenticationFailed('Invalid IP address for token')
         
@@ -73,7 +78,7 @@ class HIPAACompliantJWTAuthentication(JWTAuthentication):
         if not self._check_rate_limit(request, token):
             raise AuthenticationFailed('Rate limit exceeded')
         
-        # Validate device fingerprint
+        # Validate device fingerprint - only in production
         if not self._validate_device_fingerprint(request, token):
             raise AuthenticationFailed('Invalid device fingerprint')
     

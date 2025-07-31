@@ -10,6 +10,7 @@ export interface User {
   permissions: string[]
   lastLogin: string
   mfaEnabled: boolean
+  avatarUrl?: string // Add avatar URL support
 }
 
 export interface AuthTokens {
@@ -76,7 +77,7 @@ class HIPAACompliantAuthService {
       
       // Check for existing session with a small delay to ensure Vite proxy is ready
       setTimeout(async () => {
-        await this.restoreSession()
+        await this._restoreSession()
       }, 100)
       
       // Setup security headers
@@ -283,7 +284,74 @@ class HIPAACompliantAuthService {
   }
 
   /**
-   * Login with HIPAA-compliant security measures
+   * Fetch full user profile including avatar
+   */
+  public async fetchUserProfile(): Promise<User | null> {
+    try {
+      const accessToken = await this.getAccessToken()
+      if (!accessToken) {
+        console.log('fetchUserProfile: No access token available')
+        return null
+      }
+
+      console.log('fetchUserProfile: Making request to /api/users/profile/me/')
+      const response = await fetch('/api/users/profile/me/', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      console.log('fetchUserProfile: Response status:', response.status)
+      if (!response.ok) {
+        console.warn('Failed to fetch user profile:', response.status)
+        return null
+      }
+
+      const profileData = await response.json()
+      console.log('fetchUserProfile: Raw profile data:', profileData)
+      console.log('fetchUserProfile: avatar_url field:', profileData.avatar_url)
+      
+      // Update user with full profile data including avatar
+      const updatedUser: User = {
+        id: profileData.id.toString(),
+        email: profileData.email,
+        name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || profileData.username,
+        userType: profileData.user_type,
+        permissions: profileData.permissions || [],
+        lastLogin: profileData.last_login || new Date().toISOString(),
+        mfaEnabled: profileData.mfa_enabled || false,
+        avatarUrl: profileData.avatar_url || undefined
+      }
+
+      console.log('fetchUserProfile: Updated user object:', updatedUser)
+      console.log('fetchUserProfile: Final avatarUrl:', updatedUser.avatarUrl)
+
+      this.user.value = updatedUser
+      return updatedUser
+    } catch (error) {
+      console.error('Error fetching user profile:', error)
+      return null
+    }
+  }
+
+  /**
+   * Refresh user profile (public method for components to call)
+   */
+  public async refreshUserProfile(): Promise<User | null> {
+    return this.fetchUserProfile()
+  }
+
+  /**
+   * Public method to restore session (for router guards)
+   */
+  public async restoreSession(): Promise<void> {
+    return this._restoreSession()
+  }
+
+  /**
+   * Login with security compliance
    */
   public async login(credentials: LoginCredentials): Promise<User> {
     try {
@@ -324,6 +392,7 @@ class HIPAACompliantAuthService {
       }
       
       const responseData = await response.json()
+      console.log('Login response data:', responseData)
       
       const { user, access_token, refresh_token, expires_in } = responseData
       
@@ -345,13 +414,23 @@ class HIPAACompliantAuthService {
         userType: user.user_type,
         permissions: user.permissions || [],
         lastLogin: user.last_login || new Date().toISOString(),
-        mfaEnabled: user.mfa_enabled || false
+        mfaEnabled: user.mfa_enabled || false,
+        avatarUrl: user.avatar_url || undefined
       }
+      
+      console.log('Login: Initial user object set:', this.user.value)
       this.isAuthenticated.value = true
       this.lastActivity.value = Date.now()
       
       // Setup API interceptors with new tokens
       this.setupApiInterceptors(tokens.accessToken)
+      
+      // Fetch full user profile including avatar
+      try {
+        await this.fetchUserProfile()
+      } catch (profileError) {
+        console.warn('Failed to fetch full profile, using basic user data:', profileError)
+      }
       
       // Log security event (don't let logging failures affect login)
       try {
@@ -568,7 +647,7 @@ class HIPAACompliantAuthService {
   /**
    * Restore session from stored tokens
    */
-  private async restoreSession(): Promise<void> {
+  private async _restoreSession(): Promise<void> {
     try {
       const tokens = await this.getStoredTokens()
       if (!tokens) return
@@ -607,6 +686,13 @@ class HIPAACompliantAuthService {
       }
       this.isAuthenticated.value = true
       this.setupApiInterceptors(tokens.accessToken)
+      
+      // Fetch full user profile including avatar
+      try {
+        await this.fetchUserProfile()
+      } catch (profileError) {
+        console.warn('Failed to fetch full profile during session restore:', profileError)
+      }
       
     } catch (error) {
       console.error('Failed to restore session:', error)

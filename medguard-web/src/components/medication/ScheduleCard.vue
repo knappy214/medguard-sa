@@ -51,13 +51,26 @@ const getStatusIcon = (status: string) => {
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'taken':
-      return 'text-success'
+      return 'badge-success'
     case 'missed':
-      return 'text-error'
+      return 'badge-error'
     case 'pending':
-      return 'text-warning'
+      return 'badge-warning'
     default:
-      return 'text-base-content-secondary'
+      return 'badge-secondary'
+  }
+}
+
+const getStatusText = (status: string) => {
+  switch (status) {
+    case 'taken':
+      return t('dashboard.taken')
+    case 'missed':
+      return t('dashboard.missed')
+    case 'pending':
+      return t('dashboard.pending')
+    default:
+      return t('dashboard.pending')
   }
 }
 
@@ -128,7 +141,7 @@ const isOverdue = (scheduledTime: string) => {
                 {{ item.medication.name }}
               </h3>
               <span :class="`badge badge-sm ${getStatusColor(item.status)}`">
-                {{ item.status }}
+                {{ getStatusText(item.status) }}
               </span>
             </div>
             
@@ -151,7 +164,7 @@ const isOverdue = (scheduledTime: string) => {
             <button
               v-if="item.status === 'pending'"
               @click="handleMarkAsTaken(item.id)"
-              class="btn btn-success btn-sm"
+              class="btn btn-success btn-sm gap-1"
               :title="t('dashboard.markAsTaken')"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,7 +176,7 @@ const isOverdue = (scheduledTime: string) => {
             <button
               v-if="item.status === 'pending'"
               @click="handleMarkAsMissed(item.id)"
-              class="btn btn-error btn-sm"
+              class="btn btn-error btn-sm gap-1"
               :title="t('dashboard.markAsMissed')"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,15 +187,21 @@ const isOverdue = (scheduledTime: string) => {
 
             <div
               v-if="item.status === 'taken'"
-              class="text-success text-sm font-medium"
+              class="flex items-center gap-1 text-success text-sm font-medium"
             >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
               {{ t('dashboard.taken') }}
             </div>
 
             <div
               v-if="item.status === 'missed'"
-              class="text-error text-sm font-medium"
+              class="flex items-center gap-1 text-error text-sm font-medium"
             >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
               {{ t('dashboard.missed') }}
             </div>
           </div>

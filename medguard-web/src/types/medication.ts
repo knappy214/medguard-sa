@@ -59,6 +59,11 @@ export interface MedicationFormData {
   minStock: number
   instructions: string
   category: string
+  // Schedule information
+  scheduleTiming?: 'morning' | 'noon' | 'night' | 'custom'
+  scheduleCustomTime?: string
+  scheduleDosageAmount?: number
+  scheduleInstructions?: string
 }
 
 export interface ApiResponse<T> {

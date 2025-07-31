@@ -20,10 +20,34 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import User
-from .serializers import UserSerializer, UserDetailSerializer, UserCreateSerializer
+from .serializers import UserSerializer
 from security.jwt_auth import generate_secure_tokens, blacklist_token, get_token_generator
 from security.audit import log_audit_event
 from django.conf import settings
+
+import os
+from django.contrib.auth import get_user_model
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from rest_framework import status, generics, permissions, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.views import APIView
+from wagtail.api.v2.views import BaseAPIViewSet
+from wagtail.api.v2.router import WagtailAPIRouter
+
+from .models import User, UserAvatar, UserProfile
+from .serializers import (
+    UserSerializer, UserUpdateSerializer, UserAvatarSerializer,
+    AvatarUploadSerializer, ProfilePreferencesSerializer,
+    PasswordChangeSerializer, UserSummarySerializer
+)
+
+User = get_user_model()
+
 
 logger = logging.getLogger(__name__)
 
@@ -349,7 +373,7 @@ def register_view(request):
         password_confirm = request.data.get('password_confirm')
         first_name = request.data.get('first_name', '')
         last_name = request.data.get('last_name', '')
-        user_type = request.data.get('user_type', User.UserType.PATIENT)
+        user_type = request.data.get('user_type', 'PATIENT')
         
         # Validate required fields
         if not all([username, email, password, password_confirm]):
@@ -601,103 +625,250 @@ def change_password_view(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@api_view(['GET', 'PUT'])
-@permission_classes([IsAuthenticated])
-def profile_view(request):
-    """Handle user profile management."""
-    if request.method == 'GET':
-        # Return current user profile
-        user = request.user
-        return Response({
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'first_name': user.first_name or '',
-            'last_name': user.last_name or '',
-            'user_type': user.user_type,
-            'preferred_language': user.preferred_language or 'en',
-            'date_joined': user.date_joined.isoformat(),
-            'last_login': user.last_login.isoformat() if user.last_login else None,
-            'is_active': user.is_active,
-            'permissions': _get_user_permissions(user)
-        })
+class UserProfileViewSet(viewsets.ViewSet):
+    """
+    ViewSet for user profile management with avatar support
+    """
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
-    elif request.method == 'PUT':
-        # Update user profile
-        try:
-            user = request.user
-            
-            # Update allowed fields
-            if 'first_name' in request.data:
-                user.first_name = request.data['first_name']
-            if 'last_name' in request.data:
-                user.last_name = request.data['last_name']
-            if 'preferred_language' in request.data:
-                user.preferred_language = request.data['preferred_language']
-            
-            # Validate email if provided
-            if 'email' in request.data:
-                new_email = request.data['email']
-                if new_email != user.email:
-                    # Check if email is already taken
-                    if User.objects.filter(email=new_email).exclude(id=user.id).exists():
-                        return Response({
-                            'error': 'Email address is already in use'
-                        }, status=status.HTTP_400_BAD_REQUEST)
-                    user.email = new_email
-            
-            user.save()
-            
-            # Log audit event
-            log_audit_event(
-                user=user,
-                action='profile_updated',
-                description=f'Profile updated for {user.username}',
-                severity='low',
-                request=request
+    def get_serializer_class(self):
+        """Return the serializer class for this viewset"""
+        return UserSerializer
+    
+    def get_serializer(self, *args, **kwargs):
+        """Return the serializer instance for this viewset"""
+        serializer_class = self.get_serializer_class()
+        return serializer_class(*args, **kwargs)
+    
+    @action(detail=False, methods=['get', 'put', 'patch'], url_path='me')
+    def me(self, request):
+        """Get or update current user's profile"""
+        user = request.user
+        
+        if request.method == 'GET':
+            serializer = self.get_serializer(user)
+            return Response(serializer.data)
+        
+        elif request.method in ['PUT', 'PATCH']:
+            serializer = UserUpdateSerializer(
+                user, 
+                data=request.data, 
+                partial=True,
+                context={'request': request}
             )
             
-            return Response({
-                'message': 'Profile updated successfully',
-                'user': {
-                    'id': user.id,
-                    'username': user.username,
-                    'email': user.email,
-                    'first_name': user.first_name or '',
-                    'last_name': user.last_name or '',
-                    'user_type': user.user_type,
-                    'preferred_language': user.preferred_language or 'en',
-                    'permissions': _get_user_permissions(user)
-                }
-            })
+            if serializer.is_valid():
+                serializer.save()
+                # Return updated user data
+                user_serializer = UserSerializer(user, context={'request': request})
+                return Response(user_serializer.data)
             
-        except Exception as e:
-            logger.error(f'Profile update error: {e}')
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['post'], url_path='avatar/upload')
+    def upload_avatar(self, request):
+        """Upload user avatar"""
+        serializer = AvatarUploadSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        
+        if serializer.is_valid():
+            avatar = serializer.save()
+            avatar_serializer = UserAvatarSerializer(avatar, context={'request': request})
             return Response({
-                'error': 'Profile update failed'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                'url': avatar_serializer.data['url'],
+                'message': 'Avatar uploaded successfully'
+            }, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['delete'], url_path='avatar/delete')
+    def delete_avatar(self, request):
+        """Delete user avatar"""
+        if hasattr(request.user, 'avatar') and request.user.avatar:
+            request.user.avatar.delete()
+            return Response({'message': 'Avatar deleted successfully'})
+        
+        return Response(
+            {'error': 'No avatar found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    @action(detail=False, methods=['put', 'patch'], url_path='preferences')
+    def update_preferences(self, request):
+        """Update user preferences"""
+        serializer = ProfilePreferencesSerializer(
+            request.user,
+            data=request.data,
+            partial=True,
+            context={'request': request}
+        )
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Preferences updated successfully'})
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['post'], url_path='change-password')
+    def change_password(self, request):
+        """Change user password"""
+        serializer = PasswordChangeSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Password changed successfully'})
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def user_permissions_view(request):
-    """Get current user's permissions."""
-    try:
+def profile_summary(request):
+    """Get user profile summary"""
+    serializer = UserSummarySerializer(request.user, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def delete_account(request):
+    """Delete user account"""
+    user = request.user
+    password = request.data.get('password')
+    
+    if not password or not user.check_password(password):
+        return Response(
+            {'error': 'Password is required and must be correct'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Delete user (this will cascade to related models)
+    user.delete()
+    return Response({'message': 'Account deleted successfully'})
+
+
+class UserProfileAPIViewSet(viewsets.ViewSet):
+    """
+    API ViewSet for user profiles
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get_serializer_class(self):
+        """Return the serializer class for this viewset"""
+        return UserSerializer
+    
+    def list(self, request, *args, **kwargs):
+        """List current user's profile"""
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+    
+    def retrieve(self, request, *args, **kwargs):
+        """Retrieve current user's profile"""
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+    
+    def update(self, request, *args, **kwargs):
+        """Update current user's profile"""
         user = request.user
-        permissions = _get_user_permissions(user)
+        serializer = UserUpdateSerializer(
+            user, 
+            data=request.data, 
+            partial=True,
+            context={'request': request}
+        )
         
-        return Response({
-            'permissions': permissions,
-            'user_type': user.user_type,
-            'is_staff': user.is_staff,
-            'is_superuser': user.is_superuser
-        })
+        if serializer.is_valid():
+            serializer.save()
+            user_serializer = UserSerializer(user, context={'request': request})
+            return Response(user_serializer.data)
         
-    except Exception as e:
-        logger.error(f'Permissions error: {e}')
-        return Response({
-            'error': 'Failed to get permissions'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Register with Wagtail API router
+api_router = WagtailAPIRouter('wagtailapi')
+api_router.register_endpoint('profile', UserProfileAPIViewSet)
+
+
+# Additional utility views
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def health_check(request):
+    """Health check endpoint for user profile system"""
+    return Response({
+        'status': 'healthy',
+        'user_id': request.user.id,
+        'has_avatar': hasattr(request.user, 'avatar') and request.user.avatar is not None
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def export_profile_data(request):
+    """Export user profile data"""
+    user = request.user
+    data = UserSerializer(user, context={'request': request}).data
+    
+    # Add additional profile data if exists
+    if hasattr(user, 'profile'):
+        profile_data = {
+            'professional_title': user.profile.professional_title,
+            'license_number': user.profile.license_number,
+            'specialization': user.profile.specialization,
+            'facility_name': user.profile.facility_name,
+            'facility_address': user.profile.facility_address,
+            'facility_phone': user.profile.facility_phone,
+        }
+        data['extended_profile'] = profile_data
+    
+    return Response(data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def import_profile_data(request):
+    """Import user profile data"""
+    user = request.user
+    data = request.data
+    
+    # Update basic user fields
+    basic_fields = [
+        'first_name', 'last_name', 'phone', 'date_of_birth', 'gender',
+        'address', 'city', 'province', 'postal_code', 'blood_type',
+        'allergies', 'medical_conditions', 'current_medications',
+        'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
+        'preferred_language', 'timezone', 'email_notifications', 'sms_notifications'
+    ]
+    
+    for field in basic_fields:
+        if field in data:
+            setattr(user, field, data[field])
+    
+    user.save()
+    
+    # Update extended profile if provided
+    if 'extended_profile' in data:
+        profile, created = UserProfile.objects.get_or_create(user=user)
+        profile_data = data['extended_profile']
+        
+        for field in ['professional_title', 'license_number', 'specialization', 
+                     'facility_name', 'facility_address', 'facility_phone']:
+            if field in profile_data:
+                setattr(profile, field, profile_data[field])
+        
+        profile.save()
+    
+    serializer = UserSerializer(user, context={'request': request})
+    return Response(serializer.data)
 
 
 def _get_user_permissions(user):
@@ -783,9 +954,9 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """Use appropriate serializer based on action."""
         if self.action == 'create':
-            return UserCreateSerializer
+            return UserSerializer
         elif self.action == 'retrieve':
-            return UserDetailSerializer
+            return UserSerializer
         return UserSerializer
     
     @action(detail=True, methods=['post'])
@@ -808,32 +979,32 @@ class UserViewSet(viewsets.ModelViewSet):
     def profile(self, request, pk=None):
         """Get detailed profile information for a user."""
         user = self.get_object()
-        serializer = UserDetailSerializer(user, context={'request': request})
+        serializer = UserSerializer(user, context={'request': request})
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def me(self, request):
         """Get current user's profile information."""
-        serializer = UserDetailSerializer(request.user, context={'request': request})
+        serializer = UserSerializer(request.user, context={'request': request})
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def patients(self, request):
         """Get all patient users."""
-        patients = User.objects.filter(user_type=User.UserType.PATIENT)
+        patients = User.objects.filter(user_type='PATIENT')
         serializer = UserSerializer(patients, many=True, context={'request': request})
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def caregivers(self, request):
         """Get all caregiver users."""
-        caregivers = User.objects.filter(user_type=User.UserType.CAREGIVER)
+        caregivers = User.objects.filter(user_type='CAREGIVER')
         serializer = UserSerializer(caregivers, many=True, context={'request': request})
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def healthcare_providers(self, request):
         """Get all healthcare provider users."""
-        providers = User.objects.filter(user_type=User.UserType.HEALTHCARE_PROVIDER)
+        providers = User.objects.filter(user_type='HEALTHCARE_PROVIDER')
         serializer = UserSerializer(providers, many=True, context={'request': request})
         return Response(serializer.data)

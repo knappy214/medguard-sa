@@ -124,6 +124,12 @@ DATABASES = {
 # Custom User Model
 AUTH_USER_MODEL = 'users.User'
 
+# Authentication backends
+AUTHENTICATION_BACKENDS = [
+    'users.authentication.EmailOrUsernameModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
@@ -322,9 +328,27 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
+    "http://localhost:5173",  # Vite development server
+    "http://127.0.0.1:5173",  # Vite development server
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Allow custom HIPAA security headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'X-Security-Level',      # Custom HIPAA security header (exact case)
+    'X-Client-Version',      # Custom HIPAA security header (exact case)
+    'X-Request-Timestamp',   # Custom HIPAA security header (exact case)
+]
 
 # Enhanced security settings for HIPAA compliance
 SECURE_BROWSER_XSS_FILTER = True
@@ -369,6 +393,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:3000',
     'http://localhost:8080',
     'http://127.0.0.1:8080',
+    'http://localhost:5173',  # Vite development server
+    'http://127.0.0.1:5173',  # Vite development server
 ]
 
 # Security headers

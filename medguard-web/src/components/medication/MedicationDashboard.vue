@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Medication, MedicationSchedule, StockAlert } from '@/types/medication'
-import { medicationApi, mockMedications, mockSchedule, mockAlerts } from '@/services/medicationApi'
+import { medicationApi } from '@/services/medicationApi'
 import MedicationCard from './MedicationCard.vue'
 import ScheduleCard from './ScheduleCard.vue'
 import StockAlertsCard from './StockAlertsCard.vue'
@@ -16,6 +16,8 @@ const schedule = ref<MedicationSchedule[]>([])
 const alerts = ref<StockAlert[]>([])
 const loading = ref(true)
 const showAddModal = ref(false)
+const showEditModal = ref(false)
+const editingMedication = ref<Medication | null>(null)
 
 // Computed properties
 const pendingMedications = computed(() => 
@@ -42,24 +44,30 @@ const unreadAlerts = computed(() =>
 const loadData = async () => {
   loading.value = true
   try {
-    // In development, use mock data
-    if (import.meta.env.DEV) {
-      medications.value = mockMedications
-      schedule.value = mockSchedule
-      alerts.value = mockAlerts
-    } else {
-      // In production, use real API
-      const [meds, sched, alrts] = await Promise.all([
-        medicationApi.getMedications(),
-        medicationApi.getTodaySchedule(),
-        medicationApi.getStockAlerts()
-      ])
-      medications.value = meds
-      schedule.value = sched
-      alerts.value = alrts
-    }
+    console.log('🔄 Loading dashboard data...')
+    // Use the enhanced API service which automatically handles mock vs real API
+    const [meds, sched, alrts] = await Promise.all([
+      medicationApi.getMedications(),
+      medicationApi.getTodaySchedule(),
+      medicationApi.getStockAlerts()
+    ])
+    console.log('📦 Received medications:', meds)
+    console.log('📅 Received schedule:', sched)
+    console.log('🚨 Received alerts:', alrts)
+    
+    medications.value = meds
+    schedule.value = sched
+    alerts.value = alrts
+    
+    console.log('✅ Updated reactive data:', {
+      medicationsCount: medications.value.length,
+      scheduleCount: schedule.value.length,
+      alertsCount: alerts.value.length
+    })
   } catch (error) {
     console.error('Failed to load dashboard data:', error)
+    // Show user-friendly error message
+    // You can add a toast notification here
   } finally {
     loading.value = false
   }
@@ -67,89 +75,98 @@ const loadData = async () => {
 
 const handleMarkAsTaken = async (scheduleId: string) => {
   try {
-    if (import.meta.env.DEV) {
-      // Update mock data
-      const scheduleItem = schedule.value.find(item => item.id === scheduleId)
-      if (scheduleItem) {
-        scheduleItem.status = 'taken'
-        scheduleItem.takenAt = new Date().toISOString()
+    const result = await medicationApi.markAsTaken(scheduleId)
+    
+    if (result.success) {
+      // Show success message with stock information
+      console.log('✅ Medication marked as taken successfully')
+      console.log(`📦 Stock deducted: ${result.stockDeducted}`)
+      console.log(`📊 Remaining stock: ${result.remainingStock}`)
+      
+      if (result.lowStockAlert) {
+        console.warn('⚠️ Low stock alert triggered')
+        // You could show a toast notification here
       }
-    } else {
-      await medicationApi.markAsTaken(scheduleId)
+      
       await loadData() // Reload data
+    } else {
+      // Handle specific error cases
+      if (result.error?.includes('Insufficient stock')) {
+        console.error('❌ Insufficient stock:', result.error)
+        // You could show a specific error message to the user
+      } else {
+        console.error('❌ Failed to mark medication as taken:', result.error)
+      }
     }
   } catch (error) {
     console.error('Failed to mark medication as taken:', error)
+    // Show user-friendly error message
   }
 }
 
 const handleMarkAsMissed = async (scheduleId: string) => {
   try {
-    if (import.meta.env.DEV) {
-      // Update mock data
-      const scheduleItem = schedule.value.find(item => item.id === scheduleId)
-      if (scheduleItem) {
-        scheduleItem.status = 'missed'
-      }
-    } else {
-      await medicationApi.markAsMissed(scheduleId)
-      await loadData() // Reload data
-    }
+    await medicationApi.markAsMissed(scheduleId)
+    await loadData() // Reload data
   } catch (error) {
     console.error('Failed to mark medication as missed:', error)
+    // Show user-friendly error message
   }
 }
 
 const handleAddMedication = async (medicationData: any) => {
+  console.log('📝 handleAddMedication called with data:', medicationData)
   try {
-    if (import.meta.env.DEV) {
-      // Add to mock data
-      const newMedication: Medication = {
-        id: Date.now().toString(),
-        ...medicationData,
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-      medications.value.push(newMedication)
-    } else {
-      await medicationApi.createMedication(medicationData)
-      await loadData() // Reload data
-    }
+    console.log('🔄 Calling medicationApi.createMedication...')
+    const result = await medicationApi.createMedication(medicationData)
+    console.log('✅ Medication created successfully:', result)
+    await loadData() // Reload data
     showAddModal.value = false
   } catch (error) {
-    console.error('Failed to add medication:', error)
+    console.error('❌ Failed to add medication:', error)
+    console.error('🔍 Error in handleAddMedication:', {
+      message: (error as any)?.message,
+      status: (error as any)?.status,
+      data: (error as any)?.data
+    })
+    // Show user-friendly error message
   }
 }
 
 const handleDeleteMedication = async (medicationId: string) => {
   try {
-    if (import.meta.env.DEV) {
-      // Remove from mock data
-      medications.value = medications.value.filter(med => med.id !== medicationId)
-    } else {
-      await medicationApi.deleteMedication(medicationId)
-      await loadData() // Reload data
-    }
+    await medicationApi.deleteMedication(medicationId)
+    await loadData() // Reload data
   } catch (error) {
     console.error('Failed to delete medication:', error)
+    // Show user-friendly error message
+  }
+}
+
+const handleEditMedication = (medication: Medication) => {
+  editingMedication.value = medication
+  showEditModal.value = true
+}
+
+const handleUpdateMedication = async (medicationData: any) => {
+  try {
+    await medicationApi.updateMedication(editingMedication.value!.id, medicationData)
+    await loadData() // Reload data
+    showEditModal.value = false
+    editingMedication.value = null
+  } catch (error) {
+    console.error('Failed to update medication:', error)
+    // Show user-friendly error message
   }
 }
 
 const handleMarkAlertAsRead = async (alertId: string) => {
   try {
-    if (import.meta.env.DEV) {
-      // Update mock data
-      const alert = alerts.value.find(a => a.id === alertId)
-      if (alert) {
-        alert.isRead = true
-      }
-    } else {
-      await medicationApi.markAlertAsRead(alertId)
-      await loadData() // Reload data
-    }
+    await medicationApi.markAlertAsRead(alertId)
+    await loadData() // Reload data
   } catch (error) {
     console.error('Failed to mark alert as read:', error)
+    // Show user-friendly error message
   }
 }
 
@@ -290,6 +307,7 @@ onMounted(() => {
               :key="medication.id"
               :medication="medication"
               @delete="handleDeleteMedication"
+              @edit="handleEditMedication"
             />
           </div>
         </div>
@@ -301,6 +319,15 @@ onMounted(() => {
       v-if="showAddModal"
       @close="showAddModal = false"
       @add="handleAddMedication"
+    />
+
+    <!-- Edit Medication Modal -->
+    <AddMedicationModal 
+      v-if="showEditModal"
+      :medication="editingMedication"
+      mode="edit"
+      @close="showEditModal = false"
+      @add="handleUpdateMedication"
     />
   </div>
 </template>

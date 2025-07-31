@@ -264,9 +264,9 @@ class MedicationStatsSerializer(serializers.Serializer):
         ).count()
         
         # Schedule counts
-        if user.user_type == User.UserType.PATIENT:
+        if user.user_type == 'PATIENT':
             schedules = MedicationSchedule.objects.filter(patient=user)
-        elif user.user_type == User.UserType.CAREGIVER:
+        elif user.user_type == 'CAREGIVER':
             schedules = MedicationSchedule.objects.filter(patient__caregiver=user)
         else:
             schedules = MedicationSchedule.objects.all()
@@ -310,9 +310,9 @@ class MedicationStatsSerializer(serializers.Serializer):
         ).count()
         
         # Adherence rate
-        if user.user_type == User.UserType.PATIENT:
+        if user.user_type == 'PATIENT':
             logs = MedicationLog.objects.filter(patient=user)
-        elif user.user_type == User.UserType.CAREGIVER:
+        elif user.user_type == 'CAREGIVER':
             logs = MedicationLog.objects.filter(patient__caregiver=user)
         else:
             logs = MedicationLog.objects.all()

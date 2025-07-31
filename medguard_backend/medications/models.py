@@ -468,7 +468,7 @@ class MedicationSchedule(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='medication_schedules',
-        limit_choices_to={'user_type': User.UserType.PATIENT},
+        limit_choices_to={'user_type': 'PATIENT'},
         help_text=_('Patient for whom this schedule is created')
     )
     
@@ -623,7 +623,7 @@ class MedicationLog(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='medication_logs',
-        limit_choices_to={'user_type': User.UserType.PATIENT},
+        limit_choices_to={'user_type': 'PATIENT'},
         help_text=_('Patient who took the medication')
     )
     
@@ -1288,7 +1288,7 @@ class PrescriptionRenewal(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='prescription_renewals',
-        limit_choices_to={'user_type': User.UserType.PATIENT},
+        limit_choices_to={'user_type': 'PATIENT'},
         help_text=_('Patient for this prescription')
     )
     

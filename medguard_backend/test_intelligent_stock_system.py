@@ -239,7 +239,7 @@ class IntelligentStockSystemTester:
         try:
             # Create test medication and user
             medication = self._create_test_medication("Renewal Test Medication", 50)
-            patient = self._create_test_user("testpatient", "Test Patient", user_type=User.UserType.PATIENT)
+            patient = self._create_test_user("testpatient", "Test Patient", user_type='PATIENT')
             
             # Create prescription renewal
             renewal = PrescriptionRenewal.objects.create(
@@ -391,7 +391,7 @@ class IntelligentStockSystemTester:
             manufacturer="Test Manufacturer"
         )
     
-    def _create_test_user(self, username, full_name, user_type=User.UserType.STAFF):
+    def _create_test_user(self, username, full_name, user_type='HEALTHCARE_PROVIDER'):
         """Create a test user."""
         user, created = User.objects.get_or_create(
             username=username,

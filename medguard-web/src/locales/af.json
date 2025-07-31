@@ -6,6 +6,7 @@
     "medicationList": "Medikasie Lys",
     "stockAlerts": "Voorraad Waarskuwings",
     "addMedication": "Voeg Medikasie By",
+    "editMedication": "Wysig Medikasie",
     "taken": "Geneem",
     "missed": "Gemis",
     "upcoming": "Komende",
@@ -42,7 +43,13 @@
     "legend": "Legende",
     "legendText": "🚨 Kritiese waarskuwings benodig onmiddellike aandag. ⚠️ Waarskuwing waarskuwings dui op lae voorraad. ℹ️ Inligting waarskuwings verskaf algemene opdaterings.",
     "stockLowMessage": "{medication} voorraad is laag. Slegs {count} tablette oor.",
-    "stockCriticalMessage": "{medication} voorraad is krities laag. Slegs {count} tablette oor."
+    "stockCriticalMessage": "{medication} voorraad is krities laag. Slegs {count} tablette oor.",
+    "stockDeducted": "Voorraad afgetrek",
+    "remainingStock": "Oorblywende voorraad",
+    "insufficientStock": "Onvoldoende voorraad",
+    "insufficientStockMessage": "Slegs {current} pille beskikbaar, maar {required} benodig",
+    "lowStockAlert": "Lae voorraad waarskuwing",
+    "medicationTakenSuccess": "Medikasie suksesvol as geneem gemerk"
   },
   "medication": {
     "name": "Medikasie Naam",
@@ -107,6 +114,7 @@
     "success": "Sukses",
     "cancel": "Kanselleer",
     "save": "Stoor",
+    "update": "Opdateer",
     "delete": "Verwyder",
     "edit": "Redigeer",
     "add": "Voeg By",
@@ -135,27 +143,37 @@
   },
   "validation": {
     "medicationNameRequired": "Medikasie naam is verpligtend",
-    "dosageRequired": "Dosage is verpligtend",
+    "dosageRequired": "Dosis is verpligtend",
     "frequencyRequired": "Frekwensie is verpligtend",
     "timeRequired": "Tyd is verpligtend",
     "stockCannotBeNegative": "Voorraad kan nie negatief wees nie",
     "minStockCannotBeNegative": "Minimum voorraad kan nie negatief wees nie",
     "instructionsRequired": "Instruksies is verpligtend",
-    "categoryRequired": "Kategorie is verpligtend"
+    "categoryRequired": "Kategorie is verpligtend",
+    "customTimeRequired": "Aangepaste tyd is verpligtend wanneer aangepaste tyd gebruik word",
+    "dosageAmountMustBePositive": "Dosis hoeveelheid moet positief wees"
   },
   "form": {
     "medicationName": "Medikasie Naam",
-    "dosage": "Dosage",
+    "category": "Kategorie",
+    "dosage": "Dosis",
+    "dosagePlaceholder": "bv., 500mg",
     "frequency": "Frekwensie",
+    "selectFrequency": "Kies frekwensie",
     "time": "Tyd",
+    "timePlaceholder": "bv., 08:00",
     "currentStock": "Huidige Voorraad",
     "minimumStock": "Minimum Voorraad",
     "instructions": "Instruksies",
-    "category": "Kategorie",
-    "selectFrequency": "Kies frekwensie",
-    "dosagePlaceholder": "bv., 500mg",
-    "timePlaceholder": "bv., 08:00, 14:00, 20:00",
-    "instructionsPlaceholder": "bv., Neem met kos. Moenie meer as 4 tablette per dag neem nie.",
-    "addMedication": "Voeg Medikasie By"
+    "instructionsPlaceholder": "Spesiale instruksies vir die neem van hierdie medikasie...",
+    "scheduleInformation": "Skeduleer Inligting",
+    "scheduleTiming": "Skeduleer Tyd",
+    "morning": "Oggend",
+    "noon": "Middag",
+    "night": "Nag",
+    "customTime": "Aangepaste Tyd",
+    "dosageAmount": "Dosis Hoeveelheid",
+    "scheduleInstructions": "Skeduleer Instruksies",
+    "scheduleInstructionsPlaceholder": "Spesiale instruksies vir hierdie skeduleer..."
   }
 } 

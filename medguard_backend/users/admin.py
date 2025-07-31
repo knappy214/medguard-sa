@@ -10,18 +10,18 @@ class UserAdmin(BaseUserAdmin):
     
     list_display = (
         'username', 'email', 'get_full_name', 'user_type', 
-        'medical_record_number', 'is_active', 'date_joined'
+        'phone', 'is_active', 'date_joined'
     )
     
     list_filter = (
         'user_type', 'gender', 'is_active', 'is_staff', 'is_superuser',
         'preferred_language', 'email_notifications', 'sms_notifications',
-        'push_notifications', 'date_joined'
+        'date_joined'
     )
     
     search_fields = (
         'username', 'email', 'first_name', 'last_name', 
-        'medical_record_number', 'phone_number'
+        'phone'
     )
     
     ordering = ('-date_joined',)
@@ -38,20 +38,19 @@ class UserAdmin(BaseUserAdmin):
         }),
         (_('Contact Information'), {
             'fields': (
-                'phone_number', 'emergency_contact_name', 
+                'phone', 'emergency_contact_name', 
                 'emergency_contact_phone', 'emergency_contact_relationship'
             )
         }),
         (_('Medical Information'), {
             'fields': (
-                'medical_record_number', 'primary_healthcare_provider',
-                'healthcare_provider_phone'
+                'blood_type', 'allergies', 'medical_conditions', 'current_medications'
             )
         }),
         (_('Preferences'), {
             'fields': (
                 'preferred_language', 'timezone', 'email_notifications',
-                'sms_notifications', 'push_notifications'
+                'sms_notifications', 'mfa_enabled'
             )
         }),
         (_('Permissions'), {
@@ -70,7 +69,7 @@ class UserAdmin(BaseUserAdmin):
             'classes': ('wide',),
             'fields': (
                 'username', 'email', 'password1', 'password2', 'user_type',
-                'first_name', 'last_name', 'phone_number'
+                'first_name', 'last_name', 'phone'
             ),
         }),
     )

@@ -48,6 +48,11 @@ export function useAuth() {
     return authService.getSecuritySettings()
   }
   
+  // Refresh user profile
+  const refreshUserProfile = async () => {
+    return authService.refreshUserProfile()
+  }
+  
   // Check if user is admin
   const isAdmin = computed(() => {
     return user.value?.userType === 'HEALTHCARE_PROVIDER' && 
@@ -80,6 +85,7 @@ export function useAuth() {
     logout,
     hasPermission,
     isUserType,
-    getSecuritySettings
+    getSecuritySettings,
+    refreshUserProfile
   }
 } 

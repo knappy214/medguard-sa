@@ -1,205 +1,252 @@
 <template>
-  <div class="register-container">
-    <div class="register-card">
-      <div class="register-header">
-        <h2>🏥 MedGuard SA</h2>
-        <p>Create Your Healthcare Account</p>
-      </div>
-      
-      <form @submit.prevent="handleRegister" class="register-form">
-        <!-- Personal Information -->
-        <div class="form-section">
-          <h3>Personal Information</h3>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label for="firstName">First Name</label>
-              <input
-                id="firstName"
-                v-model="formData.first_name"
-                type="text"
-                required
-                placeholder="Enter your first name"
-                class="form-input"
-              />
-            </div>
-            
-            <div class="form-group">
-              <label for="lastName">Last Name</label>
-              <input
-                id="lastName"
-                v-model="formData.last_name"
-                type="text"
-                required
-                placeholder="Enter your last name"
-                class="form-input"
-              />
-            </div>
+  <div class="min-h-screen bg-gradient-to-br from-primary to-secondary flex items-center justify-center p-4">
+    <div class="card w-full max-w-2xl bg-base-100 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div class="card-body">
+        <div class="text-center mb-6">
+          <div class="flex justify-center mb-4">
+            <Logo size="lg" :show-text="false" />
           </div>
-          
-          <div class="form-group">
-            <label for="email">Email Address</label>
-            <input
-              id="email"
-              v-model="formData.email"
-              type="email"
-              required
-              placeholder="Enter your email address"
-              class="form-input"
-            />
-          </div>
-          
-          <div class="form-group">
-            <label for="username">Username</label>
-            <input
-              id="username"
-              v-model="formData.username"
-              type="text"
-              required
-              placeholder="Choose a username"
-              class="form-input"
-            />
-          </div>
+          <h2 class="text-3xl font-bold text-primary">MedGuard SA</h2>
+          <p class="text-base-content/70 mt-2">Create Your Healthcare Account</p>
         </div>
         
-        <!-- Account Type -->
-        <div class="form-section">
-          <h3>Account Type</h3>
-          
-          <div class="form-group">
-            <label for="userType">I am a:</label>
-            <select
-              id="userType"
-              v-model="formData.user_type"
-              required
-              class="form-select"
-            >
-              <option value="">Select your role</option>
-              <option value="patient">Patient</option>
-              <option value="caregiver">Caregiver</option>
-              <option value="healthcare_provider">Healthcare Provider</option>
-            </select>
-          </div>
-        </div>
-        
-        <!-- Security -->
-        <div class="form-section">
-          <h3>Security</h3>
-          
-          <div class="form-group">
-            <label for="password">Password</label>
-            <div class="password-input-container">
-              <input
-                id="password"
-                v-model="formData.password"
-                :type="showPassword ? 'text' : 'password'"
-                required
-                placeholder="Create a strong password"
-                class="form-input"
-                @input="validatePassword"
-              />
-              <button
-                type="button"
-                class="password-toggle"
-                @click="showPassword = !showPassword"
-              >
-                {{ showPassword ? '👁️' : '👁️‍🗨️' }}
-              </button>
-            </div>
-            <div class="password-strength" v-if="formData.password">
-              <div class="strength-bar">
-                <div 
-                  class="strength-fill" 
-                  :class="passwordStrength.class"
-                  :style="{ width: passwordStrength.percentage + '%' }"
-                ></div>
+        <form @submit.prevent="handleRegister" class="space-y-8">
+          <!-- Personal Information -->
+          <div class="card bg-base-200">
+            <div class="card-body">
+              <h3 class="card-title text-lg">Personal Information</h3>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-control">
+                  <label for="firstName" class="label">
+                    <span class="label-text font-medium">First Name</span>
+                  </label>
+                  <input
+                    id="firstName"
+                    v-model="formData.first_name"
+                    type="text"
+                    required
+                    autocomplete="given-name"
+                    placeholder="Enter your first name"
+                    class="input input-bordered w-full focus:input-primary"
+                  />
+                </div>
+                
+                <div class="form-control">
+                  <label for="lastName" class="label">
+                    <span class="label-text font-medium">Last Name</span>
+                  </label>
+                  <input
+                    id="lastName"
+                    v-model="formData.last_name"
+                    type="text"
+                    required
+                    autocomplete="family-name"
+                    placeholder="Enter your last name"
+                    class="input input-bordered w-full focus:input-primary"
+                  />
+                </div>
               </div>
-              <span class="strength-text" :class="passwordStrength.class">
-                {{ passwordStrength.text }}
-              </span>
+              
+              <div class="form-control">
+                <label for="email" class="label">
+                  <span class="label-text font-medium">Email Address</span>
+                </label>
+                <input
+                  id="email"
+                  v-model="formData.email"
+                  type="email"
+                  required
+                  autocomplete="email"
+                  placeholder="Enter your email address"
+                  class="input input-bordered w-full focus:input-primary"
+                />
+              </div>
+              
+              <div class="form-control">
+                <label for="username" class="label">
+                  <span class="label-text font-medium">Username</span>
+                </label>
+                <input
+                  id="username"
+                  v-model="formData.username"
+                  type="text"
+                  required
+                  autocomplete="username"
+                  placeholder="Choose a username"
+                  class="input input-bordered w-full focus:input-primary"
+                />
+              </div>
             </div>
           </div>
           
-          <div class="form-group">
-            <label for="passwordConfirm">Confirm Password</label>
-            <input
-              id="passwordConfirm"
-              v-model="formData.password_confirm"
-              type="password"
-              required
-              placeholder="Confirm your password"
-              class="form-input"
-              @input="validatePasswordMatch"
-            />
-            <div v-if="formData.password_confirm && !passwordsMatch" class="error-text">
-              Passwords do not match
+          <!-- Account Type -->
+          <div class="card bg-base-200">
+            <div class="card-body">
+              <h3 class="card-title text-lg">Account Type</h3>
+              
+              <div class="form-control">
+                <label for="userType" class="label">
+                  <span class="label-text font-medium">I am a:</span>
+                </label>
+                <select
+                  id="userType"
+                  v-model="formData.user_type"
+                  required
+                  class="select select-bordered w-full focus:select-primary"
+                >
+                  <option value="">Select your role</option>
+                  <option value="patient">Patient</option>
+                  <option value="caregiver">Caregiver</option>
+                  <option value="healthcare_provider">Healthcare Provider</option>
+                </select>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <!-- Terms and Conditions -->
-        <div class="form-section">
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input
-                v-model="formData.acceptTerms"
-                type="checkbox"
-                required
-                class="checkbox-input"
-              />
-              <span class="checkbox-text">
-                I agree to the 
-                <a href="#" @click.prevent="showTerms = true" class="link">Terms of Service</a>
-                and 
-                <a href="#" @click.prevent="showPrivacy = true" class="link">Privacy Policy</a>
-              </span>
-            </label>
+          
+          <!-- Security -->
+          <div class="card bg-base-200">
+            <div class="card-body">
+              <h3 class="card-title text-lg">Security</h3>
+              
+              <div class="form-control">
+                <label for="password" class="label">
+                  <span class="label-text font-medium">Password</span>
+                </label>
+                <div class="relative">
+                  <input
+                    id="password"
+                    v-model="formData.password"
+                    :type="showPassword ? 'text' : 'password'"
+                    required
+                    autocomplete="new-password"
+                    placeholder="Create a strong password"
+                    class="input input-bordered w-full pr-12 focus:input-primary"
+                    @input="validatePassword"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-sm absolute right-2 top-1/2 transform -translate-y-1/2"
+                    @click="showPassword = !showPassword"
+                  >
+                    {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+                  </button>
+                </div>
+                <div class="password-strength mt-2" v-if="formData.password">
+                  <div class="flex items-center gap-2">
+                    <progress 
+                      class="progress flex-1" 
+                      :class="passwordStrength.class === 'weak' ? 'progress-error' : passwordStrength.class === 'fair' ? 'progress-warning' : 'progress-success'"
+                      :value="passwordStrength.percentage" 
+                      max="100"
+                    ></progress>
+                    <span class="text-sm font-medium" :class="passwordStrength.class === 'weak' ? 'text-error' : passwordStrength.class === 'fair' ? 'text-warning' : 'text-success'">
+                      {{ passwordStrength.text }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-control">
+                <label for="passwordConfirm" class="label">
+                  <span class="label-text font-medium">Confirm Password</span>
+                </label>
+                                  <input
+                    id="passwordConfirm"
+                    v-model="formData.password_confirm"
+                    type="password"
+                    required
+                    autocomplete="new-password"
+                    placeholder="Confirm your password"
+                    class="input input-bordered w-full focus:input-primary"
+                    @input="validatePasswordMatch"
+                  />
+                <div v-if="formData.password_confirm && !passwordsMatch" class="label">
+                  <span class="label-text-alt text-error">Passwords do not match</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+          
+          <!-- Terms and Conditions -->
+          <div class="card bg-base-200">
+            <div class="card-body">
+              <div class="form-control">
+                <label class="label cursor-pointer">
+                  <input
+                    v-model="formData.acceptTerms"
+                    type="checkbox"
+                    required
+                    class="checkbox checkbox-primary"
+                  />
+                  <span class="label-text ml-2">
+                    I agree to the 
+                    <a href="#" @click.prevent="showTerms = true" class="link link-primary">Terms of Service</a>
+                    and 
+                    <a href="#" @click.prevent="showPrivacy = true" class="link link-primary">Privacy Policy</a>
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div v-if="error" class="alert alert-error">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{{ error }}</span>
+          </div>
+          
+          <button 
+            type="submit" 
+            :disabled="loading || !isFormValid"
+            class="btn btn-primary w-full"
+          >
+            <span v-if="loading" class="loading loading-spinner loading-sm"></span>
+            <span v-if="loading">Creating Account...</span>
+            <span v-else>Create Account</span>
+          </button>
+        </form>
         
-        <div v-if="error" class="error-message">
-          {{ error }}
+        <div class="text-center mt-6 pt-6 border-t border-base-300">
+          <p class="text-base-content/70 text-sm">
+            Already have an account? 
+            <a href="#" @click.prevent="goToLogin" class="link link-primary font-medium">Sign In</a>
+          </p>
         </div>
-        
-        <button 
-          type="submit" 
-          :disabled="loading || !isFormValid"
-          class="register-button"
-        >
-          <span v-if="loading">Creating Account...</span>
-          <span v-else>Create Account</span>
-        </button>
-      </form>
-      
-      <div class="register-footer">
-        <p>Already have an account? <a href="#" @click.prevent="goToLogin" class="link">Sign In</a></p>
       </div>
     </div>
     
     <!-- Terms Modal -->
-    <div v-if="showTerms" class="modal-overlay" @click="showTerms = false">
-      <div class="modal" @click.stop>
-        <h3>Terms of Service</h3>
-        <div class="modal-content">
+    <div v-if="showTerms" class="modal modal-open">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">Terms of Service</h3>
+        <div class="py-4 space-y-4">
           <p>By using MedGuard SA, you agree to comply with all applicable healthcare regulations including HIPAA and POPIA.</p>
           <p>You are responsible for maintaining the confidentiality of your account and for all activities that occur under your account.</p>
           <p>MedGuard SA is designed for healthcare professionals and patients to manage medication schedules securely.</p>
         </div>
-        <button @click="showTerms = false" class="modal-close">Close</button>
+        <div class="modal-action">
+          <button @click="showTerms = false" class="btn btn-primary">Close</button>
+        </div>
       </div>
+      <div class="modal-backdrop" @click="showTerms = false"></div>
     </div>
     
     <!-- Privacy Modal -->
-    <div v-if="showPrivacy" class="modal-overlay" @click="showPrivacy = false">
-      <div class="modal" @click.stop>
-        <h3>Privacy Policy</h3>
-        <div class="modal-content">
+    <div v-if="showPrivacy" class="modal modal-open">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">Privacy Policy</h3>
+        <div class="py-4 space-y-4">
           <p>Your health information is protected under strict privacy regulations.</p>
           <p>We use industry-standard encryption to protect your data both in transit and at rest.</p>
           <p>We do not share your personal health information with third parties without your explicit consent.</p>
         </div>
-        <button @click="showPrivacy = false" class="modal-close">Close</button>
+        <div class="modal-action">
+          <button @click="showPrivacy = false" class="btn btn-primary">Close</button>
+        </div>
       </div>
+      <div class="modal-backdrop" @click="showPrivacy = false"></div>
     </div>
   </div>
 </template>
@@ -209,6 +256,7 @@ import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import authService from '@/services/authService'
+import Logo from '@/components/common/Logo.vue'
 
 const router = useRouter()
 
@@ -322,291 +370,4 @@ const goToLogin = () => {
 }
 </script>
 
-<style scoped>
-.register-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #2563EB, #10B981);
-  padding: 1rem;
-}
-
-.register-card {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.register-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.register-header h2 {
-  color: #2563EB;
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin: 0 0 0.5rem 0;
-}
-
-.register-header p {
-  color: #6B7280;
-  margin: 0;
-  font-size: 0.875rem;
-}
-
-.register-form {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.form-section {
-  border: 1px solid #E5E7EB;
-  border-radius: 8px;
-  padding: 1.5rem;
-}
-
-.form-section h3 {
-  color: #374151;
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin: 0 0 1rem 0;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-group label {
-  font-weight: 500;
-  color: #374151;
-  font-size: 0.875rem;
-}
-
-.form-input,
-.form-select {
-  padding: 0.75rem;
-  border: 1px solid #D1D5DB;
-  border-radius: 6px;
-  font-size: 1rem;
-  transition: border-color 0.2s ease;
-}
-
-.form-input:focus,
-.form-select:focus {
-  outline: none;
-  border-color: #2563EB;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.password-input-container {
-  position: relative;
-}
-
-.password-toggle {
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.25rem;
-}
-
-.password-strength {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
-}
-
-.strength-bar {
-  flex: 1;
-  height: 4px;
-  background: #E5E7EB;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.strength-fill {
-  height: 100%;
-  transition: width 0.3s ease;
-}
-
-.strength-fill.weak {
-  background: #EF4444;
-}
-
-.strength-fill.fair {
-  background: #F59E0B;
-}
-
-.strength-fill.strong {
-  background: #10B981;
-}
-
-.strength-text {
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.strength-text.weak {
-  color: #EF4444;
-}
-
-.strength-text.fair {
-  color: #F59E0B;
-}
-
-.strength-text.strong {
-  color: #10B981;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  cursor: pointer;
-}
-
-.checkbox-input {
-  margin-top: 0.125rem;
-}
-
-.checkbox-text {
-  font-size: 0.875rem;
-  color: #374151;
-  line-height: 1.4;
-}
-
-.link {
-  color: #2563EB;
-  text-decoration: none;
-}
-
-.link:hover {
-  text-decoration: underline;
-}
-
-.register-button {
-  background: #2563EB;
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.register-button:hover:not(:disabled) {
-  background: #1d4ed8;
-}
-
-.register-button:disabled {
-  background: #9CA3AF;
-  cursor: not-allowed;
-}
-
-.error-message {
-  background: #FEF2F2;
-  color: #DC2626;
-  padding: 0.75rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  border: 1px solid #FECACA;
-}
-
-.error-text {
-  color: #DC2626;
-  font-size: 0.75rem;
-  margin-top: 0.25rem;
-}
-
-.register-footer {
-  text-align: center;
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid #E5E7EB;
-}
-
-.register-footer p {
-  color: #6B7280;
-  font-size: 0.875rem;
-  margin: 0;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal {
-  background: white;
-  border-radius: 8px;
-  padding: 2rem;
-  max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.modal h3 {
-  color: #374151;
-  margin: 0 0 1rem 0;
-}
-
-.modal-content {
-  margin-bottom: 1.5rem;
-}
-
-.modal-content p {
-  color: #6B7280;
-  line-height: 1.6;
-  margin-bottom: 1rem;
-}
-
-.modal-close {
-  background: #2563EB;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-@media (max-width: 640px) {
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-  
-  .register-card {
-    padding: 1.5rem;
-  }
-}
-</style> 
+ 

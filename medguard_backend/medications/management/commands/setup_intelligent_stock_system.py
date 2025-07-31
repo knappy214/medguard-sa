@@ -197,7 +197,7 @@ class Command(BaseCommand):
         created_count = 0
         
         # Get sample patients
-        patients = User.objects.filter(user_type=User.UserType.PATIENT)[:5]
+        patients = User.objects.filter(user_type='PATIENT')[:5]
         if not patients:
             self.stdout.write(
                 self.style.WARNING('No patients found. Skipping prescription renewals setup.')

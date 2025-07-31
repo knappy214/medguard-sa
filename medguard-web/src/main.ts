@@ -10,6 +10,9 @@ import App from './App.vue'
 import en from './locales/en.json'
 import af from './locales/af.json'
 
+// Import API switch utility for development
+import '@/utils/apiSwitch'
+
 // Create Pinia instance
 const pinia = createPinia()
 

@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { MedicationFormData } from '@/types/medication'
+import type { MedicationFormData, Medication } from '@/types/medication'
+
+interface Props {
+  medication?: Medication | null
+  mode?: 'add' | 'edit'
+}
 
 interface Emits {
   (e: 'close'): void
   (e: 'add', data: MedicationFormData): void
 }
+
+const props = withDefaults(defineProps<Props>(), {
+  mode: 'add'
+})
 
 const emit = defineEmits<Emits>()
 
@@ -21,11 +30,32 @@ const form = reactive<MedicationFormData>({
   stock: 0,
   minStock: 10,
   instructions: '',
-  category: ''
+  category: '',
+  // Schedule information
+  scheduleTiming: 'morning',
+  scheduleCustomTime: '',
+  scheduleDosageAmount: 1.0,
+  scheduleInstructions: ''
 })
 
 const errors = reactive<Record<string, string>>({})
 const loading = ref(false)
+
+// Watch for medication prop changes to populate form in edit mode
+watch(() => props.medication, (medication) => {
+  if (medication && props.mode === 'edit') {
+    Object.assign(form, {
+      name: medication.name,
+      dosage: medication.dosage,
+      frequency: medication.frequency,
+      time: medication.time,
+      stock: medication.stock,
+      minStock: medication.minStock,
+      instructions: medication.instructions,
+      category: medication.category
+    })
+  }
+}, { immediate: true })
 
 // Form validation
 const validateForm = (): boolean => {
@@ -77,6 +107,17 @@ const validateForm = (): boolean => {
 
   if (!form.category.trim()) {
     errors.category = t('validation.categoryRequired')
+    isValid = false
+  }
+
+  // Validate schedule information
+  if (form.scheduleTiming === 'custom' && !form.scheduleCustomTime) {
+    errors.scheduleCustomTime = t('validation.customTimeRequired')
+    isValid = false
+  }
+
+  if ((form.scheduleDosageAmount || 0) <= 0) {
+    errors.scheduleDosageAmount = t('validation.dosageAmountMustBePositive')
     isValid = false
   }
 
@@ -147,7 +188,7 @@ const frequencies = [
           <svg class="w-6 h-6 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
-          {{ t('dashboard.addMedication') }}
+          {{ props.mode === 'edit' ? t('dashboard.editMedication') : t('dashboard.addMedication') }}
         </h3>
         <button @click="handleClose" class="btn btn-sm btn-circle btn-ghost">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -301,6 +342,81 @@ const frequencies = [
           </div>
         </div>
 
+        <!-- Schedule Information -->
+        <div class="card bg-base-200 p-4 mb-4">
+          <h4 class="font-semibold text-base-content mb-3">
+            <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {{ t('form.scheduleInformation') }}
+          </h4>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">{{ t('form.scheduleTiming') }}</span>
+              </label>
+              <select
+                v-model="form.scheduleTiming"
+                class="select select-bordered w-full"
+              >
+                <option value="morning">{{ t('form.morning') }}</option>
+                <option value="noon">{{ t('form.noon') }}</option>
+                <option value="night">{{ t('form.night') }}</option>
+                <option value="custom">{{ t('form.customTime') }}</option>
+              </select>
+            </div>
+
+            <div class="form-control" v-if="form.scheduleTiming === 'custom'">
+              <label class="label">
+                <span class="label-text font-medium">{{ t('form.customTime') }}</span>
+              </label>
+              <input
+                v-model="form.scheduleCustomTime"
+                type="time"
+                :class="[
+                  'input input-bordered w-full',
+                  errors.scheduleCustomTime ? 'input-error' : ''
+                ]"
+              />
+              <label v-if="errors.scheduleCustomTime" class="label">
+                <span class="label-text-alt text-error">{{ errors.scheduleCustomTime }}</span>
+              </label>
+            </div>
+
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">{{ t('form.dosageAmount') }}</span>
+              </label>
+              <input
+                v-model.number="form.scheduleDosageAmount"
+                type="number"
+                min="0.1"
+                step="0.1"
+                placeholder="1.0"
+                :class="[
+                  'input input-bordered w-full',
+                  errors.scheduleDosageAmount ? 'input-error' : ''
+                ]"
+              />
+              <label v-if="errors.scheduleDosageAmount" class="label">
+                <span class="label-text-alt text-error">{{ errors.scheduleDosageAmount }}</span>
+              </label>
+            </div>
+
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">{{ t('form.scheduleInstructions') }}</span>
+              </label>
+              <textarea
+                v-model="form.scheduleInstructions"
+                :placeholder="t('form.scheduleInstructionsPlaceholder')"
+                class="textarea textarea-bordered h-20"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
         <!-- Instructions -->
         <div class="form-control">
           <label class="label">
@@ -335,7 +451,7 @@ const frequencies = [
             :disabled="loading"
           >
             <span v-if="loading" class="loading loading-spinner loading-sm"></span>
-            {{ loading ? t('common.loading') : t('common.save') }}
+            {{ loading ? t('common.loading') : (props.mode === 'edit' ? t('common.update') : t('common.save')) }}
           </button>
         </div>
       </form>
