@@ -10,6 +10,8 @@
     "missed": "Missed",
     "upcoming": "Upcoming",
     "lowStock": "Low Stock",
+    "outOfStock": "Out of Stock",
+    "inStock": "In Stock",
     "pillsRemaining": "pills remaining",
     "noMedications": "No medications scheduled",
     "noAlerts": "No stock alerts",
@@ -25,7 +27,22 @@
     "unread": "unread",
     "addYourFirstMedication": "Add your first medication to get started",
     "activePrescriptions": "active prescriptions",
-    "today": "today"
+    "today": "today",
+    "takenAt": "Taken at",
+    "critical": "Critical",
+    "warning": "Warning",
+    "info": "Info",
+    "new": "New",
+    "markAsRead": "Mark as read",
+    "markAllAsRead": "Mark All as Read",
+    "minStock": "Min",
+    "deleteConfirmation": "Are you sure you want to delete this medication?",
+    "tip": "Tip",
+    "tipText": "Click the buttons to mark medications as taken or missed. This helps track your medication adherence.",
+    "legend": "Legend",
+    "legendText": "🚨 Critical alerts require immediate attention. ⚠️ Warning alerts indicate low stock. ℹ️ Info alerts provide general updates.",
+    "stockLowMessage": "{medication} stock is running low. Only {count} tablets remaining.",
+    "stockCriticalMessage": "{medication} stock is critically low. Only {count} tablets remaining."
   },
   "medication": {
     "name": "Medication Name",
@@ -98,5 +115,47 @@
     "enable": "Enable",
     "disable": "Disable",
     "refresh": "Refresh"
+  },
+  "footer": {
+    "tagline": "Professional Healthcare Management System",
+    "quickLinks": "Quick Links",
+    "dashboard": "Dashboard",
+    "medications": "Medications",
+    "settings": "Settings",
+    "contact": "Contact",
+    "companyName": "MedGuard SA",
+    "companyDescription": "Professional Healthcare Solutions",
+    "copyright": "© {year} All rights reserved",
+    "builtWith": "Built with ❤️ for South African Healthcare"
+  },
+  "theme": {
+    "switchToDark": "Switch to dark mode",
+    "switchToLight": "Switch to light mode",
+    "toggleTheme": "Toggle theme"
+  },
+  "validation": {
+    "medicationNameRequired": "Medication name is required",
+    "dosageRequired": "Dosage is required",
+    "frequencyRequired": "Frequency is required",
+    "timeRequired": "Time is required",
+    "stockCannotBeNegative": "Stock cannot be negative",
+    "minStockCannotBeNegative": "Minimum stock cannot be negative",
+    "instructionsRequired": "Instructions are required",
+    "categoryRequired": "Category is required"
+  },
+  "form": {
+    "medicationName": "Medication Name",
+    "dosage": "Dosage",
+    "frequency": "Frequency",
+    "time": "Time",
+    "currentStock": "Current Stock",
+    "minimumStock": "Minimum Stock",
+    "instructions": "Instructions",
+    "category": "Category",
+    "selectFrequency": "Select frequency",
+    "dosagePlaceholder": "e.g., 500mg",
+    "timePlaceholder": "e.g., 08:00, 14:00, 20:00",
+    "instructionsPlaceholder": "e.g., Take with food. Do not exceed 4 tablets per day.",
+    "addMedication": "Add Medication"
   }
 } 

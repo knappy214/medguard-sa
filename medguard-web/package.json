@@ -20,7 +20,8 @@
     "pinia": "^3.0.3",
     "tailwindcss": "^4.1.11",
     "vue": "^3.5.17",
-    "vue-i18n": "^11.1.11"
+    "vue-i18n": "^11.1.11",
+    "vue-router": "^4.5.1"
   },
   "devDependencies": {
     "@intlify/unplugin-vue-i18n": "^6.0.8",

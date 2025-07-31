@@ -11,7 +11,7 @@ from django.utils import timezone
 from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Count
 from django.contrib.auth import get_user_model
@@ -235,6 +235,72 @@ class SecurityEventViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
+def log_security_event_public_view(request):
+    """
+    API endpoint to log security events from unauthenticated users.
+    
+    This endpoint allows logging of security events like login failures
+    before authentication is established.
+    """
+    try:
+        event_type = request.data.get('eventType')
+        data = request.data.get('data', {})
+        device_id = request.headers.get('X-Device-ID')
+        user_agent = request.data.get('userAgent')
+        ip_address = request.data.get('ipAddress', 'client-side')
+        
+        if not event_type:
+            return Response({
+                'error': 'eventType is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Convert event type to match ActionType choices
+        event_type_mapping = {
+            'LOGIN_FAILURE': 'login_failure',
+            'LOGIN_SUCCESS': 'login_success',
+            'LOGOUT': 'logout',
+            'SECURITY_EVENT': 'security_event'
+        }
+        
+        action = event_type_mapping.get(event_type, 'security_event')
+        
+        # Create description based on event type
+        description = f"Security event: {event_type}"
+        if event_type == 'LOGIN_FAILURE':
+            description = f"Login failure attempt from device {device_id}"
+        elif event_type == 'LOGIN_SUCCESS':
+            description = f"Login success for user {data.get('userId', 'unknown')}"
+        elif event_type == 'LOGOUT':
+            description = f"User logout from device {device_id}"
+        
+        # Log the security event without user (since unauthenticated)
+        log_audit_event(
+            user=None,
+            action=action,
+            description=description,
+            severity='medium',
+            request=request,
+            metadata={
+                'device_id': device_id,
+                'user_agent': user_agent,
+                'ip_address': ip_address,
+                'data': data
+            }
+        )
+        
+        return Response({
+            'message': 'Security event logged successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Public security event logging error: {str(e)}")
+        return Response({
+            'error': 'Failed to log security event'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def log_security_event_view(request):
     """
@@ -278,55 +344,90 @@ def log_security_event_view(request):
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def security_dashboard_view(request):
-    """
-    Security dashboard view providing overview of security metrics.
-    """
+    """Get security dashboard data."""
     try:
         # Get date range from query parameters
-        days = int(request.query_params.get('days', 7))
+        days = int(request.query_params.get('days', 30))
         start_date = timezone.now() - timedelta(days=days)
         
-        # Get audit logs for the period
-        audit_logs = AuditLog.objects.filter(timestamp__gte=start_date)
+        # Get security statistics
+        total_events = SecurityEvent.objects.filter(timestamp__gte=start_date).count()
+        high_severity_events = SecurityEvent.objects.filter(
+            timestamp__gte=start_date,
+            severity=SecurityEvent.Severity.HIGH
+        ).count()
         
-        # Calculate security metrics
-        total_events = audit_logs.count()
-        failed_logins = audit_logs.filter(action='login_failed').count()
-        access_denied = audit_logs.filter(action='access_denied').count()
-        security_events = audit_logs.filter(severity__in=['high', 'critical']).count()
+        # Get recent security events
+        recent_events = SecurityEvent.objects.filter(
+            timestamp__gte=start_date
+        ).order_by('-timestamp')[:10]
         
-        # Get recent security incidents
-        recent_incidents = audit_logs.filter(
-            Q(severity__in=['high', 'critical']) |
-            Q(action__in=['login_failed', 'access_denied', 'breach_attempt'])
-        ).order_by('-timestamp')[:5]
-        
-        # Get top IP addresses with failed attempts
-        suspicious_ips = audit_logs.filter(
-            action='login_failed'
-        ).values('ip_address').annotate(
-            count=Count('id')
-        ).filter(count__gte=3).order_by('-count')[:5]
+        # Get audit log statistics
+        total_audit_logs = AuditLog.objects.filter(timestamp__gte=start_date).count()
+        access_denied_logs = AuditLog.objects.filter(
+            timestamp__gte=start_date,
+            action=AuditLog.ActionType.ACCESS_DENIED
+        ).count()
         
         return Response({
-            'metrics': {
-                'total_events': total_events,
-                'failed_logins': failed_logins,
-                'access_denied': access_denied,
-                'security_events': security_events,
-                'suspicious_ips': len(suspicious_ips)
-            },
-            'recent_incidents': AuditLogSerializer(recent_incidents, many=True).data,
-            'suspicious_ips': list(suspicious_ips),
-            'date_range': {
-                'start_date': start_date.isoformat(),
-                'end_date': timezone.now().isoformat(),
-                'days': days
-            }
+            'total_security_events': total_events,
+            'high_severity_events': high_severity_events,
+            'total_audit_logs': total_audit_logs,
+            'access_denied_logs': access_denied_logs,
+            'recent_events': SecurityEventSerializer(recent_events, many=True).data,
+            'date_range_days': days
         })
         
     except Exception as e:
-        logger.error(f"Security dashboard error: {str(e)}")
+        logger.error(f'Error getting security dashboard data: {e}')
         return Response({
-            'error': 'Failed to generate security dashboard'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
+            'error': 'Failed to get security dashboard data'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def audit_log_view(request):
+    """Handle audit log requests."""
+    if request.method == 'GET':
+        # Return audit log summary
+        try:
+            days = int(request.query_params.get('days', 30))
+            start_date = timezone.now() - timedelta(days=days)
+            
+            logs = AuditLog.objects.filter(timestamp__gte=start_date)
+            
+            return Response({
+                'total_logs': logs.count(),
+                'recent_logs': AuditLogSerializer(logs.order_by('-timestamp')[:10], many=True).data,
+                'date_range_days': days
+            })
+        except Exception as e:
+            logger.error(f'Error getting audit logs: {e}')
+            return Response({
+                'error': 'Failed to get audit logs'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    elif request.method == 'POST':
+        # Log a new audit event
+        try:
+            action = request.data.get('action')
+            description = request.data.get('description', '')
+            severity = request.data.get('severity', 'low')
+            
+            log_audit_event(
+                user=request.user,
+                action=action,
+                description=description,
+                severity=severity,
+                request=request
+            )
+            
+            return Response({
+                'message': 'Audit event logged successfully'
+            })
+        except Exception as e:
+            logger.error(f'Error logging audit event: {e}')
+            return Response({
+                'error': 'Failed to log audit event'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 

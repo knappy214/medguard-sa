@@ -10,6 +10,8 @@
     "missed": "Gemis",
     "upcoming": "Komende",
     "lowStock": "Lae Voorraad",
+    "outOfStock": "Uit Voorraad",
+    "inStock": "In Voorraad",
     "pillsRemaining": "pille oor",
     "noMedications": "Geen medikasie geskeduleer",
     "noAlerts": "Geen voorraad waarskuwings",
@@ -25,7 +27,22 @@
     "unread": "ongelees",
     "addYourFirstMedication": "Voeg jou eerste medikasie by om te begin",
     "activePrescriptions": "aktiewe voorskrifte",
-    "today": "vandag"
+    "today": "vandag",
+    "takenAt": "Geneem om",
+    "critical": "Krities",
+    "warning": "Waarskuwing",
+    "info": "Inligting",
+    "new": "Nuut",
+    "markAsRead": "Merk as gelees",
+    "markAllAsRead": "Merk Alles as Gelees",
+    "minStock": "Min",
+    "deleteConfirmation": "Is jy seker jy wil hierdie medikasie verwyder?",
+    "tip": "Wenk",
+    "tipText": "Klik die knoppies om medikasie as geneem of gemis te merk. Dit help om jou medikasie nakoming dop te hou.",
+    "legend": "Legende",
+    "legendText": "🚨 Kritiese waarskuwings benodig onmiddellike aandag. ⚠️ Waarskuwing waarskuwings dui op lae voorraad. ℹ️ Inligting waarskuwings verskaf algemene opdaterings.",
+    "stockLowMessage": "{medication} voorraad is laag. Slegs {count} tablette oor.",
+    "stockCriticalMessage": "{medication} voorraad is krities laag. Slegs {count} tablette oor."
   },
   "medication": {
     "name": "Medikasie Naam",
@@ -98,5 +115,47 @@
     "enable": "Aktiveer",
     "disable": "Deaktiveer",
     "refresh": "Verfris"
+  },
+  "footer": {
+    "tagline": "Professionele Gesondheidsorg Bestuurstelsel",
+    "quickLinks": "Vinnige Skakels",
+    "dashboard": "Dashboard",
+    "medications": "Medikasie",
+    "settings": "Instellings",
+    "contact": "Kontak",
+    "companyName": "MedGuard SA",
+    "companyDescription": "Professionele Gesondheidsorg Oplossings",
+    "copyright": "© {year} Alle regte voorbehou",
+    "builtWith": "Gebou met ❤️ vir Suid-Afrikaanse Gesondheidsorg"
+  },
+  "theme": {
+    "switchToDark": "Skakel na donker modus",
+    "switchToLight": "Skakel na ligte modus",
+    "toggleTheme": "Wissel tema"
+  },
+  "validation": {
+    "medicationNameRequired": "Medikasie naam is verpligtend",
+    "dosageRequired": "Dosage is verpligtend",
+    "frequencyRequired": "Frekwensie is verpligtend",
+    "timeRequired": "Tyd is verpligtend",
+    "stockCannotBeNegative": "Voorraad kan nie negatief wees nie",
+    "minStockCannotBeNegative": "Minimum voorraad kan nie negatief wees nie",
+    "instructionsRequired": "Instruksies is verpligtend",
+    "categoryRequired": "Kategorie is verpligtend"
+  },
+  "form": {
+    "medicationName": "Medikasie Naam",
+    "dosage": "Dosage",
+    "frequency": "Frekwensie",
+    "time": "Tyd",
+    "currentStock": "Huidige Voorraad",
+    "minimumStock": "Minimum Voorraad",
+    "instructions": "Instruksies",
+    "category": "Kategorie",
+    "selectFrequency": "Kies frekwensie",
+    "dosagePlaceholder": "bv., 500mg",
+    "timePlaceholder": "bv., 08:00, 14:00, 20:00",
+    "instructionsPlaceholder": "bv., Neem met kos. Moenie meer as 4 tablette per dag neem nie.",
+    "addMedication": "Voeg Medikasie By"
   }
 } 

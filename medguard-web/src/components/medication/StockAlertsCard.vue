@@ -62,6 +62,25 @@ const formatDate = (dateString: string) => {
 const handleMarkAsRead = (alertId: string) => {
   emit('mark-as-read', alertId)
 }
+
+// Function to get localized alert message
+const getLocalizedMessage = (alert: StockAlert) => {
+  if (alert.type === 'low_stock') {
+    const stock = alert.medication.stock
+    if (alert.severity === 'error') {
+      return t('dashboard.stockCriticalMessage', { 
+        medication: alert.medication.name, 
+        count: stock 
+      })
+    } else {
+      return t('dashboard.stockLowMessage', { 
+        medication: alert.medication.name, 
+        count: stock 
+      })
+    }
+  }
+  return alert.message
+}
 </script>
 
 <template>
@@ -81,15 +100,15 @@ const handleMarkAsRead = (alertId: string) => {
       <div class="flex flex-wrap gap-2 mb-4">
         <div class="badge badge-error gap-1">
           <span>🚨</span>
-          {{ alerts.filter(a => a.severity === 'error').length }} Critical
+          {{ alerts.filter((a: StockAlert) => a.severity === 'error').length }} {{ t('dashboard.critical') }}
         </div>
         <div class="badge badge-warning gap-1">
           <span>⚠️</span>
-          {{ alerts.filter(a => a.severity === 'warning').length }} Warning
+          {{ alerts.filter((a: StockAlert) => a.severity === 'warning').length }} {{ t('dashboard.warning') }}
         </div>
         <div class="badge badge-info gap-1">
           <span>ℹ️</span>
-          {{ alerts.filter(a => a.severity === 'info').length }} Info
+          {{ alerts.filter((a: StockAlert) => a.severity === 'info').length }} {{ t('dashboard.info') }}
         </div>
       </div>
 
@@ -117,14 +136,14 @@ const handleMarkAsRead = (alertId: string) => {
                   {{ alert.medication.name }}
                 </h3>
                 <span v-if="!alert.isRead" class="badge badge-primary badge-xs">
-                  New
+                  {{ t('dashboard.new') }}
                 </span>
               </div>
               <button
                 v-if="!alert.isRead"
                 @click="handleMarkAsRead(alert.id)"
                 class="btn btn-ghost btn-xs"
-                :title="'Mark as read'"
+                :title="t('dashboard.markAsRead')"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -133,7 +152,7 @@ const handleMarkAsRead = (alertId: string) => {
             </div>
             
             <p class="text-sm text-base-content mb-2">
-              {{ alert.message }}
+              {{ getLocalizedMessage(alert) }}
             </p>
             
             <div class="flex items-center justify-between text-xs text-base-content/60">
@@ -148,13 +167,13 @@ const handleMarkAsRead = (alertId: string) => {
       <div class="mt-4 space-y-2">
         <button
           v-if="unreadAlerts.length > 0"
-          @click="unreadAlerts.forEach(alert => handleMarkAsRead(alert.id))"
+          @click="unreadAlerts.forEach((alert: StockAlert) => handleMarkAsRead(alert.id))"
           class="btn btn-outline btn-sm btn-block"
         >
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
-          Mark All as Read
+          {{ t('dashboard.markAllAsRead') }}
         </button>
         
         <button class="btn btn-primary btn-sm btn-block">
@@ -168,7 +187,7 @@ const handleMarkAsRead = (alertId: string) => {
       <!-- Alert Legend -->
       <div class="mt-4 p-3 bg-base-200/50 border border-base-300 rounded-lg">
         <p class="text-sm text-base-content/80">
-          <strong>Legend:</strong> 🚨 Critical alerts require immediate attention. ⚠️ Warning alerts indicate low stock. ℹ️ Info alerts provide general updates.
+          <strong>{{ t('dashboard.legend') }}:</strong> {{ t('dashboard.legendText') }}
         </p>
       </div>
     </div>

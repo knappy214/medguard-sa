@@ -52,8 +52,6 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',  # JWT authentication
     'corsheaders',
-    # Modern notification system
-    'django_nyt',
     'post_office',
     'push_notifications',
 ]

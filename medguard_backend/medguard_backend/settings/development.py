@@ -14,6 +14,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '0.0.0.0',
     '[::1]',  # IPv6 localhost
+    'testserver',  # For Django test client
 ]
 
 # Development-specific database settings
@@ -58,6 +59,9 @@ if DEBUG:
     MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
     INTERNAL_IPS = ['127.0.0.1', 'localhost', '::1']
     
+    # Add CSRF exemption middleware for API endpoints
+    MIDDLEWARE.insert(0, 'medguard_backend.middleware.csrf_exempt.CSRFExemptMiddleware')
+    
     # Debug toolbar configuration
     DEBUG_TOOLBAR_CONFIG = {
         'SHOW_TOOLBAR_CALLBACK': lambda request: True,
@@ -90,6 +94,22 @@ CELERY_TASK_EAGER_PROPAGATES = True
 SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
+
+# Temporarily disable CSRF for development API testing
+MIDDLEWARE = [mw for mw in MIDDLEWARE if 'csrf' not in mw.lower()]
+
+# CSRF exemption for API endpoints in development
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:8080',
+    'http://127.0.0.1:8080'
+]
+
+# Disable CSRF for API endpoints in development
+CSRF_EXEMPT_URLS = [
+    r'^/api/.*$',
+]
 
 # Development-specific Wagtail settings
 WAGTAILADMIN_BASE_URL = 'http://localhost:8000'

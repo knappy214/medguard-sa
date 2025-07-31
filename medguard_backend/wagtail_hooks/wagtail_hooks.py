@@ -436,10 +436,18 @@ class MedicationSummaryItem(SummaryItem):
 
 @hooks.register('construct_homepage_summary_items')
 def add_medication_summary_items(request, summary_items):
-    """Add medication-related summary items and enhance default summary items to the admin homepage."""
+    """Add medication-related summary items to the admin homepage."""
     from medications.models import Medication, MedicationLog, StockAlert
-    from notifications.models import Notification
     from django.utils import timezone
+    
+    # Use our own notification models instead of django-notifications
+    try:
+        from medguard_notifications.models import Notification
+        NOTIFICATIONS_AVAILABLE = True
+    except ImportError:
+        NOTIFICATIONS_AVAILABLE = False
+        Notification = None
+    
     from wagtail.models import Page
     from wagtail.images.models import Image
     from wagtail.documents.models import Document
@@ -529,20 +537,21 @@ def add_medication_summary_items(request, summary_items):
         )
     )
     
-    # Add active notifications
-    active_notifications = Notification.objects.filter(
-        is_active=True, status='active'
-    ).count()
-    summary_items.append(
-        MedicationSummaryItem(
-            request,
-            count=active_notifications,
-            label=_('Active Notifications'),
-            url='/admin/notifications/',
-            icon_name='mail',
-            status_class='warning' if active_notifications > 0 else 'info'
+    # Add active notifications (if available)
+    if NOTIFICATIONS_AVAILABLE and Notification:
+        active_notifications = Notification.objects.filter(
+            is_active=True, status='active'
+        ).count()
+        summary_items.append(
+            MedicationSummaryItem(
+                request,
+                count=active_notifications,
+                label=_('Active Notifications'),
+                url='/admin/notifications/',
+                icon_name='mail',
+                status_class='warning' if active_notifications > 0 else 'info'
+            )
         )
-    )
 
 
 @hooks.register('insert_global_admin_css')

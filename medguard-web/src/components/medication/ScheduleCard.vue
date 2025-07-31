@@ -140,7 +140,7 @@ const isOverdue = (scheduledTime: string) => {
                 </svg>
                 {{ formatTime(item.scheduledTime) }}
                 <span v-if="item.takenAt" class="text-success">
-                  (Taken at {{ formatTime(item.takenAt) }})
+                  ({{ t('dashboard.takenAt') }} {{ formatTime(item.takenAt) }})
                 </span>
               </p>
             </div>
@@ -192,7 +192,7 @@ const isOverdue = (scheduledTime: string) => {
       <!-- Instructions -->
       <div class="mt-4 p-3 bg-info/10 border border-info/20 rounded-lg">
         <p class="text-sm text-base-content/80">
-          <strong>Tip:</strong> Click the buttons to mark medications as taken or missed. This helps track your medication adherence.
+          <strong>{{ t('dashboard.tip') }}:</strong> {{ t('dashboard.tipText') }}
         </p>
       </div>
     </div>

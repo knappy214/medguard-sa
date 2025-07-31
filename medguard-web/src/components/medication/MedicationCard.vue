@@ -24,7 +24,7 @@ const stockStatus = computed(() => {
   } else if (props.medication.stock <= props.medication.minStock) {
     return { status: 'low-stock', color: 'warning', text: t('dashboard.lowStock') }
   } else {
-    return { status: 'in-stock', color: 'success', text: 'In Stock' }
+    return { status: 'in-stock', color: 'success', text: t('dashboard.inStock') }
   }
 })
 
@@ -34,7 +34,7 @@ const stockPercentage = computed(() => {
 })
 
 const handleDelete = () => {
-  if (confirm('Are you sure you want to delete this medication?')) {
+  if (confirm(t('dashboard.deleteConfirmation'))) {
     emit('delete', props.medication.id)
   }
 }
@@ -108,7 +108,7 @@ const handleEdit = () => {
         
         <div class="flex justify-between items-center text-xs text-base-content-secondary">
           <span>{{ medication.stock }} {{ t('dashboard.pillsRemaining') }}</span>
-          <span>Min: {{ medication.minStock }}</span>
+          <span>{{ t('dashboard.minStock') }}: {{ medication.minStock }}</span>
         </div>
       </div>
 

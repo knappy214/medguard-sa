@@ -270,17 +270,17 @@
     <div class="quick-actions">
         <h3>🚀 Quick Actions</h3>
         <div class="action-buttons">
-            <a href="{% url 'medication:add' %}" class="action-btn">
+            <a href="/admin/medications/medication/add/" class="action-btn">
                 {% icon name="plus" %} Add Medication
             </a>
-            <a href="{% url 'medication-schedule:add' %}" class="action-btn">
+            <a href="/admin/medications/medicationschedule/add/" class="action-btn">
                 {% icon name="date" %} Create Schedule
             </a>
-            <a href="{% url 'notification:add' %}" class="action-btn">
-                {% icon name="mail" %} Send Notification
-            </a>
-            <a href="{% url 'stock-alert:add' %}" class="action-btn">
+            <a href="/admin/medications/stockalert/add/" class="action-btn">
                 {% icon name="warning" %} Create Alert
+            </a>
+            <a href="/admin/users/user/add/" class="action-btn">
+                {% icon name="user" %} Add User
             </a>
         </div>
     </div>
@@ -306,8 +306,8 @@
             </h3>
             <p>Manage your medication inventory, track stock levels, and monitor medication schedules for patients.</p>
             <div class="action-buttons">
-                <a href="{% url 'medication:index' %}" class="action-btn">View All</a>
-                <a href="{% url 'medication:add' %}" class="action-btn">Add New</a>
+                <a href="/admin/medications/medication/" class="action-btn">View All</a>
+                <a href="/admin/medications/medication/add/" class="action-btn">Add New</a>
             </div>
         </div>
 
@@ -319,21 +319,21 @@
             </h3>
             <p>Monitor patient medication schedules, track adherence, and manage individual care plans.</p>
             <div class="action-buttons">
-                <a href="{% url 'medication-schedule:index' %}" class="action-btn">Schedules</a>
-                <a href="{% url 'medication-log:index' %}" class="action-btn">Logs</a>
+                <a href="/admin/medications/medicationschedule/" class="action-btn">Schedules</a>
+                <a href="/admin/medications/medicationlog/" class="action-btn">Logs</a>
             </div>
         </div>
 
-        <!-- Notifications -->
+        <!-- User Management -->
         <div class="dashboard-card">
             <h3>
-                {% icon name="mail" classname="icon" %}
-                Notifications
+                {% icon name="user" classname="icon" %}
+                User Management
             </h3>
-            <p>Send alerts, manage system notifications, and keep everyone informed about important updates.</p>
+            <p>Manage user accounts, permissions, and access controls for the healthcare system.</p>
             <div class="action-buttons">
-                <a href="{% url 'notification:index' %}" class="action-btn">View All</a>
-                <a href="{% url 'notification:add' %}" class="action-btn">Send New</a>
+                <a href="/admin/users/user/" class="action-btn">View All</a>
+                <a href="/admin/users/user/add/" class="action-btn">Add New</a>
             </div>
         </div>
 
@@ -345,8 +345,8 @@
             </h3>
             <p>Monitor inventory levels, set up alerts for low stock, and ensure medications are always available.</p>
             <div class="action-buttons">
-                <a href="{% url 'stock-alert:index' %}" class="action-btn">Alerts</a>
-                <a href="{% url 'medication:index' %}" class="action-btn">Inventory</a>
+                <a href="/admin/medications/stockalert/" class="action-btn">Alerts</a>
+                <a href="/admin/medications/medication/" class="action-btn">Inventory</a>
             </div>
         </div>
     </div>

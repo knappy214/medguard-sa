@@ -10,9 +10,8 @@ import type {
   PaginatedResponse 
 } from '@/types/medication'
 
-// Configure axios base URL for Django REST API
+// Configure axios to use Vite proxy (no base URL needed)
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -78,7 +77,7 @@ export const medicationApi = {
   // Get all medications
   async getMedications(): Promise<Medication[]> {
     try {
-      const response = await api.get<ApiResponse<Medication[]>>('/medications/')
+      const response = await api.get<ApiResponse<Medication[]>>('/api/medications/')
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch medications:', error)
@@ -89,7 +88,7 @@ export const medicationApi = {
   // Get medication by ID
   async getMedication(id: string): Promise<Medication | null> {
     try {
-      const response = await api.get<ApiResponse<Medication>>(`/medications/${id}/`)
+      const response = await api.get<ApiResponse<Medication>>(`/api/medications/${id}/`)
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch medication:', error)
@@ -100,7 +99,7 @@ export const medicationApi = {
   // Create new medication
   async createMedication(data: MedicationFormData): Promise<Medication | null> {
     try {
-      const response = await api.post<ApiResponse<Medication>>('/medications/', data)
+      const response = await api.post<ApiResponse<Medication>>('/api/medications/', data)
       return response.data.data
     } catch (error) {
       console.error('Failed to create medication:', error)
@@ -111,7 +110,7 @@ export const medicationApi = {
   // Update medication
   async updateMedication(id: string, data: Partial<MedicationFormData>): Promise<Medication | null> {
     try {
-      const response = await api.put<ApiResponse<Medication>>(`/medications/${id}/`, data)
+      const response = await api.put<ApiResponse<Medication>>(`/api/medications/${id}/`, data)
       return response.data.data
     } catch (error) {
       console.error('Failed to update medication:', error)
@@ -122,7 +121,7 @@ export const medicationApi = {
   // Delete medication
   async deleteMedication(id: string): Promise<boolean> {
     try {
-      await api.delete(`/medications/${id}/`)
+      await api.delete(`/api/medications/${id}/`)
       return true
     } catch (error) {
       console.error('Failed to delete medication:', error)
@@ -133,7 +132,7 @@ export const medicationApi = {
   // Get today's schedule
   async getTodaySchedule(): Promise<MedicationSchedule[]> {
     try {
-      const response = await api.get<ApiResponse<MedicationSchedule[]>>('/medications/schedule/today/')
+      const response = await api.get<ApiResponse<MedicationSchedule[]>>('/api/medications/schedule/today/')
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch today\'s schedule:', error)
@@ -144,7 +143,7 @@ export const medicationApi = {
   // Mark medication as taken
   async markAsTaken(scheduleId: string, notes?: string): Promise<boolean> {
     try {
-      await api.post(`/medications/schedule/${scheduleId}/mark-taken/`, { notes })
+      await api.post(`/api/medications/schedule/${scheduleId}/mark-taken/`, { notes })
       return true
     } catch (error) {
       console.error('Failed to mark medication as taken:', error)
@@ -155,7 +154,7 @@ export const medicationApi = {
   // Mark medication as missed
   async markAsMissed(scheduleId: string): Promise<boolean> {
     try {
-      await api.post(`/medications/schedule/${scheduleId}/mark-missed/`)
+      await api.post(`/api/medications/schedule/${scheduleId}/mark-missed/`)
       return true
     } catch (error) {
       console.error('Failed to mark medication as missed:', error)
@@ -166,7 +165,7 @@ export const medicationApi = {
   // Get stock alerts
   async getStockAlerts(): Promise<StockAlert[]> {
     try {
-      const response = await api.get<ApiResponse<StockAlert[]>>('/medications/alerts/stock/')
+      const response = await api.get<ApiResponse<StockAlert[]>>('/api/medications/alerts/stock/')
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch stock alerts:', error)
@@ -177,7 +176,7 @@ export const medicationApi = {
   // Mark alert as read
   async markAlertAsRead(alertId: string): Promise<boolean> {
     try {
-      await api.post(`/medications/alerts/${alertId}/mark-read/`)
+      await api.post(`/api/medications/alerts/${alertId}/mark-read/`)
       return true
     } catch (error) {
       console.error('Failed to mark alert as read:', error)
@@ -188,7 +187,7 @@ export const medicationApi = {
   // Update stock level
   async updateStock(medicationId: string, newStock: number): Promise<boolean> {
     try {
-      await api.put(`/medications/${medicationId}/stock/`, { stock: newStock })
+      await api.put(`/api/medications/${medicationId}/stock/`, { stock: newStock })
       return true
     } catch (error) {
       console.error('Failed to update stock:', error)
@@ -199,7 +198,7 @@ export const medicationApi = {
   // Get stock analytics
   async getStockAnalytics(medicationId: string): Promise<StockAnalytics> {
     try {
-      const response = await api.get<ApiResponse<StockAnalytics>>(`/medications/${medicationId}/analytics/`)
+      const response = await api.get<ApiResponse<StockAnalytics>>(`/api/medications/${medicationId}/analytics/`)
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch stock analytics:', error)
@@ -210,7 +209,7 @@ export const medicationApi = {
   // Get paginated medications
   async getMedicationsPaginated(page: number = 1, pageSize: number = 10): Promise<PaginatedResponse<Medication>> {
     try {
-      const response = await api.get<ApiResponse<PaginatedResponse<Medication>>>('/medications/', {
+      const response = await api.get<ApiResponse<PaginatedResponse<Medication>>>('/api/medications/', {
         params: { page, page_size: pageSize }
       })
       return response.data.data
@@ -223,7 +222,7 @@ export const medicationApi = {
   // Search medications
   async searchMedications(query: string): Promise<Medication[]> {
     try {
-      const response = await api.get<ApiResponse<Medication[]>>('/medications/search/', {
+      const response = await api.get<ApiResponse<Medication[]>>('/api/medications/search/', {
         params: { q: query }
       })
       return response.data.data
@@ -236,7 +235,7 @@ export const medicationApi = {
   // Get medication history
   async getMedicationHistory(medicationId: string): Promise<any[]> {
     try {
-      const response = await api.get<ApiResponse<any[]>>(`/medications/${medicationId}/history/`)
+      const response = await api.get<ApiResponse<any[]>>(`/api/medications/${medicationId}/history/`)
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch medication history:', error)
@@ -247,7 +246,7 @@ export const medicationApi = {
   // Export medication data
   async exportMedicationData(format: 'json' | 'csv' = 'json'): Promise<Blob> {
     try {
-      const response = await api.get('/medications/export/', {
+      const response = await api.get('/api/medications/export/', {
         params: { format },
         responseType: 'blob'
       })
@@ -264,7 +263,7 @@ export const medicationApi = {
       const formData = new FormData()
       formData.append('file', file)
       
-      await api.post('/medications/import/', formData, {
+      await api.post('/api/medications/import/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -279,7 +278,7 @@ export const medicationApi = {
   // Get medication statistics
   async getMedicationStats(): Promise<any> {
     try {
-      const response = await api.get<ApiResponse<any>>('/medications/stats/')
+      const response = await api.get<ApiResponse<any>>('/api/medications/stats/')
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch medication statistics:', error)
@@ -290,7 +289,7 @@ export const medicationApi = {
   // Get medication reminders
   async getMedicationReminders(): Promise<any[]> {
     try {
-      const response = await api.get<ApiResponse<any[]>>('/medications/reminders/')
+      const response = await api.get<ApiResponse<any[]>>('/api/medications/reminders/')
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch medication reminders:', error)
@@ -301,7 +300,7 @@ export const medicationApi = {
   // Set medication reminder
   async setMedicationReminder(medicationId: string, reminderData: any): Promise<boolean> {
     try {
-      await api.post(`/medications/${medicationId}/reminders/`, reminderData)
+      await api.post(`/api/medications/${medicationId}/reminders/`, reminderData)
       return true
     } catch (error) {
       console.error('Failed to set medication reminder:', error)
@@ -312,7 +311,7 @@ export const medicationApi = {
   // Delete medication reminder
   async deleteMedicationReminder(reminderId: string): Promise<boolean> {
     try {
-      await api.delete(`/medications/reminders/${reminderId}/`)
+      await api.delete(`/api/medications/reminders/${reminderId}/`)
       return true
     } catch (error) {
       console.error('Failed to delete medication reminder:', error)

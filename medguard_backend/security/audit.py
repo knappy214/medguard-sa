@@ -37,12 +37,15 @@ class AuditLog(models.Model):
         EXPORT = 'export', _('Export')
         IMPORT = 'import', _('Import')
         LOGIN = 'login', _('Login')
+        LOGIN_SUCCESS = 'login_success', _('Login Success')
+        LOGIN_FAILURE = 'login_failure', _('Login Failure')
         LOGOUT = 'logout', _('Logout')
         ACCESS_DENIED = 'access_denied', _('Access Denied')
         PASSWORD_CHANGE = 'password_change', _('Password Change')
         PERMISSION_CHANGE = 'permission_change', _('Permission Change')
         DATA_ANONYMIZATION = 'data_anonymization', _('Data Anonymization')
         BREACH_ATTEMPT = 'breach_attempt', _('Breach Attempt')
+        SECURITY_EVENT = 'security_event', _('Security Event')
     
     # Severity levels
     class Severity(models.TextChoices):
@@ -79,10 +82,14 @@ class AuditLog(models.Model):
     content_type = models.ForeignKey(
         ContentType,
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         help_text=_('Content type of the object')
     )
     
     object_id = models.PositiveIntegerField(
+        null=True,
+        blank=True,
         help_text=_('ID of the object')
     )
     
@@ -140,6 +147,7 @@ class AuditLog(models.Model):
     session_id = models.CharField(
         max_length=100,
         blank=True,
+        null=True,
         help_text=_('Session ID')
     )
     
@@ -270,7 +278,8 @@ class AuditLogger:
                 user_agent = request.META.get('HTTP_USER_AGENT', '')
                 request_path = request.path
                 request_method = request.method
-                session_id = request.session.session_key if request.session else ""
+                session_id = getattr(request, 'session', None)
+                session_id = session_id.session_key if session_id else ""
             
             # Create audit log entry
             audit_log = AuditLog.objects.create(

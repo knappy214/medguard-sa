@@ -2,14 +2,16 @@
 import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
-import MedicationDashboard from './components/medication/MedicationDashboard.vue'
+import { useAuth } from '@/composables/useAuth'
 import LanguageSwitcher from './components/common/LanguageSwitcher.vue'
 import ThemeToggle from './components/common/ThemeToggle.vue'
 import Logo from './components/common/Logo.vue'
 import Footer from './components/common/Footer.vue'
+import Navigation from './components/common/Navigation.vue'
 
 const { t } = useI18n()
 const themeStore = useThemeStore()
+const { isAuthenticated } = useAuth()
 
 // Initialize theme on app mount
 onMounted(() => {
@@ -19,8 +21,11 @@ onMounted(() => {
 
 <template>
   <div class="app min-h-screen bg-base-100 flex flex-col">
-    <!-- Header with Logo, Language Switcher and Theme Toggle -->
-    <header class="bg-base-100 border-b border-base-300 shadow-sm sticky top-0 z-50">
+    <!-- Navigation for authenticated users -->
+    <Navigation v-if="isAuthenticated" />
+    
+    <!-- Header for unauthenticated users -->
+    <header v-else class="bg-base-100 border-b border-base-300 shadow-sm sticky top-0 z-50">
       <div class="container mx-auto px-4 py-4">
         <div class="flex justify-between items-center">
           <div class="flex items-center space-x-4">
@@ -46,7 +51,7 @@ onMounted(() => {
 
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-8 flex-1">
-      <MedicationDashboard />
+      <router-view />
     </main>
 
     <!-- Footer -->

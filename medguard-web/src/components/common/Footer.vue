@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import Logo from './Logo.vue'
 
+const { t } = useI18n()
 const currentYear = new Date().getFullYear()
 </script>
 
@@ -12,33 +14,33 @@ const currentYear = new Date().getFullYear()
         <div class="flex flex-col items-center md:items-start">
           <Logo size="lg" />
           <p class="text-base-content/70 text-sm mt-2 text-center md:text-left">
-            Professional Healthcare Management System
+            {{ t('footer.tagline') }}
           </p>
         </div>
         
         <!-- Quick Links -->
         <div class="flex flex-col items-center">
-          <h3 class="font-semibold text-base-content mb-4">Quick Links</h3>
+          <h3 class="font-semibold text-base-content mb-4">{{ t('footer.quickLinks') }}</h3>
           <div class="flex flex-col space-y-2 text-sm">
             <a href="#" class="text-base-content/70 hover:text-primary transition-colors">
-              Dashboard
+              {{ t('footer.dashboard') }}
             </a>
             <a href="#" class="text-base-content/70 hover:text-primary transition-colors">
-              Medications
+              {{ t('footer.medications') }}
             </a>
             <a href="#" class="text-base-content/70 hover:text-primary transition-colors">
-              Settings
+              {{ t('footer.settings') }}
             </a>
           </div>
         </div>
         
         <!-- Contact Info -->
         <div class="flex flex-col items-center md:items-end">
-          <h3 class="font-semibold text-base-content mb-4">Contact</h3>
+          <h3 class="font-semibold text-base-content mb-4">{{ t('footer.contact') }}</h3>
           <div class="text-sm text-base-content/70 text-center md:text-right">
-            <p>MedGuard SA</p>
-            <p>Professional Healthcare Solutions</p>
-            <p class="mt-2">© {{ currentYear }} All rights reserved</p>
+            <p>{{ t('footer.companyName') }}</p>
+            <p>{{ t('footer.companyDescription') }}</p>
+            <p class="mt-2">{{ t('footer.copyright', { year: currentYear }) }}</p>
           </div>
         </div>
       </div>
@@ -46,7 +48,7 @@ const currentYear = new Date().getFullYear()
       <!-- Bottom Bar -->
       <div class="border-t border-base-300 mt-8 pt-4 text-center">
         <p class="text-xs text-base-content/50">
-          Built with ❤️ for South African Healthcare
+          {{ t('footer.builtWith') }}
         </p>
       </div>
     </div>

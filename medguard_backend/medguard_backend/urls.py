@@ -10,14 +10,27 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls.i18n import i18n_patterns
+from users import views as user_views
 
 # Admin site customization
 admin.site.site_header = settings.ADMIN_SITE_HEADER
 admin.site.site_title = settings.ADMIN_SITE_TITLE
 admin.site.index_title = settings.ADMIN_INDEX_TITLE
 
-# Non-translatable URLs (admin, API, etc.)
+# API endpoints must come FIRST to avoid conflicts with Wagtail's catch-all pattern
 urlpatterns = [
+    # Direct API endpoints for testing
+    path('api/test/', user_views.test_view, name='test_view'),
+    
+    # API endpoints (without language prefix)
+    path('api/users/', include('users.urls')),
+    path('api/medications/', include('medications.urls')),
+    path('api/notifications/', include('medguard_notifications.urls')),
+    path('api/security/', include('security.urls')),
+]
+
+# Non-translatable URLs (admin, etc.)
+urlpatterns += [
     # Internationalization
     path('i18n/', include('django.conf.urls.i18n')),
     
@@ -26,21 +39,12 @@ urlpatterns = [
     
     # Wagtail admin (without language prefix for admin access)
     path('admin/', include('wagtail.admin.urls')),
-    
-    # API endpoints (without language prefix) - using distinct namespaces
-    path('api/', include(('medications.urls', 'api_medications'), namespace='api_medications')),
-    # path('api/', include(('medguard_notifications.urls', 'api_notifications'), namespace='api_notifications')),
-    path('api/', include(('users.urls', 'api_users'), namespace='api_users')),
-    path('api/', include(('security.urls', 'api_security'), namespace='api_security')),
 ]
 
 # Translatable URLs (with language prefix)
 urlpatterns += i18n_patterns(
     # Search functionality
     path('search/', include('search.urls')),
-    
-    # Frontend medications views (with language prefix) - using distinct namespace
-    path('medications/', include(('medications.urls', 'frontend_medications'), namespace='frontend_medications')),
     
     # Home app views (including i18n test)
     path('home/', include('home.urls')),

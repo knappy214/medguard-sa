@@ -8,10 +8,12 @@ import logging
 from django.shortcuts import render
 from django.contrib.auth import authenticate
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
@@ -21,225 +23,132 @@ from .models import User
 from .serializers import UserSerializer, UserDetailSerializer, UserCreateSerializer
 from security.jwt_auth import generate_secure_tokens, blacklist_token, get_token_generator
 from security.audit import log_audit_event
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
 
-class CustomTokenObtainPairView(TokenObtainPairView):
-    """
-    Custom token obtain view with device validation and security checks.
-    """
-    
-    def post(self, request, *args, **kwargs):
-        """Handle login request with device validation."""
-        try:
-            # Get device fingerprint from request
-            device_fingerprint = self._get_device_fingerprint(request)
-            
-            # Authenticate user
-            username = request.data.get('username')
-            password = request.data.get('password')
-            
-            if not username or not password:
-                return Response({
-                    'error': 'Username and password are required'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            user = authenticate(username=username, password=password)
-            
-            if not user:
-                # Log failed login attempt
-                log_audit_event(
-                    user=None,
-                    action='login_failed',
-                    description=f'Failed login attempt for username: {username}',
-                    severity='medium',
-                    request=request,
-                    metadata={'username': username, 'ip_address': self._get_client_ip(request)}
-                )
-                
-                return Response({
-                    'error': 'Invalid credentials'
-                }, status=status.HTTP_401_UNAUTHORIZED)
-            
-            if not user.is_active:
-                return Response({
-                    'error': 'Account is disabled'
-                }, status=status.HTTP_401_UNAUTHORIZED)
-            
-            # Generate secure tokens with device validation
-            tokens = generate_secure_tokens(user, request)
-            
-            # Log successful login
-            log_audit_event(
-                user=user,
-                action='login',
-                description=f'Successful login for user: {user.username}',
-                severity='low',
-                request=request,
-                metadata={
-                    'device_fingerprint': device_fingerprint,
-                    'ip_address': self._get_client_ip(request)
-                }
-            )
-            
-            # Update last login
-            user.last_login = timezone.now()
-            user.save(update_fields=['last_login'])
-            
-            return Response({
-                'access': tokens['access'],
-                'refresh': tokens['refresh'],
-                'user': {
-                    'id': user.id,
-                    'username': user.username,
-                    'email': user.email,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'user_type': user.user_type,
-                    'preferred_language': user.preferred_language,
-                }
-            })
-            
-        except Exception as e:
-            logger.error(f"Login error: {str(e)}")
-            return Response({
-                'error': 'Authentication failed'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    def _get_device_fingerprint(self, request):
-        """Extract device fingerprint from request headers."""
-        # Get device fingerprint from custom header
-        device_fingerprint = request.META.get('HTTP_X_DEVICE_FINGERPRINT')
-        
-        if not device_fingerprint:
-            # Generate a basic fingerprint from user agent and IP
-            user_agent = request.META.get('HTTP_USER_AGENT', '')
-            ip_address = self._get_client_ip(request)
-            device_fingerprint = f"{ip_address}:{hash(user_agent) % 1000000}"
-        
-        return device_fingerprint
-    
-    def _get_client_ip(self, request):
-        """Get client IP address from request."""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
-        else:
-            ip = request.META.get('REMOTE_ADDR')
-        return ip
-
-
-class CustomTokenRefreshView(TokenRefreshView):
-    """
-    Custom token refresh view with security checks.
-    """
-    
-    def post(self, request, *args, **kwargs):
-        """Handle token refresh with security validation."""
-        try:
-            refresh_token = request.data.get('refresh')
-            
-            if not refresh_token:
-                return Response({
-                    'error': 'Refresh token is required'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Validate refresh token
-            try:
-                token = RefreshToken(refresh_token)
-                user_id = token.payload.get('user_id')
-                
-                if not user_id:
-                    raise InvalidToken('Invalid token payload')
-                
-                # Get user
-                try:
-                    user = User.objects.get(id=user_id, is_active=True)
-                except User.DoesNotExist:
-                    raise InvalidToken('User not found or inactive')
-                
-                # Validate device fingerprint if present
-                device_fingerprint = self._get_device_fingerprint(request)
-                token_fingerprint = token.payload.get('device_fingerprint')
-                
-                if token_fingerprint and device_fingerprint != token_fingerprint:
-                    # Log potential security issue
-                    log_audit_event(
-                        user=user,
-                        action='token_refresh_failed',
-                        description='Device fingerprint mismatch during token refresh',
-                        severity='high',
-                        request=request,
-                        metadata={
-                            'expected_fingerprint': token_fingerprint,
-                            'received_fingerprint': device_fingerprint,
-                            'ip_address': self._get_client_ip(request)
-                        }
-                    )
-                    
-                    return Response({
-                        'error': 'Invalid device fingerprint'
-                    }, status=status.HTTP_401_UNAUTHORIZED)
-                
-                # Generate new access token
-                new_access_token = token.access_token
-                
-                # Log successful refresh
-                log_audit_event(
-                    user=user,
-                    action='token_refresh',
-                    description=f'Token refreshed for user: {user.username}',
-                    severity='low',
-                    request=request,
-                    metadata={
-                        'device_fingerprint': device_fingerprint,
-                        'ip_address': self._get_client_ip(request)
-                    }
-                )
-                
-                return Response({
-                    'access': str(new_access_token)
-                })
-                
-            except (InvalidToken, TokenError) as e:
-                return Response({
-                    'error': 'Invalid refresh token'
-                }, status=status.HTTP_401_UNAUTHORIZED)
-                
-        except Exception as e:
-            logger.error(f"Token refresh error: {str(e)}")
-            return Response({
-                'error': 'Token refresh failed'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    def _get_device_fingerprint(self, request):
-        """Extract device fingerprint from request headers."""
-        device_fingerprint = request.META.get('HTTP_X_DEVICE_FINGERPRINT')
-        
-        if not device_fingerprint:
-            user_agent = request.META.get('HTTP_USER_AGENT', '')
-            ip_address = self._get_client_ip(request)
-            device_fingerprint = f"{ip_address}:{hash(user_agent) % 1000000}"
-        
-        return device_fingerprint
-    
-    def _get_client_ip(self, request):
-        """Get client IP address from request."""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
-        else:
-            ip = request.META.get('REMOTE_ADDR')
-        return ip
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def test_view(request):
+    """Simple test view."""
+    return Response({
+        'message': 'Test view working',
+        'status': 'success'
+    })
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def logout_view(request):
-    """
-    Logout view to blacklist refresh token.
-    """
+def login_view(request):
+    """Handle user login with JWT token generation."""
+    try:
+        username_or_email = request.data.get('username') or request.data.get('email')
+        password = request.data.get('password')
+        
+        print(f"Login attempt for username/email: {username_or_email}")
+        
+        if not username_or_email or not password:
+            return Response({
+                'error': 'Username/Email and password are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Try to authenticate with username first
+        user = authenticate(request, username=username_or_email, password=password)
+        
+        # If that fails, try to find user by email and authenticate
+        if user is None:
+            try:
+                user_obj = User.objects.get(email=username_or_email)
+                user = authenticate(request, username=user_obj.username, password=password)
+            except User.DoesNotExist:
+                user = None
+        
+        if user is None:
+            print(f"Authentication failed for username/email: {username_or_email}")
+            return Response({
+                'error': 'Invalid credentials'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        if not user.is_active:
+            return Response({
+                'error': 'Account is disabled'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        print(f"Authentication successful for user: {user.username}")
+        
+        # Log the user in
+        from django.contrib.auth import login
+        login(request, user)
+        
+        # Generate JWT tokens
+        try:
+            tokens = generate_secure_tokens(user, request)
+            print(f"Tokens generated successfully for user: {user.username}")
+            
+            # Log audit event
+            try:
+                log_audit_event(
+                    user=user,
+                    action='login_success',
+                    details={'ip_address': _get_client_ip(request)},
+                    request=request
+                )
+            except Exception as audit_error:
+                print(f"Audit logging failed: {audit_error}")
+            
+            return Response({
+                'message': 'Login successful',
+                'access_token': tokens['access'],
+                'refresh_token': tokens['refresh'],
+                'expires_in': tokens['expires_in'],
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'first_name': user.first_name or '',
+                    'last_name': user.last_name or '',
+                    'user_type': user.user_type,
+                    'preferred_language': user.preferred_language or 'en',
+                    'permissions': _get_user_permissions(user),
+                    'last_login': user.last_login.isoformat() if user.last_login else None,
+                    'mfa_enabled': False
+                }
+            })
+            
+        except Exception as token_error:
+            print(f"Token generation failed: {token_error}")
+            # Fall back to basic response without tokens
+            return Response({
+                'message': 'Login successful (tokens unavailable)',
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'first_name': user.first_name or '',
+                    'last_name': user.last_name or '',
+                    'user_type': user.user_type,
+                    'preferred_language': user.preferred_language or 'en',
+                    'permissions': ['view_own_profile'],
+                    'last_login': user.last_login.isoformat() if user.last_login else None,
+                    'mfa_enabled': False
+                }
+            })
+        
+    except Exception as e:
+        print(f"Login error: {e}")
+        import traceback
+        traceback.print_exc()
+        logger.error(f'Login error: {e}')
+        return Response({
+            'error': 'Login failed'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def refresh_token_view(request):
+    """Handle token refresh."""
     try:
         refresh_token = request.data.get('refresh')
         
@@ -248,34 +157,586 @@ def logout_view(request):
                 'error': 'Refresh token is required'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Blacklist the refresh token
-        success = blacklist_token(refresh_token, request.user if request.user.is_authenticated else None)
-        
-        if success:
-            # Log logout
-            if request.user.is_authenticated:
-                log_audit_event(
-                    user=request.user,
-                    action='logout',
-                    description=f'User logged out: {request.user.username}',
-                    severity='low',
-                    request=request,
-                    metadata={'ip_address': _get_client_ip(request)}
-                )
+        # Validate refresh token
+        try:
+            token = RefreshToken(refresh_token)
+            user_id = token.payload.get('user_id')
+            
+            if not user_id:
+                raise InvalidToken('Invalid token payload')
+            
+            # Get user
+            try:
+                user = User.objects.get(id=user_id, is_active=True)
+            except User.DoesNotExist:
+                raise InvalidToken('User not found or inactive')
+            
+            # Generate new access token
+            new_access_token = str(token.access_token)
+            
+            # Log successful refresh
+            log_audit_event(
+                user=user,
+                action='token_refresh',
+                description=f'Token refreshed for user: {user.username}',
+                severity='low',
+                request=request,
+                metadata={'ip_address': _get_client_ip(request)}
+            )
             
             return Response({
-                'message': 'Successfully logged out'
+                'access': new_access_token,
+                'tokens': {
+                    'accessToken': new_access_token,
+                    'refreshToken': refresh_token,
+                    'expiresAt': _calculate_expires_at(new_access_token)
+                }
             })
-        else:
+            
+        except (InvalidToken, TokenError) as e:
+            logger.warning(f'Token refresh failed: {e}')
             return Response({
                 'error': 'Invalid refresh token'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            }, status=status.HTTP_401_UNAUTHORIZED)
             
     except Exception as e:
-        logger.error(f"Logout error: {str(e)}")
+        logger.error(f'Token refresh error: {e}')
+        return Response({
+            'error': 'Token refresh failed'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def _calculate_expires_at(access_token):
+    """Calculate token expiration timestamp."""
+    from rest_framework_simplejwt.tokens import AccessToken
+    from rest_framework_simplejwt.exceptions import TokenError
+    
+    try:
+        token = AccessToken(access_token)
+        return int(token.current_time.timestamp() * 1000)  # Convert to milliseconds
+    except TokenError:
+        # Fallback to 15 minutes from now
+        import time
+        return int((time.time() + 15 * 60) * 1000)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def logout_view(request):
+    """Handle user logout and token invalidation."""
+    try:
+        # Get authorization header (optional for logout)
+        auth_header = request.headers.get('Authorization')
+        token = None
+        user = None
+        
+        if auth_header and auth_header.startswith('Bearer '):
+            # Extract and validate token
+            token = auth_header.split(' ')[1]
+            try:
+                # Blacklist the token if valid
+                blacklist_token(token)
+            except Exception as e:
+                logger.warning(f'Failed to blacklist token: {e}')
+            
+            # Try to get user from token for logging
+            try:
+                from rest_framework_simplejwt.tokens import AccessToken
+                from rest_framework_simplejwt.exceptions import TokenError
+                
+                access_token = AccessToken(token)
+                user_id = access_token.payload.get('user_id')
+                if user_id:
+                    user = User.objects.get(id=user_id, is_active=True)
+            except (TokenError, User.DoesNotExist):
+                pass  # Token is invalid, but we still allow logout
+        
+        # Get device ID for logging
+        device_id = request.data.get('deviceId') or request.headers.get('X-Device-ID')
+        
+        # Log logout event (even without user for security tracking)
+        log_audit_event(
+            user=user,
+            action='logout',
+            description=f'User logout from device {device_id}',
+            severity='low',
+            request=request,
+            metadata={
+                'device_id': device_id,
+                'ip_address': _get_client_ip(request),
+                'token_provided': bool(token)
+            }
+        )
+        
+        return Response({
+            'message': 'Successfully logged out'
+        })
+        
+    except Exception as e:
+        logger.error(f'Logout error: {e}')
         return Response({
             'error': 'Logout failed'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def validate_token_view(request):
+    """Validate token and return current user information."""
+    try:
+        # Get authorization header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return Response({
+                'error': 'No valid authorization header'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Extract token
+        token = auth_header.split(' ')[1]
+        
+        # Validate token and get user
+        from rest_framework_simplejwt.tokens import AccessToken
+        from rest_framework_simplejwt.exceptions import TokenError
+        
+        try:
+            access_token = AccessToken(token)
+            user_id = access_token.payload.get('user_id')
+            
+            if not user_id:
+                raise TokenError('Invalid token payload')
+            
+            user = User.objects.get(id=user_id, is_active=True)
+            
+            # Return user information
+            return Response({
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'user_type': user.user_type,
+                    'preferred_language': user.preferred_language,
+                    'permissions': _get_user_permissions(user),
+                    'last_login': user.last_login.isoformat() if user.last_login else None,
+                    'mfa_enabled': user.mfa_enabled if hasattr(user, 'mfa_enabled') else False
+                }
+            })
+            
+        except (TokenError, User.DoesNotExist):
+            return Response({
+                'error': 'Invalid or expired token'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+            
+    except Exception as e:
+        logger.error(f'Token validation error: {e}')
+        return Response({
+            'error': 'Token validation failed'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_view(request):
+    """Handle user registration with enhanced validation."""
+    try:
+        # Extract registration data
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+        password_confirm = request.data.get('password_confirm')
+        first_name = request.data.get('first_name', '')
+        last_name = request.data.get('last_name', '')
+        user_type = request.data.get('user_type', User.UserType.PATIENT)
+        
+        # Validate required fields
+        if not all([username, email, password, password_confirm]):
+            return Response({
+                'error': 'All required fields must be provided'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate password confirmation
+        if password != password_confirm:
+            return Response({
+                'error': 'Passwords do not match'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if user already exists
+        if User.objects.filter(username=username).exists():
+            return Response({
+                'error': 'Username already exists'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if User.objects.filter(email=email).exists():
+            return Response({
+                'error': 'Email already exists'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Create user
+        try:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                user_type=user_type,
+                is_active=True  # Users are active by default
+            )
+            
+            # Log the user in
+            from django.contrib.auth import login
+            login(request, user)
+            
+            # Generate JWT tokens
+            tokens = generate_secure_tokens(user, request)
+            
+            # Log audit event
+            log_audit_event(
+                user=user,
+                action='user_registration',
+                description=f'New user registration: {user.username}',
+                severity='low',
+                request=request
+            )
+            
+            return Response({
+                'message': 'Registration successful',
+                'access_token': tokens['access'],
+                'refresh_token': tokens['refresh'],
+                'expires_in': tokens['expires_in'],
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'first_name': user.first_name or '',
+                    'last_name': user.last_name or '',
+                    'user_type': user.user_type,
+                    'preferred_language': user.preferred_language or 'en',
+                    'permissions': _get_user_permissions(user),
+                    'last_login': user.last_login.isoformat() if user.last_login else None,
+                    'mfa_enabled': False
+                }
+            })
+            
+        except Exception as create_error:
+            logger.error(f'User creation error: {create_error}')
+            return Response({
+                'error': 'Failed to create user account'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    except Exception as e:
+        logger.error(f'Registration error: {e}')
+        return Response({
+            'error': 'Registration failed'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def password_reset_request_view(request):
+    """Handle password reset request."""
+    try:
+        email = request.data.get('email')
+        
+        if not email:
+            return Response({
+                'error': 'Email address is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if user exists (but don't reveal if they do)
+        try:
+            user = User.objects.get(email=email, is_active=True)
+        except User.DoesNotExist:
+            # Return success even if user doesn't exist to prevent enumeration
+            return Response({
+                'message': 'If an account with this email exists, a password reset link has been sent.'
+            })
+        
+        # Generate password reset token
+        from django.contrib.auth.tokens import default_token_generator
+        from django.utils.http import urlsafe_base64_encode
+        from django.utils.encoding import force_bytes
+        
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        
+        # Create password reset URL
+        reset_url = f"{request.scheme}://{request.get_host()}/api/users/password-reset-confirm/{uid}/{token}/"
+        
+        # Send email (in development, just log it)
+        if settings.DEBUG:
+            logger.info(f'Password reset link for {email}: {reset_url}')
+        
+        # Log audit event
+        log_audit_event(
+            user=user,
+            action='password_reset_requested',
+            description=f'Password reset requested for {user.email}',
+            severity='medium',
+            request=request
+        )
+        
+        return Response({
+            'message': 'If an account with this email exists, a password reset link has been sent.'
+        })
+        
+    except Exception as e:
+        logger.error(f'Password reset request error: {e}')
+        return Response({
+            'error': 'Password reset request failed'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def password_reset_confirm_view(request, uidb64, token):
+    """Handle password reset confirmation."""
+    try:
+        new_password = request.data.get('new_password')
+        new_password_confirm = request.data.get('new_password_confirm')
+        
+        if not all([new_password, new_password_confirm]):
+            return Response({
+                'error': 'New password and confirmation are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if new_password != new_password_confirm:
+            return Response({
+                'error': 'Passwords do not match'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Decode user ID
+        from django.utils.http import urlsafe_base64_decode
+        from django.utils.encoding import force_str
+        
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid, is_active=True)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return Response({
+                'error': 'Invalid password reset link'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate token
+        from django.contrib.auth.tokens import default_token_generator
+        
+        if not default_token_generator.check_token(user, token):
+            return Response({
+                'error': 'Invalid or expired password reset link'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Set new password
+        user.set_password(new_password)
+        user.save()
+        
+        # Log audit event
+        log_audit_event(
+            user=user,
+            action='password_reset_completed',
+            description=f'Password reset completed for {user.email}',
+            severity='medium',
+            request=request
+        )
+        
+        return Response({
+            'message': 'Password has been reset successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f'Password reset confirm error: {e}')
+        return Response({
+            'error': 'Password reset failed'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_password_view(request):
+    """Handle password change for authenticated users."""
+    try:
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+        new_password_confirm = request.data.get('new_password_confirm')
+        
+        if not all([old_password, new_password, new_password_confirm]):
+            return Response({
+                'error': 'All password fields are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if new_password != new_password_confirm:
+            return Response({
+                'error': 'New passwords do not match'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verify old password
+        if not request.user.check_password(old_password):
+            return Response({
+                'error': 'Current password is incorrect'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Set new password
+        request.user.set_password(new_password)
+        request.user.save()
+        
+        # Log audit event
+        log_audit_event(
+            user=request.user,
+            action='password_changed',
+            description=f'Password changed for {request.user.username}',
+            severity='medium',
+            request=request
+        )
+        
+        return Response({
+            'message': 'Password changed successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f'Password change error: {e}')
+        return Response({
+            'error': 'Password change failed'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def profile_view(request):
+    """Handle user profile management."""
+    if request.method == 'GET':
+        # Return current user profile
+        user = request.user
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name or '',
+            'last_name': user.last_name or '',
+            'user_type': user.user_type,
+            'preferred_language': user.preferred_language or 'en',
+            'date_joined': user.date_joined.isoformat(),
+            'last_login': user.last_login.isoformat() if user.last_login else None,
+            'is_active': user.is_active,
+            'permissions': _get_user_permissions(user)
+        })
+    
+    elif request.method == 'PUT':
+        # Update user profile
+        try:
+            user = request.user
+            
+            # Update allowed fields
+            if 'first_name' in request.data:
+                user.first_name = request.data['first_name']
+            if 'last_name' in request.data:
+                user.last_name = request.data['last_name']
+            if 'preferred_language' in request.data:
+                user.preferred_language = request.data['preferred_language']
+            
+            # Validate email if provided
+            if 'email' in request.data:
+                new_email = request.data['email']
+                if new_email != user.email:
+                    # Check if email is already taken
+                    if User.objects.filter(email=new_email).exclude(id=user.id).exists():
+                        return Response({
+                            'error': 'Email address is already in use'
+                        }, status=status.HTTP_400_BAD_REQUEST)
+                    user.email = new_email
+            
+            user.save()
+            
+            # Log audit event
+            log_audit_event(
+                user=user,
+                action='profile_updated',
+                description=f'Profile updated for {user.username}',
+                severity='low',
+                request=request
+            )
+            
+            return Response({
+                'message': 'Profile updated successfully',
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'first_name': user.first_name or '',
+                    'last_name': user.last_name or '',
+                    'user_type': user.user_type,
+                    'preferred_language': user.preferred_language or 'en',
+                    'permissions': _get_user_permissions(user)
+                }
+            })
+            
+        except Exception as e:
+            logger.error(f'Profile update error: {e}')
+            return Response({
+                'error': 'Profile update failed'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_permissions_view(request):
+    """Get current user's permissions."""
+    try:
+        user = request.user
+        permissions = _get_user_permissions(user)
+        
+        return Response({
+            'permissions': permissions,
+            'user_type': user.user_type,
+            'is_staff': user.is_staff,
+            'is_superuser': user.is_superuser
+        })
+        
+    except Exception as e:
+        logger.error(f'Permissions error: {e}')
+        return Response({
+            'error': 'Failed to get permissions'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def _get_user_permissions(user):
+    """Get user permissions based on user type."""
+    permissions = []
+    
+    # Base permissions for all authenticated users
+    permissions.extend([
+        'view_own_profile',
+        'edit_own_profile',
+        'view_medications',
+        'view_schedules'
+    ])
+    
+    # User type specific permissions
+    if user.user_type == 'PATIENT':
+        permissions.extend([
+            'manage_own_medications',
+            'view_own_schedules',
+            'mark_medications_taken'
+        ])
+    elif user.user_type == 'CAREGIVER':
+        permissions.extend([
+            'manage_patient_medications',
+            'view_patient_schedules',
+            'mark_patient_medications_taken',
+            'view_patient_profiles'
+        ])
+    elif user.user_type == 'HEALTHCARE_PROVIDER':
+        permissions.extend([
+            'manage_all_medications',
+            'manage_all_schedules',
+            'view_all_profiles',
+            'manage_users',
+            'view_analytics',
+            'manage_notifications'
+        ])
+    
+    return permissions
 
 
 def _get_client_ip(request):

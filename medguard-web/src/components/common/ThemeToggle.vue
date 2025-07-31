@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
 
+const { t } = useI18n()
 const themeStore = useThemeStore()
 
 // Initialize theme on mount
@@ -16,8 +18,8 @@ onMounted(() => {
     <button 
       @click="themeStore.toggleTheme"
       class="btn btn-circle btn-ghost"
-      :title="themeStore.currentTheme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'"
-      aria-label="Toggle theme"
+      :title="themeStore.currentTheme === 'light' ? t('theme.switchToDark') : t('theme.switchToLight')"
+      :aria-label="t('theme.toggleTheme')"
     >
       <!-- Sun icon for light mode -->
       <svg 

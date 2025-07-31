@@ -41,42 +41,42 @@ const validateForm = (): boolean => {
   let isValid = true
 
   if (!form.name.trim()) {
-    errors.name = 'Medication name is required'
+    errors.name = t('validation.medicationNameRequired')
     isValid = false
   }
 
   if (!form.dosage.trim()) {
-    errors.dosage = 'Dosage is required'
+    errors.dosage = t('validation.dosageRequired')
     isValid = false
   }
 
   if (!form.frequency.trim()) {
-    errors.frequency = 'Frequency is required'
+    errors.frequency = t('validation.frequencyRequired')
     isValid = false
   }
 
   if (!form.time.trim()) {
-    errors.time = 'Time is required'
+    errors.time = t('validation.timeRequired')
     isValid = false
   }
 
   if (form.stock < 0) {
-    errors.stock = 'Stock cannot be negative'
+    errors.stock = t('validation.stockCannotBeNegative')
     isValid = false
   }
 
   if (form.minStock < 0) {
-    errors.minStock = 'Minimum stock cannot be negative'
+    errors.minStock = t('validation.minStockCannotBeNegative')
     isValid = false
   }
 
   if (!form.instructions.trim()) {
-    errors.instructions = 'Instructions are required'
+    errors.instructions = t('validation.instructionsRequired')
     isValid = false
   }
 
   if (!form.category.trim()) {
-    errors.category = 'Category is required'
+    errors.category = t('validation.categoryRequired')
     isValid = false
   }
 
@@ -162,12 +162,12 @@ const frequencies = [
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="form-control">
             <label class="label">
-              <span class="label-text font-medium">Medication Name *</span>
+              <span class="label-text font-medium">{{ t('form.medicationName') }} *</span>
             </label>
             <input
               v-model="form.name"
               type="text"
-              placeholder="e.g., Paracetamol"
+              :placeholder="t('form.medicationName')"
               :class="[
                 'input input-bordered w-full',
                 errors.name ? 'input-error' : ''
@@ -180,7 +180,7 @@ const frequencies = [
 
           <div class="form-control">
             <label class="label">
-              <span class="label-text font-medium">Category *</span>
+              <span class="label-text font-medium">{{ t('form.category') }} *</span>
             </label>
             <select
               v-model="form.category"
@@ -189,7 +189,7 @@ const frequencies = [
                 errors.category ? 'select-error' : ''
               ]"
             >
-              <option value="">Select category</option>
+              <option value="">{{ t('form.selectFrequency') }}</option>
               <option v-for="category in categories" :key="category" :value="category">
                 {{ category }}
               </option>
@@ -204,12 +204,12 @@ const frequencies = [
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="form-control">
             <label class="label">
-              <span class="label-text font-medium">Dosage *</span>
+              <span class="label-text font-medium">{{ t('form.dosage') }} *</span>
             </label>
             <input
               v-model="form.dosage"
               type="text"
-              placeholder="e.g., 500mg"
+              :placeholder="t('form.dosagePlaceholder')"
               :class="[
                 'input input-bordered w-full',
                 errors.dosage ? 'input-error' : ''
@@ -222,7 +222,7 @@ const frequencies = [
 
           <div class="form-control">
             <label class="label">
-              <span class="label-text font-medium">Frequency *</span>
+              <span class="label-text font-medium">{{ t('form.frequency') }} *</span>
             </label>
             <select
               v-model="form.frequency"
@@ -231,7 +231,7 @@ const frequencies = [
                 errors.frequency ? 'select-error' : ''
               ]"
             >
-              <option value="">Select frequency</option>
+              <option value="">{{ t('form.selectFrequency') }}</option>
               <option v-for="frequency in frequencies" :key="frequency" :value="frequency">
                 {{ frequency }}
               </option>
@@ -246,12 +246,12 @@ const frequencies = [
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="form-control">
             <label class="label">
-              <span class="label-text font-medium">Time *</span>
+              <span class="label-text font-medium">{{ t('form.time') }} *</span>
             </label>
             <input
               v-model="form.time"
               type="text"
-              placeholder="e.g., 08:00, 14:00, 20:00"
+              :placeholder="t('form.timePlaceholder')"
               :class="[
                 'input input-bordered w-full',
                 errors.time ? 'input-error' : ''
@@ -264,7 +264,7 @@ const frequencies = [
 
           <div class="form-control">
             <label class="label">
-              <span class="label-text font-medium">Current Stock</span>
+              <span class="label-text font-medium">{{ t('form.currentStock') }}</span>
             </label>
             <input
               v-model.number="form.stock"
@@ -283,7 +283,7 @@ const frequencies = [
 
           <div class="form-control">
             <label class="label">
-              <span class="label-text font-medium">Minimum Stock</span>
+              <span class="label-text font-medium">{{ t('form.minimumStock') }}</span>
             </label>
             <input
               v-model.number="form.minStock"
@@ -304,11 +304,11 @@ const frequencies = [
         <!-- Instructions -->
         <div class="form-control">
           <label class="label">
-            <span class="label-text font-medium">Instructions *</span>
+            <span class="label-text font-medium">{{ t('form.instructions') }} *</span>
           </label>
           <textarea
             v-model="form.instructions"
-            placeholder="e.g., Take with food. Do not exceed 4 tablets per day."
+            :placeholder="t('form.instructionsPlaceholder')"
             :class="[
               'textarea textarea-bordered h-24',
               errors.instructions ? 'textarea-error' : ''

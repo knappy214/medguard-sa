@@ -17,7 +17,6 @@ from django.db import transaction
 from django.urls import reverse
 
 # Modern notification libraries
-from django_nyt.utils import notify as nyt_notify
 from post_office import mail as po_mail
 from post_office.models import Email, EmailTemplate
 from push_notifications.models import APNSDevice, GCMDevice
@@ -429,24 +428,22 @@ class NotificationService:
         message: str, 
         notification: Notification
     ) -> bool:
-        """Send in-app notification using django-nyt."""
+        """Send in-app notification using our own implementation."""
         try:
-            nyt_notify(
-                title,
-                "medguard/notification",
-                url=reverse('medguard_notifications:detail', kwargs={'pk': notification.pk}),
-                recipient=user,
-                target_object=notification,
-                extra_data={
-                    'message': message,
-                    'notification_id': notification.pk,
-                    'type': notification.notification_type,
-                    'priority': notification.priority,
-                }
+            # Create a user notification record
+            UserNotification.objects.create(
+                user=user,
+                notification=notification,
+                title=title,
+                message=message,
+                is_read=False,
+                created_at=timezone.now()
             )
+            
+            logger.info(f"In-app notification created for user {user.id}: {title}")
             return True
         except Exception as e:
-            logger.error(f"Error sending in-app notification: {str(e)}")
+            logger.error(f"Failed to send in-app notification to user {user.id}: {e}")
             return False
     
     def _send_email_notification(
