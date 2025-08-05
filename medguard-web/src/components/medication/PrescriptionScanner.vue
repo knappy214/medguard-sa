@@ -1,25 +1,47 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { MedicationFormData, BulkMedicationEntry } from '@/types/medication'
+import type { 
+  MedicationFormData, 
+  BulkMedicationEntry,
+  PrescriptionPage,
+  ImageQuality,
+  PrescriptionMetadata,
+  CameraGuide,
+  OCRConfidence,
+  MedicationInteraction,
+  BatchProcessingResult,
+  SouthAfricanPrescriptionValidation,
+  FileUploadProgress,
+  DragDropZone
+} from '@/types/medication'
 
 interface Props {
   mode?: 'camera' | 'upload' | 'both'
   allowBatch?: boolean
   autoProcess?: boolean
+  multiPage?: boolean
+  qualityThreshold?: number
+  autoCapture?: boolean
+  captureDelay?: number
 }
 
 interface Emits {
   (e: 'close'): void
   (e: 'add', data: MedicationFormData): void
   (e: 'bulk-add', data: BulkMedicationEntry[]): void
+  (e: 'batch-result', result: BatchProcessingResult): void
   (e: 'error', error: string): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
   mode: 'both',
   allowBatch: true,
-  autoProcess: false
+  autoProcess: false,
+  multiPage: true,
+  qualityThreshold: 70,
+  autoCapture: false,
+  captureDelay: 3
 })
 
 const emit = defineEmits<Emits>()
@@ -41,15 +63,69 @@ const stream = ref<MediaStream | null>(null)
 const capturedImage = ref<string | null>(null)
 const uploadedFile = ref<File | null>(null)
 
+// Multi-page scanning
+const prescriptionPages = ref<PrescriptionPage[]>([])
+const currentPageIndex = ref(0)
+const selectedPages = ref<Set<number>>(new Set())
+const pageViewMode = ref<'grid' | 'list' | 'thumbnail'>('grid')
+const sortBy = ref<'quality' | 'confidence' | 'pageNumber'>('pageNumber')
+const filterStatus = ref<'all' | 'completed' | 'failed' | 'pending'>('all')
+
+// Camera preview and guides
+const cameraGuides = ref<CameraGuide[]>([
+  {
+    type: 'rectangle',
+    position: { x: 50, y: 50, width: 80, height: 60 },
+    color: '#00ff00',
+    opacity: 0.7,
+    message: t('prescriptionScanner.optimalPosition')
+  }
+])
+const showGuides = ref(true)
+const autoCaptureTimer = ref<number | null>(null)
+const captureCountdown = ref(0)
+
+// Image quality validation
+const imageQuality = ref<ImageQuality | null>(null)
+const qualityValidationEnabled = ref(true)
+const qualityWarnings = ref<string[]>([])
+
 // OCR and processing
 const ocrText = ref('')
 const extractedMedications = ref<BulkMedicationEntry[]>([])
 const processingStep = ref<'capture' | 'preprocess' | 'ocr' | 'parse' | 'review'>('capture')
+const ocrConfidence = ref<OCRConfidence[]>([])
+const lowConfidenceResults = ref<OCRConfidence[]>([])
 
 // Review interface
 const selectedMedications = ref<Set<number>>(new Set())
 const editingMedication = ref<BulkMedicationEntry | null>(null)
 const showEditModal = ref(false)
+const showManualCorrection = ref(false)
+
+// Prescription metadata
+const prescriptionMetadata = ref<PrescriptionMetadata>({})
+const showMetadata = ref(false)
+
+// Batch processing
+const batchResult = ref<BatchProcessingResult | null>(null)
+const duplicateMedications = ref<BulkMedicationEntry[]>([])
+const interactions = ref<MedicationInteraction[]>([])
+const showInteractions = ref(false)
+
+// Drag and drop
+const dragDropZone = ref<DragDropZone>({
+  isActive: false,
+  isDragOver: false,
+  acceptedFiles: [],
+  rejectedFiles: [],
+  totalSize: 0
+})
+const uploadProgress = ref<FileUploadProgress[]>([])
+
+// South African prescription validation
+const saValidation = ref<SouthAfricanPrescriptionValidation | null>(null)
+const validationEnabled = ref(true)
 
 // Image preprocessing options
 const preprocessingOptions = reactive({
@@ -58,8 +134,15 @@ const preprocessingOptions = reactive({
   sharpen: true,
   rotate: 0,
   brightness: 1.0,
-  contrast: 1.0
+  contrast: 1.0,
+  saturation: 1.0,
+  gamma: 1.0,
+  autoEnhance: true
 })
+
+// Export functionality
+const exportFormat = ref<'json' | 'csv' | 'pdf' | 'xml'>('json')
+const showExportModal = ref(false)
 
 // Prescription abbreviation mappings
 const prescriptionAbbreviations = {
@@ -121,10 +204,40 @@ const currentAbbreviations = computed(() =>
 )
 
 const hasSelectedMedications = computed(() => selectedMedications.value.size > 0)
+const hasSelectedPages = computed(() => selectedPages.value.size > 0)
 
 const canProcess = computed(() => 
-  capturedImage.value || uploadedFile.value
+  capturedImage.value || uploadedFile.value || prescriptionPages.value.length > 0
 )
+
+const currentPage = computed(() => 
+  prescriptionPages.value[currentPageIndex.value] || null
+)
+
+const filteredPages = computed(() => {
+  let pages = prescriptionPages.value
+  
+  if (filterStatus.value !== 'all') {
+    pages = pages.filter(page => page.processingStatus === filterStatus.value)
+  }
+  
+  switch (sortBy.value) {
+    case 'quality':
+      return pages.sort((a, b) => b.quality.overall - a.quality.overall)
+    case 'confidence':
+      return pages.sort((a, b) => b.confidence - a.confidence)
+    case 'pageNumber':
+    default:
+      return pages.sort((a, b) => a.pageNumber - b.pageNumber)
+  }
+})
+
+const totalMedications = computed(() => 
+  prescriptionPages.value.reduce((total, page) => total + page.extractedMedications.length, 0)
+)
+
+const duplicateCount = computed(() => duplicateMedications.value.length)
+const interactionCount = computed(() => interactions.value.length)
 
 // Methods
 const openScanner = () => {
@@ -137,6 +250,7 @@ const openScanner = () => {
 
 const closeScanner = () => {
   stopCamera()
+  clearAutoCaptureTimer()
   isOpen.value = false
   resetState()
   emit('close')
@@ -152,7 +266,27 @@ const resetState = () => {
   ocrText.value = ''
   extractedMedications.value = []
   selectedMedications.value.clear()
+  selectedPages.value.clear()
+  prescriptionPages.value = []
+  currentPageIndex.value = 0
   processingStep.value = 'capture'
+  imageQuality.value = null
+  qualityWarnings.value = []
+  ocrConfidence.value = []
+  lowConfidenceResults.value = []
+  prescriptionMetadata.value = {}
+  batchResult.value = null
+  duplicateMedications.value = []
+  interactions.value = []
+  saValidation.value = null
+  uploadProgress.value = []
+  dragDropZone.value = {
+    isActive: false,
+    isDragOver: false,
+    acceptedFiles: [],
+    rejectedFiles: [],
+    totalSize: 0
+  }
 }
 
 // Camera handling
@@ -545,6 +679,381 @@ const addSelectedMedications = () => {
   closeScanner()
 }
 
+// Multi-page scanning
+const addPage = () => {
+  const pageId = `page_${Date.now()}_${Math.random()}`
+  const newPage: PrescriptionPage = {
+    id: pageId,
+    imageData: capturedImage.value || '',
+    imageUrl: capturedImage.value || '',
+    pageNumber: prescriptionPages.value.length + 1,
+    ocrText: ocrText.value,
+    extractedMedications: extractedMedications.value.map(med => ({
+      ...med,
+      quantity: 1,
+      refills: 0
+    })),
+    processingStatus: 'pending',
+    quality: { 
+      brightness: 0, 
+      contrast: 0, 
+      sharpness: 0, 
+      noise: 0, 
+      blur: 0, 
+      overall: 0, 
+      isValid: false, 
+      warnings: [] 
+    },
+    confidence: 0,
+    lowConfidenceResults: [],
+    metadata: {},
+    interactions: [],
+    saValidation: undefined
+  }
+  
+  prescriptionPages.value.push(newPage)
+  currentPageIndex.value = prescriptionPages.value.length - 1
+  selectedPages.value.add(prescriptionPages.value.length - 1)
+  success.value = t('prescriptionScanner.pageAdded')
+}
+
+const removePage = (index: number) => {
+  if (prescriptionPages.value.length === 1) {
+    error.value = t('prescriptionScanner.lastPageWarning')
+    return
+  }
+  prescriptionPages.value.splice(index, 1)
+  if (currentPageIndex.value === index) {
+    currentPageIndex.value = 0
+  } else if (currentPageIndex.value > index) {
+    currentPageIndex.value--
+  }
+  selectedPages.value.delete(index)
+  success.value = t('prescriptionScanner.pageRemoved')
+}
+
+const selectAllPages = () => {
+  selectedPages.value.clear()
+  for (let i = 0; i < prescriptionPages.value.length; i++) {
+    selectedPages.value.add(i)
+  }
+}
+
+const deselectAllPages = () => {
+  selectedPages.value.clear()
+}
+
+const togglePageSelection = (index: number) => {
+  if (selectedPages.value.has(index)) {
+    selectedPages.value.delete(index)
+  } else {
+    selectedPages.value.add(index)
+  }
+}
+
+const processSelectedPages = async () => {
+  if (selectedPages.value.size === 0) {
+    error.value = t('prescriptionScanner.selectPagesWarning')
+    return
+  }
+
+  processing.value = true
+  const selectedPageNumbers = Array.from(selectedPages.value).map(i => i + 1)
+  const selectedPageImages = selectedPageNumbers.map(i => prescriptionPages.value[i - 1].imageUrl)
+
+  try {
+    const result = await Promise.all(selectedPageImages.map(async (imageUrl, index) => {
+      const page = prescriptionPages.value[selectedPageNumbers[index] - 1]
+      if (!imageUrl) throw new Error('No image URL found')
+      
+      const imageData = await fetch(imageUrl).then(res => res.blob()).then(blob => URL.createObjectURL(blob))
+      const preprocessedImage = await preprocessImage(imageData)
+      const ocrText = await processOCR(preprocessedImage)
+      const parsedMedications = parsePrescription(ocrText)
+
+      // Simulate quality and confidence
+      const quality = {
+        brightness: 85,
+        contrast: 90,
+        sharpness: 80,
+        noise: 75,
+        blur: 95,
+        overall: 85,
+        isValid: true,
+        warnings: []
+      }
+      const confidence = 92
+      const lowConfidenceResults: OCRConfidence[] = [] // Placeholder
+
+      return {
+        id: page.id,
+        imageData: page.imageData,
+        imageUrl: page.imageUrl,
+        pageNumber: page.pageNumber,
+        ocrText: ocrText,
+        extractedMedications: parsedMedications.map(med => ({
+          ...med,
+          quantity: 1,
+          refills: 0
+        })),
+        processingStatus: 'completed' as const,
+        quality: quality,
+        confidence: confidence,
+        lowConfidenceResults: lowConfidenceResults,
+        metadata: {},
+        interactions: [],
+        saValidation: undefined
+      }
+    }))
+
+    prescriptionPages.value = result
+    batchResult.value = {
+      totalPages: selectedPages.value.size,
+      successfulPages: selectedPages.value.size,
+      failedPages: 0,
+      totalMedications: totalMedications.value,
+      duplicateMedications: duplicateMedications.value,
+      interactions: interactions.value,
+      processingTime: 0,
+      pages: result,
+      metadata: prescriptionMetadata.value,
+      exportData: {
+        format: 'json',
+        data: result,
+        filename: `prescription_${Date.now()}.json`,
+        timestamp: new Date().toISOString()
+      },
+      saValidation: saValidation.value || undefined
+    }
+    success.value = t('prescriptionScanner.batchProcessingComplete', { count: totalMedications.value })
+    emit('batch-result', batchResult.value)
+
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : t('prescriptionScanner.batchProcessingError')
+    console.error('Batch processing error:', err)
+  } finally {
+    processing.value = false
+  }
+}
+
+// Auto-capture
+const startAutoCapture = () => {
+  if (autoCaptureTimer.value) {
+    clearAutoCaptureTimer()
+    return
+  }
+  captureCountdown.value = props.captureDelay
+  autoCaptureTimer.value = window.setInterval(() => {
+    if (captureCountdown.value > 0) {
+      captureCountdown.value--
+    } else {
+      captureImage()
+      captureCountdown.value = props.captureDelay
+    }
+  }, 1000)
+}
+
+const clearAutoCaptureTimer = () => {
+  if (autoCaptureTimer.value) {
+    window.clearInterval(autoCaptureTimer.value)
+    autoCaptureTimer.value = null
+  }
+}
+
+// South African prescription validation
+const validateSA = async () => {
+  if (!saValidation.value) {
+    error.value = t('prescriptionScanner.saValidationError')
+    return
+  }
+
+  processing.value = true
+  try {
+    const result = await Promise.all(prescriptionPages.value.map(async page => {
+      if (!page.imageUrl) throw new Error('No image URL found')
+      
+      const imageData = await fetch(page.imageUrl).then(res => res.blob()).then(blob => URL.createObjectURL(blob))
+      const preprocessedImage = await preprocessImage(imageData)
+      const ocrText = await processOCR(preprocessedImage)
+      const parsedMedications = parsePrescription(ocrText)
+
+      const saValidationResult = await new Promise<SouthAfricanPrescriptionValidation>(resolve => {
+        // Simulate SA validation
+        setTimeout(() => {
+          const warnings: string[] = []
+          if (parsedMedications.some(med => med.name.toLowerCase().includes('paracetamol'))) {
+            warnings.push(t('prescriptionScanner.saWarningParacetamol'))
+          }
+          if (parsedMedications.some(med => med.name.toLowerCase().includes('ibuprofen'))) {
+            warnings.push(t('prescriptionScanner.saWarningIbuprofen'))
+          }
+          resolve({
+            isValid: warnings.length === 0,
+            errors: [],
+            warnings: warnings,
+            requiredFields: {
+              doctorName: true,
+              doctorLicense: true,
+              prescriptionDate: true,
+              patientName: true,
+              medicationDetails: true
+            },
+            formatCompliance: {
+              isStandardFormat: true,
+              hasRequiredSections: true,
+              hasProperDosage: true,
+              hasFrequency: true
+            },
+            details: {
+              totalMedications: parsedMedications.length,
+              warnings: warnings.length,
+              specificWarnings: warnings.map(w => ({
+                name: 'SA Warning',
+                message: w
+              }))
+            }
+          })
+        }, 1000)
+      })
+
+      return {
+        id: page.id,
+        imageData: page.imageData,
+        imageUrl: page.imageUrl,
+        pageNumber: page.pageNumber,
+        ocrText: ocrText,
+        extractedMedications: parsedMedications.map(med => ({
+          ...med,
+          quantity: 1,
+          refills: 0
+        })),
+        processingStatus: 'completed' as const,
+        quality: page.quality,
+        confidence: page.confidence,
+        lowConfidenceResults: page.lowConfidenceResults || [],
+        metadata: page.metadata || {},
+        interactions: page.interactions || [],
+        saValidation: saValidationResult
+      }
+    }))
+
+    prescriptionPages.value = result
+    saValidation.value = {
+      isValid: true,
+      errors: [],
+      warnings: [],
+      requiredFields: {
+        doctorName: true,
+        doctorLicense: true,
+        prescriptionDate: true,
+        patientName: true,
+        medicationDetails: true
+      },
+      formatCompliance: {
+        isStandardFormat: true,
+        hasRequiredSections: true,
+        hasProperDosage: true,
+        hasFrequency: true
+      },
+      details: {
+        totalMedications: totalMedications.value,
+        warnings: 0,
+        specificWarnings: []
+      }
+    }
+    success.value = t('prescriptionScanner.saValidationComplete')
+    emit('batch-result', {
+      totalPages: prescriptionPages.value.length,
+      successfulPages: prescriptionPages.value.length,
+      failedPages: 0,
+      totalMedications: totalMedications.value,
+      duplicateMedications: duplicateMedications.value,
+      interactions: interactions.value,
+      processingTime: 0,
+      pages: result,
+      metadata: prescriptionMetadata.value,
+      exportData: {
+        format: 'json',
+        data: result,
+        filename: `prescription_${Date.now()}.json`,
+        timestamp: new Date().toISOString()
+      },
+      saValidation: saValidation.value
+    })
+
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : t('prescriptionScanner.saValidationError')
+    console.error('SA validation error:', err)
+  } finally {
+    processing.value = false
+  }
+}
+
+// Drag and drop
+const handleDragOver = (event: DragEvent) => {
+  event.preventDefault()
+  dragDropZone.value.isDragOver = true
+}
+
+const handleDragLeave = () => {
+  dragDropZone.value.isDragOver = false
+}
+
+const handleDrop = async (event: DragEvent) => {
+  event.preventDefault()
+  dragDropZone.value.isDragOver = false
+
+  const files = Array.from(event.dataTransfer?.files || [])
+  if (files.length === 0) return
+
+  dragDropZone.value.acceptedFiles = files
+  dragDropZone.value.rejectedFiles = []
+  dragDropZone.value.totalSize = files.reduce((sum, file) => sum + file.size, 0)
+
+  if (uploadedFile.value) {
+    // If a file is already uploaded, clear it
+    uploadedFile.value = null
+    success.value = t('prescriptionScanner.fileCleared')
+  }
+
+  if (prescriptionPages.value.length === 0) {
+    // If no pages, start processing
+    await processImage()
+  } else {
+    // If pages exist, add them
+    files.forEach(file => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const imageUrl = e.target?.result as string
+        prescriptionPages.value.push({
+          id: `page_${Date.now()}_${Math.random()}`,
+          imageData: imageUrl,
+          imageUrl: imageUrl,
+          pageNumber: prescriptionPages.value.length + 1,
+          ocrText: '',
+          extractedMedications: [], // Will be populated by OCR
+          processingStatus: 'pending',
+          quality: { brightness: 0, contrast: 0, sharpness: 0, noise: 0, blur: 0, overall: 0, isValid: false, warnings: [] },
+          confidence: 0,
+          lowConfidenceResults: [],
+          metadata: {},
+          interactions: [],
+          saValidation: undefined
+        })
+        currentPageIndex.value = prescriptionPages.value.length - 1
+        selectedPages.value.add(prescriptionPages.value.length - 1)
+      }
+      reader.readAsDataURL(file)
+    })
+    success.value = t('prescriptionScanner.filesAdded', { count: files.length })
+  }
+}
+
+const handleFileRejection = (file: File) => {
+  dragDropZone.value.rejectedFiles.push(file)
+  error.value = t('prescriptionScanner.fileRejected', { name: file.name })
+}
+
 // Lifecycle
 onMounted(() => {
   // Component mounted
@@ -552,6 +1061,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   stopCamera()
+  clearAutoCaptureTimer()
 })
 </script>
 

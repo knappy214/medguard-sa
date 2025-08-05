@@ -356,4 +356,139 @@ export interface PerplexityEnrichmentResponse {
   error?: string
   source: 'perplexity'
   timestamp: string
+}
+
+// Enhanced prescription scanner interfaces
+export interface PrescriptionPage {
+  id: string
+  imageData: string
+  imageUrl?: string
+  pageNumber: number
+  quality: ImageQuality
+  ocrText: string
+  extractedMedications: PrescriptionMedication[]
+  confidence: number
+  processingStatus: 'pending' | 'processing' | 'completed' | 'failed'
+  error?: string
+  lowConfidenceResults?: OCRConfidence[]
+  metadata?: PrescriptionMetadata
+  interactions?: MedicationInteraction[]
+  saValidation?: SouthAfricanPrescriptionValidation
+}
+
+export interface ImageQuality {
+  brightness: number
+  contrast: number
+  sharpness: number
+  noise: number
+  blur: number
+  overall: number
+  isValid: boolean
+  warnings: string[]
+}
+
+export interface PrescriptionMetadata {
+  patientName?: string
+  patientId?: string
+  prescribingDoctor?: string
+  doctorLicense?: string
+  prescriptionDate?: string
+  expiryDate?: string
+  prescriptionNumber?: string
+  pharmacy?: string
+  diagnosis?: string
+  allergies?: string[]
+  totalCost?: number
+  insurance?: string
+  refills?: number
+  notes?: string
+}
+
+export interface CameraGuide {
+  type: 'rectangle' | 'corner' | 'crosshair'
+  position: { x: number; y: number; width: number; height: number }
+  color: string
+  opacity: number
+  message: string
+}
+
+export interface OCRConfidence {
+  text: string
+  confidence: number
+  boundingBox: { x: number; y: number; width: number; height: number }
+  suggestions: string[]
+}
+
+export interface MedicationInteraction {
+  severity: 'low' | 'moderate' | 'high' | 'contraindicated'
+  description: string
+  medications: string[]
+  recommendations: string
+  evidence: string
+  source: string
+}
+
+export interface BatchProcessingResult {
+  totalPages: number
+  successfulPages: number
+  failedPages: number
+  totalMedications: number
+  duplicateMedications: BulkMedicationEntry[]
+  interactions: MedicationInteraction[]
+  processingTime: number
+  pages: PrescriptionPage[]
+  metadata: PrescriptionMetadata
+  exportData: PrescriptionExportData
+  saValidation?: SouthAfricanPrescriptionValidation
+}
+
+export interface PrescriptionExportData {
+  format: 'json' | 'csv' | 'pdf' | 'xml'
+  data: any
+  filename: string
+  timestamp: string
+}
+
+export interface SouthAfricanPrescriptionValidation {
+  isValid: boolean
+  errors: string[]
+  warnings: string[]
+  requiredFields: {
+    doctorName: boolean
+    doctorLicense: boolean
+    prescriptionDate: boolean
+    patientName: boolean
+    medicationDetails: boolean
+  }
+  formatCompliance: {
+    isStandardFormat: boolean
+    hasRequiredSections: boolean
+    hasProperDosage: boolean
+    hasFrequency: boolean
+  }
+  details?: {
+    totalMedications: number
+    warnings: number
+    specificWarnings: Array<{
+      name: string
+      message: string
+    }>
+  }
+}
+
+export interface FileUploadProgress {
+  fileId: string
+  filename: string
+  progress: number
+  status: 'uploading' | 'processing' | 'completed' | 'failed'
+  error?: string
+  result?: PrescriptionPage
+}
+
+export interface DragDropZone {
+  isActive: boolean
+  isDragOver: boolean
+  acceptedFiles: File[]
+  rejectedFiles: File[]
+  totalSize: number
 } 
