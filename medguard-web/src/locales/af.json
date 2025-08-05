@@ -880,5 +880,95 @@
         "schedule": "Stel realistiese skedules op wat by jou daaglikse roetine pas"
       }
     }
+  },
+  "mobileCamera": {
+    "title": "Mobiele Kamera Koppelvlak",
+    "close": "Sluit Kamera",
+    "flash": "Wissel Flits",
+    "switchCamera": "Wissel Kamera",
+    "gallery": "Maak Galery Oop",
+    "capture": "Vang Beeld",
+    "retake": "Neem Foto Weer",
+    "confirm": "Bevestig Beeld",
+    "rotate": "Roteer",
+    "resetZoom": "Herstel Zoom",
+    "crop": "Sny Beeld",
+    "previewTitle": "Beeld Voorskou",
+    "pageIndicator": "Bladsy {current} van {total}",
+    "multiPageReview": "Multi-Bladsy Hersiening",
+    "addPage": "Voeg Nog 'n Bladsy By",
+    "processPages": "Verwerk {count} Bladsye",
+    "cameraError": "Kon nie kamera toegang kry nie. Kontroleer asseblief toestemmings.",
+    "switchError": "Kon nie kamera wissel nie.",
+    "captureError": "Kon nie beeld vang nie.",
+    "lowBrightness": "Beeld te donker",
+    "highBrightness": "Beeld te helder",
+    "lowContrast": "Lae kontras gedetecteer",
+    "blurry": "Beeld lyk wasig"
+  },
+  "mobileCameraDemo": {
+    "title": "Mobiele Kamera Koppelvlak Demo",
+    "description": "Ervaar die gevorderde mobiele kamera koppelvlak met voorskrif skandering vermoëns, intydse kwaliteit assessering en multi-bladsy vang kenmerke.",
+    "openCamera": "Maak Kamera Oop",
+    "settings": "Kamera Instellings",
+    "capturedImages": "Gevange Beelde",
+    "qualityAssessment": "Kwaliteit Assessering Resultate",
+    "cameraSettings": "Kamera Instellings",
+    "cameraFeatures": "Kamera Kenmerke",
+    "captureSettings": "Vang Instellings",
+    "autoFocus": "Outo Fokus",
+    "autoFocusDesc": "Pas outomaties fokus aan vir optimale beeld duidelikheid",
+    "autoExposure": "Outo Beligting",
+    "autoExposureDesc": "Pas outomaties beligting aan vir behoorlike lig",
+    "boundaryDetection": "Grens Ontdekking",
+    "boundaryDetectionDesc": "Ontdek voorskrif grense met visuele gidse",
+    "qualityAssessment": "Kwaliteit Assessering",
+    "qualityAssessmentDesc": "Intydse beeld kwaliteit analise en terugvoer",
+    "flashControl": "Flits Beheer",
+    "flashControlDesc": "Aktiveer flits beheer vir lae-lig toestande",
+    "hapticFeedback": "Haptiese Terugvoer",
+    "hapticFeedbackDesc": "Verskaf tasbare terugvoer vir suksesvolle vang",
+    "autoCapture": "Outo Vang",
+    "autoCaptureDesc": "Vang outomaties wanneer optimale toestande bereik word",
+    "captureDelay": "Vang Vertraging",
+    "qualityThreshold": "Kwaliteit Drempel",
+    "multiPage": "Multi-Bladsy Vang",
+    "multiPageDesc": "Ondersteuning vir die vang van veelvuldige voorskrif bladsye",
+    "maxPages": "Maksimum Bladsye",
+    "resetSettings": "Herstel na Verstek",
+    "saveSettings": "Stoor Instellings",
+    "brightness": "Helderheid",
+    "contrast": "Kontras",
+    "sharpness": "Skerpte",
+    "excellent": "Uitstekend",
+    "good": "Goed",
+    "fair": "Redelik",
+    "poor": "Sleg",
+    "features": {
+      "camera": {
+        "title": "Inheemse Kamera Beheer",
+        "description": "Geoptimaliseerde kamera koppelvlak met gevorderde beheer vir voorskrif skandering"
+      },
+      "quality": {
+        "title": "Intydse Kwaliteit Assessering",
+        "description": "Onmiddellike terugvoer oor beeld kwaliteit met helderheid, kontras en skerpte analise"
+      },
+      "boundary": {
+        "title": "Grens Ontdekking",
+        "description": "Outomatiese voorskrif grens ontdekking met visuele oorvleuel gidse"
+      },
+      "multiPage": {
+        "title": "Multi-Bladsy Vang",
+        "description": "Ondersteuning vir die vang van komplekse multi-bladsy voorskrifte met bladsy bestuur"
+      },
+      "preview": {
+        "title": "Beeld Voorskou & Redigering",
+        "description": "Gevorderde voorskou met zoom, rotasie en sny vermoëns"
+      },
+      "storage": {
+        "title": "Veilige Plaaslike Berging",
+        "description": "Outomatiese plaaslike berging met skoonmaak en retensie bestuur"
+      }
+    }
   }
 } 

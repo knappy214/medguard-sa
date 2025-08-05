@@ -989,6 +989,96 @@
       "validated": "Validated successfully"
     }
   },
+  "mobileCamera": {
+    "title": "Mobile Camera Interface",
+    "close": "Close Camera",
+    "flash": "Toggle Flash",
+    "switchCamera": "Switch Camera",
+    "gallery": "Open Gallery",
+    "capture": "Capture Image",
+    "retake": "Retake Photo",
+    "confirm": "Confirm Image",
+    "rotate": "Rotate",
+    "resetZoom": "Reset Zoom",
+    "crop": "Crop Image",
+    "previewTitle": "Image Preview",
+    "pageIndicator": "Page {current} of {total}",
+    "multiPageReview": "Multi-Page Review",
+    "addPage": "Add Another Page",
+    "processPages": "Process {count} Pages",
+    "cameraError": "Failed to access camera. Please check permissions.",
+    "switchError": "Failed to switch camera.",
+    "captureError": "Failed to capture image.",
+    "lowBrightness": "Image too dark",
+    "highBrightness": "Image too bright",
+    "lowContrast": "Low contrast detected",
+    "blurry": "Image appears blurry"
+  },
+  "mobileCameraDemo": {
+    "title": "Mobile Camera Interface Demo",
+    "description": "Experience the advanced mobile camera interface with prescription scanning capabilities, real-time quality assessment, and multi-page capture features.",
+    "openCamera": "Open Camera",
+    "settings": "Camera Settings",
+    "capturedImages": "Captured Images",
+    "qualityAssessment": "Quality Assessment Results",
+    "cameraSettings": "Camera Settings",
+    "cameraFeatures": "Camera Features",
+    "captureSettings": "Capture Settings",
+    "autoFocus": "Auto Focus",
+    "autoFocusDesc": "Automatically adjust focus for optimal image clarity",
+    "autoExposure": "Auto Exposure",
+    "autoExposureDesc": "Automatically adjust exposure for proper lighting",
+    "boundaryDetection": "Boundary Detection",
+    "boundaryDetectionDesc": "Detect prescription boundaries with visual guides",
+    "qualityAssessment": "Quality Assessment",
+    "qualityAssessmentDesc": "Real-time image quality analysis and feedback",
+    "flashControl": "Flash Control",
+    "flashControlDesc": "Enable flash control for low-light conditions",
+    "hapticFeedback": "Haptic Feedback",
+    "hapticFeedbackDesc": "Provide tactile feedback for successful captures",
+    "autoCapture": "Auto Capture",
+    "autoCaptureDesc": "Automatically capture when optimal conditions are met",
+    "captureDelay": "Capture Delay",
+    "qualityThreshold": "Quality Threshold",
+    "multiPage": "Multi-Page Capture",
+    "multiPageDesc": "Support for capturing multiple prescription pages",
+    "maxPages": "Maximum Pages",
+    "resetSettings": "Reset to Defaults",
+    "saveSettings": "Save Settings",
+    "brightness": "Brightness",
+    "contrast": "Contrast",
+    "sharpness": "Sharpness",
+    "excellent": "Excellent",
+    "good": "Good",
+    "fair": "Fair",
+    "poor": "Poor",
+    "features": {
+      "camera": {
+        "title": "Native Camera Controls",
+        "description": "Optimized camera interface with advanced controls for prescription scanning"
+      },
+      "quality": {
+        "title": "Real-time Quality Assessment",
+        "description": "Instant feedback on image quality with brightness, contrast, and sharpness analysis"
+      },
+      "boundary": {
+        "title": "Boundary Detection",
+        "description": "Automatic prescription boundary detection with visual overlay guides"
+      },
+      "multiPage": {
+        "title": "Multi-Page Capture",
+        "description": "Support for capturing complex multi-page prescriptions with page management"
+      },
+      "preview": {
+        "title": "Image Preview & Editing",
+        "description": "Advanced preview with zoom, rotation, and cropping capabilities"
+      },
+      "storage": {
+        "title": "Secure Local Storage",
+        "description": "Automatic local storage with cleanup and retention management"
+      }
+    }
+  },
   "signature": {
     "title": "Digital Signature",
     "signerName": "Full Name",
