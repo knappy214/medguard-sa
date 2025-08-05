@@ -333,8 +333,8 @@ class Medication(models.Model):
     )
     
     image_processing_last_attempt = models.DateTimeField(
-        blank=True,
         null=True,
+        blank=True,
         help_text=_('Last time image processing was attempted')
     )
     
@@ -368,8 +368,14 @@ class Medication(models.Model):
     )
     
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text=_('When this medication was created')
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text=_('When this medication was last updated')
+    )
     
     class Meta:
         verbose_name = _('Medication')
@@ -507,13 +513,34 @@ class MedicationSchedule(models.Model):
     )
     
     # Days of the week (for weekly schedules)
-    monday = models.BooleanField(default=True)
-    tuesday = models.BooleanField(default=True)
-    wednesday = models.BooleanField(default=True)
-    thursday = models.BooleanField(default=True)
-    friday = models.BooleanField(default=True)
-    saturday = models.BooleanField(default=True)
-    sunday = models.BooleanField(default=True)
+    monday = models.BooleanField(
+        default=True,
+        help_text=_('Take medication on Monday')
+    )
+    tuesday = models.BooleanField(
+        default=True,
+        help_text=_('Take medication on Tuesday')
+    )
+    wednesday = models.BooleanField(
+        default=True,
+        help_text=_('Take medication on Wednesday')
+    )
+    thursday = models.BooleanField(
+        default=True,
+        help_text=_('Take medication on Thursday')
+    )
+    friday = models.BooleanField(
+        default=True,
+        help_text=_('Take medication on Friday')
+    )
+    saturday = models.BooleanField(
+        default=True,
+        help_text=_('Take medication on Saturday')
+    )
+    sunday = models.BooleanField(
+        default=True,
+        help_text=_('Take medication on Sunday')
+    )
     
     # Schedule period
     start_date = models.DateField(
@@ -541,8 +568,14 @@ class MedicationSchedule(models.Model):
     )
     
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text=_('When this medication schedule was created')
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text=_('When this medication schedule was last updated')
+    )
     
     class Meta:
         verbose_name = _('Medication Schedule')
@@ -682,8 +715,14 @@ class MedicationLog(models.Model):
     )
     
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text=_('When this medication log was created')
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text=_('When this medication log was last updated')
+    )
     
     class Meta:
         verbose_name = _('Medication Log')
@@ -842,9 +881,19 @@ class StockAlert(models.Model):
     )
     
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    acknowledged_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text=_('When this stock alert was created')
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text=_('When this stock alert was last updated')
+    )
+    acknowledged_at = models.DateTimeField(
+        null=True, 
+        blank=True,
+        help_text=_('When this alert was acknowledged')
+    )
     
     class Meta:
         verbose_name = _('Stock Alert')
@@ -1006,8 +1055,14 @@ class StockTransaction(models.Model):
     )
     
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text=_('When this stock transaction was created')
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text=_('When this stock transaction was last updated')
+    )
     
     class Meta:
         verbose_name = _('Stock Transaction')
@@ -1244,9 +1299,19 @@ class PharmacyIntegration(models.Model):
     )
     
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    last_sync = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text=_('When this pharmacy integration was created')
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text=_('When this pharmacy integration was last updated')
+    )
+    last_sync = models.DateTimeField(
+        null=True, 
+        blank=True,
+        help_text=_('When this integration was last synchronized')
+    )
     
     class Meta:
         verbose_name = _('Pharmacy Integration')
@@ -1365,8 +1430,14 @@ class PrescriptionRenewal(models.Model):
     )
     
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text=_('When this prescription renewal was created')
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text=_('When this prescription renewal was last updated')
+    )
     
     class Meta:
         verbose_name = _('Prescription Renewal')
@@ -1491,9 +1562,19 @@ class StockVisualization(models.Model):
     )
     
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    last_generated = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text=_('When this stock visualization was created')
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text=_('When this stock visualization was last updated')
+    )
+    last_generated = models.DateTimeField(
+        null=True, 
+        blank=True,
+        help_text=_('When this visualization was last generated')
+    )
     
     class Meta:
         verbose_name = _('Stock Visualization')
