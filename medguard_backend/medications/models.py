@@ -165,6 +165,16 @@ class Medication(models.Model):
         PRESCRIPTION = 'prescription', _('Prescription Required')
         OVER_THE_COUNTER = 'otc', _('Over the Counter')
         SUPPLEMENT = 'supplement', _('Supplement')
+        SCHEDULE_1 = 'schedule_1', _('Schedule 1 - Highly Addictive')
+        SCHEDULE_2 = 'schedule_2', _('Schedule 2 - Addictive')
+        SCHEDULE_3 = 'schedule_3', _('Schedule 3 - Moderate Risk')
+        SCHEDULE_4 = 'schedule_4', _('Schedule 4 - Low Risk')
+        SCHEDULE_5 = 'schedule_5', _('Schedule 5 - Minimal Risk')
+        SCHEDULE_6 = 'schedule_6', _('Schedule 6 - Poisonous')
+        SCHEDULE_7 = 'schedule_7', _('Schedule 7 - Dangerous')
+        COMPOUNDED = 'compounded', _('Compounded Medication')
+        GENERIC = 'generic', _('Generic Medication')
+        BRANDED = 'branded', _('Branded Medication')
     
     # Basic medication information
     name = models.CharField(
@@ -394,8 +404,6 @@ class Medication(models.Model):
             
             # Composite indexes for complex queries
             models.Index(fields=['medication_type', 'prescription_type']),
-            models.Index(fields=['pill_count', 'low_stock_threshold']),
-            models.Index(fields=['expiration_date', 'pill_count']),
             models.Index(fields=['manufacturer', 'medication_type']),
             models.Index(fields=['name', 'generic_name']),
             
@@ -670,7 +678,7 @@ class MedicationLog(models.Model):
     schedule = models.ForeignKey(
         MedicationSchedule,
         on_delete=models.CASCADE,
-        related_name='logs',
+        related_name='medication_logs',
         null=True,
         blank=True,
         help_text=_('Associated medication schedule')
