@@ -158,6 +158,7 @@ export interface ParsedPrescription {
 }
 
 export interface PrescriptionMedication {
+  id: string
   name: string
   genericName?: string
   strength: string
