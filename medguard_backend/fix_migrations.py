@@ -297,3 +297,4 @@ class MigrationFixer:
         except Exception as e:
             logger.error(f"❌ Failed to fix ImageField paths: {e}")
             return False  
+ 
