@@ -59,6 +59,48 @@ export const API_ENDPOINTS = {
     LOGS: '/api/medications/logs/',
     ALERTS: '/api/medications/alerts/',
     ANALYTICS: (id: string) => `/api/medications/${id}/analytics/`,
+    // New endpoints for prescription processing
+    PRESCRIPTIONS: {
+      CREATE: '/api/medications/prescriptions/',
+      LIST: '/api/medications/prescriptions/',
+      DETAIL: (id: string) => `/api/medications/prescriptions/${id}/`,
+      UPDATE: (id: string) => `/api/medications/prescriptions/${id}/`,
+      DELETE: (id: string) => `/api/medications/prescriptions/${id}/`,
+      RENEWALS: '/api/medications/prescriptions/renewals/',
+      RENEWAL_DETAIL: (id: string) => `/api/medications/prescriptions/renewals/${id}/`,
+    },
+    VALIDATION: {
+      VALIDATE: '/api/medications/validation/',
+      DRUG_DATABASE: '/api/medications/validation/drug-database/',
+      INTERACTIONS: '/api/medications/validation/interactions/',
+    },
+    ENRICHMENT: {
+      PERPLEXITY: '/api/medications/enrichment/perplexity/',
+      DRUG_INFO: '/api/medications/enrichment/drug-info/',
+      COST_ANALYSIS: '/api/medications/enrichment/cost-analysis/',
+      AVAILABILITY: '/api/medications/enrichment/availability/',
+    },
+    BATCH: {
+      CREATE: '/api/medications/batch/create/',
+      VALIDATE: '/api/medications/batch/validate/',
+      PROCESS: '/api/medications/batch/process/',
+    },
+    IMAGES: {
+      UPLOAD: '/api/medications/images/upload/',
+      LIST: (medicationId: string) => `/api/medications/${medicationId}/images/`,
+      DETAIL: (id: string) => `/api/medications/images/${id}/`,
+      DELETE: (id: string) => `/api/medications/images/${id}/`,
+    },
+    ADHERENCE: {
+      TRACKING: (medicationId: string) => `/api/medications/${medicationId}/adherence/`,
+      HISTORY: (medicationId: string) => `/api/medications/${medicationId}/history/`,
+      STATS: '/api/medications/adherence/stats/',
+    },
+    STORAGE: {
+      PRESCRIPTIONS: '/api/medications/storage/prescriptions/',
+      PRESCRIPTION_DETAIL: (id: string) => `/api/medications/storage/prescriptions/${id}/`,
+      ARCHIVE: (id: string) => `/api/medications/storage/prescriptions/${id}/archive/`,
+    },
   },
   
   // Notifications

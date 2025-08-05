@@ -22,13 +22,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from datetime import datetime, timedelta, date, time
 from decimal import Decimal
 import logging
-
-logger = logging.getLogger(__name__)
-
+from django.db import transaction
+from django.core.exceptions import ValidationError
 from .models import (
     Medication, MedicationSchedule, MedicationLog, StockAlert, 
     StockAnalytics, PharmacyIntegration, StockTransaction,
-    PrescriptionRenewal, StockVisualization
+    PrescriptionRenewal, StockVisualization, User
 )
 from .serializers import (
     MedicationSerializer,
@@ -42,9 +41,13 @@ from .serializers import (
     MedicationStatsSerializer,
     StockAnalyticsSerializer,
     StockVisualizationSerializer,
-    PharmacyIntegrationSerializer
+    PharmacyIntegrationSerializer,
+    PrescriptionParser
 )
 from .services import IntelligentStockService, StockAnalyticsService, MedicationCacheService
+
+
+logger = logging.getLogger(__name__)
 
 
 class OptimizedPagination(PageNumberPagination):
@@ -432,6 +435,598 @@ class MedicationViewSet(viewsets.ModelViewSet):
     #             {'error': str(e)},
     #             status=status.HTTP_500_INTERNAL_SERVER_ERROR
     #         )
+
+    @action(detail=False, methods=['post'])
+    def bulk_create_from_prescription(self, request):
+        """
+        Create multiple medications from prescription data with schedules.
+        
+        Expected payload:
+        {
+            "medications": [
+                {
+                    "name": "Medication Name",
+                    "generic_name": "Generic Name",
+                    "strength": "500mg",
+                    "medication_type": "tablet",
+                    "prescription_type": "prescription",
+                    "initial_stock": 30,
+                    "schedule_data": {
+                        "timing": "morning",
+                        "dosage_amount": 1,
+                        "frequency": "daily",
+                        "start_date": "2024-01-01",
+                        "instructions": "Take with food"
+                    }
+                }
+            ],
+            "patient_id": 1,
+            "prescription_number": "RX123456",
+            "prescribed_by": "Dr. Smith",
+            "prescribed_date": "2024-01-01"
+        }
+        """
+        try:
+            medications_data = request.data.get('medications', [])
+            patient_id = request.data.get('patient_id')
+            prescription_number = request.data.get('prescription_number', '')
+            prescribed_by = request.data.get('prescribed_by', '')
+            prescribed_date = request.data.get('prescribed_date')
+            
+            if not medications_data:
+                return Response(
+                    {'error': 'No medications provided'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if not patient_id:
+                return Response(
+                    {'error': 'Patient ID is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Get patient
+            try:
+                patient = User.objects.get(id=patient_id, user_type='PATIENT')
+            except User.DoesNotExist:
+                return Response(
+                    {'error': 'Patient not found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            created_medications = []
+            created_schedules = []
+            created_transactions = []
+            errors = []
+            
+            # Use database transaction for rollback on failure
+            with transaction.atomic():
+                for i, med_data in enumerate(medications_data):
+                    try:
+                        # Extract schedule data
+                        schedule_data = med_data.pop('schedule_data', {})
+                        initial_stock = med_data.pop('initial_stock', 0)
+                        
+                        # Create medication
+                        medication = Medication.objects.create(
+                            **med_data,
+                            pill_count=initial_stock
+                        )
+                        created_medications.append(medication)
+                        
+                        # Create stock transaction for initial stock
+                        if initial_stock > 0:
+                            stock_transaction = StockTransaction.objects.create(
+                                medication=medication,
+                                user=request.user,
+                                transaction_type=StockTransaction.TransactionType.PURCHASE,
+                                quantity=initial_stock,
+                                notes=f"Initial stock from prescription {prescription_number}",
+                                reference_number=f"INIT_{prescription_number}_{medication.id}",
+                                batch_number=f"BATCH_{prescription_number}_{i+1}"
+                            )
+                            created_transactions.append(stock_transaction)
+                        
+                        # Create schedule if provided
+                        if schedule_data:
+                            schedule = MedicationSchedule.objects.create(
+                                patient=patient,
+                                medication=medication,
+                                **schedule_data
+                            )
+                            created_schedules.append(schedule)
+                        
+                        # Log the creation
+                        logger.info(
+                            f"Medication created from prescription: {medication.name} "
+                            f"(ID: {medication.id}, Stock: {initial_stock}) "
+                            f"by user {request.user.username}"
+                        )
+                        
+                    except Exception as e:
+                        errors.append({
+                            'index': i,
+                            'medication_name': med_data.get('name', 'Unknown'),
+                            'error': str(e)
+                        })
+                        # Rollback the entire transaction if any medication fails
+                        raise ValidationError(f"Failed to create medication at index {i}: {str(e)}")
+                
+                # Create prescription renewal record if prescription data provided
+                if prescription_number and prescribed_by and prescribed_date:
+                    for medication in created_medications:
+                        PrescriptionRenewal.objects.create(
+                            patient=patient,
+                            medication=medication,
+                            prescription_number=prescription_number,
+                            prescribed_by=prescribed_by,
+                            prescribed_date=prescribed_date,
+                            expiry_date=prescribed_date + timedelta(days=365)  # Default 1 year
+                        )
+            
+            # Prepare response data
+            response_data = {
+                'message': f'Successfully created {len(created_medications)} medications',
+                'created_medications': [
+                    {
+                        'id': med.id,
+                        'name': med.name,
+                        'initial_stock': med.pill_count
+                    } for med in created_medications
+                ],
+                'created_schedules': len(created_schedules),
+                'created_transactions': len(created_transactions),
+                'prescription_number': prescription_number,
+                'patient': {
+                    'id': patient.id,
+                    'name': patient.get_full_name()
+                }
+            }
+            
+            return Response(response_data, status=status.HTTP_201_CREATED)
+            
+        except ValidationError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            logger.error(f"Error in bulk_create_from_prescription: {e}")
+            return Response(
+                {'error': 'Internal server error'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=False, methods=['post'])
+    def prescription_upload(self, request):
+        """
+        Handle OCR-processed prescription data upload.
+        
+        Expected payload:
+        {
+            "ocr_data": {
+                "medications": [
+                    {
+                        "name": "Extracted medication name",
+                        "strength": "500mg",
+                        "instructions": "Take one tablet daily",
+                        "quantity": 30
+                    }
+                ],
+                "prescription_info": {
+                    "prescription_number": "RX123456",
+                    "prescribed_by": "Dr. Smith",
+                    "prescribed_date": "2024-01-01"
+                }
+            },
+            "patient_id": 1,
+            "confidence_score": 0.85
+        }
+        """
+        try:
+            ocr_data = request.data.get('ocr_data', {})
+            patient_id = request.data.get('patient_id')
+            confidence_score = request.data.get('confidence_score', 0.0)
+            
+            if not ocr_data:
+                return Response(
+                    {'error': 'No OCR data provided'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if not patient_id:
+                return Response(
+                    {'error': 'Patient ID is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Get patient
+            try:
+                patient = User.objects.get(id=patient_id, user_type='PATIENT')
+            except User.DoesNotExist:
+                return Response(
+                    {'error': 'Patient not found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            medications_data = ocr_data.get('medications', [])
+            prescription_info = ocr_data.get('prescription_info', {})
+            
+            processed_medications = []
+            enrichment_results = []
+            
+            for med_data in medications_data:
+                try:
+                    # Enrich medication data using external APIs
+                    enriched_data = self._enrich_medication_data(med_data)
+                    enrichment_results.append(enriched_data)
+                    
+                    # Prepare medication data for creation
+                    medication_data = {
+                        'name': enriched_data.get('name', med_data.get('name')),
+                        'generic_name': enriched_data.get('generic_name', ''),
+                        'strength': enriched_data.get('strength', med_data.get('strength', '')),
+                        'medication_type': enriched_data.get('medication_type', 'tablet'),
+                        'prescription_type': 'prescription',
+                        'pill_count': med_data.get('quantity', 0),
+                        'description': enriched_data.get('description', ''),
+                        'active_ingredients': enriched_data.get('active_ingredients', ''),
+                        'manufacturer': enriched_data.get('manufacturer', ''),
+                        'side_effects': enriched_data.get('side_effects', ''),
+                        'contraindications': enriched_data.get('contraindications', ''),
+                        'storage_instructions': enriched_data.get('storage_instructions', '')
+                    }
+                    
+                    # Parse prescription instructions
+                    instructions = med_data.get('instructions', '')
+                    if instructions:
+                        parsed = PrescriptionParser.parse_instructions(instructions)
+                        if parsed:
+                            medication_data['schedule_data'] = {
+                                'timing': parsed.get('timing', 'morning'),
+                                'dosage_amount': parsed.get('dosage_amount', 1),
+                                'frequency': parsed.get('frequency', 'daily'),
+                                'start_date': timezone.now().date(),
+                                'instructions': instructions
+                            }
+                    
+                    processed_medications.append(medication_data)
+                    
+                except Exception as e:
+                    logger.error(f"Error processing OCR medication data: {e}")
+                    continue
+            
+            # Create medications using bulk_create_from_prescription logic
+            if processed_medications:
+                bulk_data = {
+                    'medications': processed_medications,
+                    'patient_id': patient_id,
+                    'prescription_number': prescription_info.get('prescription_number', ''),
+                    'prescribed_by': prescription_info.get('prescribed_by', ''),
+                    'prescribed_date': prescription_info.get('prescribed_date')
+                }
+                
+                # Create medications using the same logic as bulk_create_from_prescription
+                created_medications = []
+                created_schedules = []
+                created_transactions = []
+                
+                with transaction.atomic():
+                    for i, med_data in enumerate(processed_medications):
+                        # Extract schedule data
+                        schedule_data = med_data.pop('schedule_data', {})
+                        initial_stock = med_data.pop('pill_count', 0)
+                        
+                        # Create medication
+                        medication = Medication.objects.create(
+                            **med_data,
+                            pill_count=initial_stock
+                        )
+                        created_medications.append(medication)
+                        
+                        # Create stock transaction for initial stock
+                        if initial_stock > 0:
+                            stock_transaction = StockTransaction.objects.create(
+                                medication=medication,
+                                user=request.user,
+                                transaction_type=StockTransaction.TransactionType.PURCHASE,
+                                quantity=initial_stock,
+                                notes=f"Initial stock from OCR prescription",
+                                reference_number=f"OCR_{timezone.now().strftime('%Y%m%d_%H%M%S')}_{i+1}",
+                                batch_number=f"OCR_BATCH_{i+1}"
+                            )
+                            created_transactions.append(stock_transaction)
+                        
+                        # Create schedule if provided
+                        if schedule_data:
+                            schedule = MedicationSchedule.objects.create(
+                                patient=patient,
+                                medication=medication,
+                                **schedule_data
+                            )
+                            created_schedules.append(schedule)
+                
+                bulk_creation_result = {
+                    'created_medications': len(created_medications),
+                    'created_schedules': len(created_schedules),
+                    'created_transactions': len(created_transactions)
+                }
+                
+                response_data = {
+                    'message': 'Prescription processed successfully',
+                    'confidence_score': confidence_score,
+                    'processed_medications': len(processed_medications),
+                    'enrichment_results': enrichment_results,
+                    'bulk_creation_result': bulk_creation_result
+                }
+                
+                return Response(response_data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(
+                    {'error': 'No valid medications found in OCR data'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+        except Exception as e:
+            logger.error(f"Error in prescription_upload: {e}")
+            return Response(
+                {'error': 'Internal server error'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def _enrich_medication_data(self, med_data):
+        """
+        Enrich medication data using external APIs (prepare for Perplexity integration).
+        
+        Args:
+            med_data: Raw medication data from OCR
+            
+        Returns:
+            Dict: Enriched medication data
+        """
+        try:
+            name = med_data.get('name', '')
+            strength = med_data.get('strength', '')
+            
+            # TODO: Integrate with Perplexity API for medication enrichment
+            # For now, return basic enrichment based on common patterns
+            
+            enriched_data = {
+                'name': name,
+                'strength': strength,
+                'medication_type': self._detect_medication_type(name, strength),
+                'generic_name': self._extract_generic_name(name),
+                'description': f"Prescription medication: {name} {strength}",
+                'active_ingredients': '',
+                'manufacturer': '',
+                'side_effects': '',
+                'contraindications': '',
+                'storage_instructions': 'Store at room temperature. Keep out of reach of children.'
+            }
+            
+            # Log enrichment attempt
+            logger.info(f"Medication enrichment attempted for: {name}")
+            
+            return enriched_data
+            
+        except Exception as e:
+            logger.error(f"Error enriching medication data: {e}")
+            return med_data
+
+    def _detect_medication_type(self, name, strength):
+        """Detect medication type based on name and strength patterns."""
+        name_lower = name.lower()
+        strength_lower = strength.lower()
+        
+        if any(word in name_lower for word in ['tablet', 'tab']):
+            return 'tablet'
+        elif any(word in name_lower for word in ['capsule', 'cap']):
+            return 'capsule'
+        elif any(word in name_lower for word in ['liquid', 'syrup', 'suspension']):
+            return 'liquid'
+        elif any(word in name_lower for word in ['inhaler', 'puff']):
+            return 'inhaler'
+        elif any(word in name_lower for word in ['cream', 'ointment']):
+            return 'cream'
+        elif 'ml' in strength_lower or 'drops' in name_lower:
+            return 'drops'
+        else:
+            return 'tablet'  # Default
+
+    def _extract_generic_name(self, name):
+        """Extract generic name from medication name."""
+        # Simple extraction - in production, use a comprehensive drug database
+        common_generics = {
+            'paracetamol': 'acetaminophen',
+            'acetaminophen': 'acetaminophen',
+            'ibuprofen': 'ibuprofen',
+            'aspirin': 'acetylsalicylic acid',
+            'amoxicillin': 'amoxicillin',
+            'omeprazole': 'omeprazole',
+            'metformin': 'metformin',
+            'atorvastatin': 'atorvastatin',
+            'lisinopril': 'lisinopril',
+            'amlodipine': 'amlodipine'
+        }
+        
+        name_lower = name.lower()
+        for generic, standard_name in common_generics.items():
+            if generic in name_lower:
+                return standard_name
+        
+        return ''
+
+    @action(detail=True, methods=['post'])
+    def add_stock(self, request, pk=None):
+        """
+        Add stock to a medication and create stock transaction.
+        
+        Expected payload:
+        {
+            "quantity": 30,
+            "unit_price": 15.50,
+            "batch_number": "BATCH123",
+            "expiry_date": "2025-12-31",
+            "notes": "Restocked from pharmacy"
+        }
+        """
+        try:
+            medication = self.get_object()
+            quantity = request.data.get('quantity', 0)
+            unit_price = request.data.get('unit_price')
+            batch_number = request.data.get('batch_number', '')
+            expiry_date = request.data.get('expiry_date')
+            notes = request.data.get('notes', '')
+            
+            if quantity <= 0:
+                return Response(
+                    {'error': 'Quantity must be greater than 0'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Calculate total amount
+            total_amount = None
+            if unit_price:
+                total_amount = Decimal(str(unit_price)) * quantity
+            
+            # Parse expiry date
+            parsed_expiry_date = None
+            if expiry_date:
+                try:
+                    parsed_expiry_date = datetime.strptime(expiry_date, '%Y-%m-%d').date()
+                except ValueError:
+                    return Response(
+                        {'error': 'Invalid expiry date format. Use YYYY-MM-DD'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            
+            with transaction.atomic():
+                # Record stock before addition
+                stock_before = medication.pill_count
+                
+                # Create stock transaction
+                stock_transaction = StockTransaction.objects.create(
+                    medication=medication,
+                    user=request.user,
+                    transaction_type=StockTransaction.TransactionType.PURCHASE,
+                    quantity=quantity,
+                    unit_price=unit_price,
+                    total_amount=total_amount,
+                    stock_before=stock_before,
+                    stock_after=stock_before + quantity,
+                    reference_number=f"STOCK_{timezone.now().strftime('%Y%m%d_%H%M%S')}",
+                    batch_number=batch_number,
+                    expiry_date=parsed_expiry_date,
+                    notes=notes
+                )
+                
+                # Update medication stock
+                medication.pill_count = stock_before + quantity
+                if parsed_expiry_date and (not medication.expiration_date or parsed_expiry_date > medication.expiration_date):
+                    medication.expiration_date = parsed_expiry_date
+                medication.save()
+                
+                # Update analytics
+                service = IntelligentStockService()
+                service.update_stock_analytics(medication)
+                
+                # Log the transaction
+                logger.info(
+                    f"Stock added to {medication.name}: {quantity} units "
+                    f"(Total: {medication.pill_count}) by {request.user.username}"
+                )
+            
+            return Response({
+                'message': f'Successfully added {quantity} units to {medication.name}',
+                'medication_id': medication.id,
+                'medication_name': medication.name,
+                'new_stock': medication.pill_count,
+                'transaction_id': stock_transaction.id,
+                'batch_number': batch_number,
+                'expiry_date': parsed_expiry_date
+            })
+            
+        except Exception as e:
+            logger.error(f"Error adding stock to medication {pk}: {e}")
+            return Response(
+                {'error': 'Internal server error'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=True, methods=['get'])
+    def audit_trail(self, request, pk=None):
+        """
+        Get audit trail for medication creation and modifications.
+        """
+        try:
+            medication = self.get_object()
+            
+            # Get stock transactions
+            transactions = StockTransaction.objects.filter(
+                medication=medication
+            ).select_related('user').order_by('-created_at')
+            
+            # Get medication logs
+            logs = MedicationLog.objects.filter(
+                medication=medication
+            ).select_related('patient', 'schedule').order_by('-created_at')
+            
+            # Get stock alerts
+            alerts = StockAlert.objects.filter(
+                medication=medication
+            ).select_related('created_by', 'acknowledged_by').order_by('-created_at')
+            
+            audit_data = {
+                'medication': {
+                    'id': medication.id,
+                    'name': medication.name,
+                    'created_at': medication.created_at,
+                    'updated_at': medication.updated_at
+                },
+                'transactions': [
+                    {
+                        'id': t.id,
+                        'type': t.transaction_type,
+                        'quantity': t.quantity,
+                        'user': t.user.get_full_name(),
+                        'timestamp': t.created_at,
+                        'notes': t.notes,
+                        'reference': t.reference_number
+                    } for t in transactions
+                ],
+                'logs': [
+                    {
+                        'id': l.id,
+                        'status': l.status,
+                        'patient': l.patient.get_full_name(),
+                        'scheduled_time': l.scheduled_time,
+                        'actual_time': l.actual_time,
+                        'dosage_taken': l.dosage_taken,
+                        'notes': l.notes
+                    } for l in logs
+                ],
+                'alerts': [
+                    {
+                        'id': a.id,
+                        'type': a.alert_type,
+                        'priority': a.priority,
+                        'status': a.status,
+                        'created_by': a.created_by.get_full_name(),
+                        'created_at': a.created_at,
+                        'title': a.title,
+                        'message': a.message
+                    } for a in alerts
+                ]
+            }
+            
+            return Response(audit_data)
+            
+        except Exception as e:
+            logger.error(f"Error getting audit trail for medication {pk}: {e}")
+            return Response(
+                {'error': 'Internal server error'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class MedicationScheduleViewSet(viewsets.ModelViewSet):

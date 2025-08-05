@@ -12,6 +12,28 @@ export interface Medication {
   isActive: boolean
   createdAt: string
   updatedAt: string
+  // New fields for enhanced medication management
+  strength?: string
+  manufacturer?: string
+  activeIngredients?: string
+  sideEffects?: string
+  icd10Code?: string
+  prescriptionNumber?: string
+  prescribingDoctor?: string
+  expirationDate?: string
+  medicationImage?: string
+  interactions?: string[]
+  // New fields for prescription processing
+  prescriptionId?: string
+  isPrescription?: boolean
+  renewalDate?: string
+  refillsRemaining?: number
+  totalRefills?: number
+  adherenceRate?: number
+  lastTaken?: string
+  nextDose?: string
+  drugDatabaseId?: string
+  enrichedData?: MedicationEnrichment
 }
 
 export interface MedicationSchedule {
@@ -64,6 +86,46 @@ export interface MedicationFormData {
   scheduleCustomTime?: string
   scheduleDosageAmount?: number
   scheduleInstructions?: string
+  // New enhanced fields
+  strength?: string
+  manufacturer?: string
+  activeIngredients?: string
+  sideEffects?: string
+  icd10Code?: string
+  prescriptionNumber?: string
+  prescribingDoctor?: string
+  expirationDate?: string
+  medicationImage?: File | null
+  interactions?: string[]
+  // Bulk entry support
+  isBulkEntry?: boolean
+  bulkMedications?: BulkMedicationEntry[]
+}
+
+export interface BulkMedicationEntry {
+  name: string
+  strength: string
+  dosage: string
+  frequency: string
+  instructions: string
+  manufacturer?: string
+  prescriptionNumber?: string
+  prescribingDoctor?: string
+}
+
+export interface ICD10Code {
+  code: string
+  description: string
+  category: string
+}
+
+export interface MedicationInteraction {
+  severity: 'low' | 'moderate' | 'high' | 'contraindicated'
+  description: string
+  medications: string[]
+  recommendations: string
+  evidence: string
+  source: string
 }
 
 export interface ApiResponse<T> {
@@ -78,4 +140,220 @@ export interface PaginatedResponse<T> {
   page: number
   perPage: number
   totalPages: number
+}
+
+// New interfaces for prescription processing
+export interface ParsedPrescription {
+  id: string
+  patientName: string
+  prescribingDoctor: string
+  prescriptionDate: string
+  medications: PrescriptionMedication[]
+  pharmacy?: string
+  totalCost?: number
+  insurance?: string
+  notes?: string
+  imageUrl?: string
+  status: 'active' | 'expired' | 'completed' | 'renewed'
+}
+
+export interface PrescriptionMedication {
+  name: string
+  genericName?: string
+  strength: string
+  dosage: string
+  frequency: string
+  quantity: number
+  refills: number
+  instructions: string
+  cost?: number
+  drugDatabaseId?: string
+  interactions?: string[]
+  sideEffects?: string[]
+  contraindications?: string[]
+}
+
+export interface MedicationValidation {
+  isValid: boolean
+  warnings: string[]
+  errors: string[]
+  suggestions: string[]
+  drugDatabaseMatch?: DrugDatabaseEntry
+  alternatives?: DrugDatabaseEntry[]
+}
+
+export interface DrugDatabaseEntry {
+  id: string
+  name: string
+  genericName: string
+  brandNames: string[]
+  activeIngredients: string[]
+  strength: string
+  dosageForm: string
+  manufacturer: string
+  description: string
+  sideEffects: string[]
+  contraindications: string[]
+  interactions: string[]
+  pregnancyCategory: string
+  breastfeedingCategory: string
+  pediatricUse: string
+  geriatricUse: string
+  renalDoseAdjustment: string
+  hepaticDoseAdjustment: string
+  storageInstructions: string
+  disposalInstructions: string
+  cost: number
+  availability: 'available' | 'discontinued' | 'restricted'
+}
+
+export interface MedicationEnrichment {
+  drugInfo?: DrugDatabaseEntry
+  interactions?: MedicationInteraction[]
+  sideEffects?: string[]
+  contraindications?: string[]
+  dosageGuidelines?: DosageGuideline[]
+  costAnalysis?: CostAnalysis
+  availability?: AvailabilityInfo
+  enrichedAt: string
+  source: 'perplexity' | 'drug_database' | 'manual'
+}
+
+export interface DosageGuideline {
+  ageGroup: string
+  condition: string
+  dosage: string
+  frequency: string
+  duration: string
+  notes: string
+}
+
+export interface CostAnalysis {
+  averageCost: number
+  costRange: {
+    min: number
+    max: number
+  }
+  genericAvailable: boolean
+  genericCost?: number
+  insuranceCoverage?: number
+  outOfPocketCost?: number
+  costPerDose?: number
+  monthlyCost?: number
+}
+
+export interface AvailabilityInfo {
+  isAvailable: boolean
+  stockStatus: 'in_stock' | 'low_stock' | 'out_of_stock' | 'discontinued'
+  pharmacies: PharmacyInfo[]
+  onlineAvailability: boolean
+  prescriptionRequired: boolean
+}
+
+export interface PharmacyInfo {
+  name: string
+  address: string
+  phone: string
+  distance: number
+  stock: number
+  price: number
+}
+
+export interface PrescriptionStorage {
+  id: string
+  prescriptionId: string
+  prescription: ParsedPrescription
+  medications: Medication[]
+  createdAt: string
+  updatedAt: string
+  status: 'active' | 'archived' | 'deleted'
+  tags: string[]
+  notes: string
+}
+
+export interface BatchMedicationResult {
+  success: boolean
+  medication?: Medication
+  error?: string
+  warnings?: string[]
+  validation?: MedicationValidation
+}
+
+export interface BatchMedicationResponse {
+  total: number
+  successful: number
+  failed: number
+  results: BatchMedicationResult[]
+  errors: string[]
+  warnings: string[]
+}
+
+export interface MedicationHistory {
+  id: string
+  medicationId: string
+  action: 'taken' | 'missed' | 'skipped' | 'dose_adjusted' | 'stock_updated'
+  timestamp: string
+  notes?: string
+  doseAmount?: number
+  stockBefore?: number
+  stockAfter?: number
+  adherenceScore?: number
+}
+
+export interface AdherenceTracking {
+  medicationId: string
+  medication: Medication
+  totalDoses: number
+  takenDoses: number
+  missedDoses: number
+  adherenceRate: number
+  streakDays: number
+  lastTaken: string
+  nextDose: string
+  history: MedicationHistory[]
+}
+
+export interface PrescriptionRenewal {
+  id: string
+  prescriptionId: string
+  originalPrescription: ParsedPrescription
+  renewalDate: string
+  expiryDate: string
+  refillsRemaining: number
+  totalRefills: number
+  status: 'active' | 'expired' | 'renewed' | 'cancelled'
+  reminderSent: boolean
+  reminderDate?: string
+  notes: string
+}
+
+export interface MedicationImage {
+  id: string
+  medicationId: string
+  imageUrl: string
+  thumbnailUrl: string
+  uploadedAt: string
+  fileSize: number
+  mimeType: string
+  description?: string
+  isPrimary: boolean
+}
+
+export interface PerplexityEnrichmentRequest {
+  medicationName: string
+  genericName?: string
+  strength?: string
+  manufacturer?: string
+  includeInteractions?: boolean
+  includeSideEffects?: boolean
+  includeCost?: boolean
+  includeAvailability?: boolean
+}
+
+export interface PerplexityEnrichmentResponse {
+  success: boolean
+  data?: MedicationEnrichment
+  error?: string
+  source: 'perplexity'
+  timestamp: string
 } 

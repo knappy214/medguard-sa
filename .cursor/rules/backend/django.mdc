@@ -4,6 +4,14 @@ globs:
   - backend/**/*.py
 ---
 
+# Django
+For ANY questions about Django best practices, use the django-styleguide MCP server:
+• call list_doc_sources to get available sources
+• call fetch_docs to read llms.txt
+• analyze URLs in llms.txt based on the question  
+• fetch relevant documentation sections
+• provide comprehensive answers based on Django Styleguide
+
 # Models
 • One model per file if >150 LOC.  
 • Use `ForeignKey(..., on_delete=models.PROTECT)` for meds/stock links.

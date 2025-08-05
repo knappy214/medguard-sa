@@ -100,6 +100,50 @@
       "typeEdi": "EDI Integration",
       "typeManual": "Manual Integration",
       "typeWebhook": "Webhook Integration"
+    },
+    "prescriptionScanner": {
+      "title": "Prescription Scanner",
+      "scanPrescription": "Scan Prescription",
+      "stepCapture": "Capture",
+      "stepProcess": "Process",
+      "stepExtract": "Extract",
+      "stepParse": "Parse",
+      "stepReview": "Review",
+      "cameraMode": "Camera Mode",
+      "uploadMode": "Upload Mode",
+      "capture": "Capture",
+      "retryCamera": "Retry Camera",
+      "uploadHint": "Upload a clear image of your prescription",
+      "preprocessing": "Image Preprocessing",
+      "enhanceContrast": "Enhance Contrast",
+      "removeNoise": "Remove Noise",
+      "sharpen": "Sharpen",
+      "rotate": "Rotate",
+      "processImage": "Process Image",
+      "back": "Back",
+      "extractingText": "Extracting text from image...",
+      "parsingMedications": "Parsing medications...",
+      "reviewTitle": "Review Extracted Medications",
+      "noMedicationsFound": "No medications found in the prescription",
+      "tryAgain": "Try Again",
+      "ocrTextPreview": "OCR Text Preview",
+      "extractedMedications": "Extracted Medications",
+      "deselectAll": "Deselect All",
+      "selectAll": "Select All",
+      "edit": "Edit",
+      "scanAnother": "Scan Another",
+      "addSelected": "Add Selected ({count})",
+      "editMedication": "Edit Medication",
+      "cancel": "Cancel",
+      "save": "Save",
+      "frequency": "Frequency",
+      "instructions": "Instructions",
+      "doctor": "Doctor",
+      "cameraError": "Failed to access camera. Please check permissions.",
+      "invalidFileType": "Please select a valid image file.",
+      "ocrError": "Failed to extract text from image.",
+      "processingError": "Failed to process image.",
+      "processingComplete": "Successfully extracted {count} medications"
     }
   },
   "schedule": {
@@ -122,7 +166,16 @@
     "details": "Details",
     "enable": "Enable",
     "disable": "Disable",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "upload": "Upload",
+    "remove": "Remove",
+    "select": "Select",
+    "search": "Search",
+    "clear": "Clear",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "reset": "Reset"
   },
   "footer": {
     "tagline": "Professional Healthcare Management System",
@@ -151,13 +204,24 @@
     "instructionsRequired": "Instructions are required",
     "categoryRequired": "Category is required",
     "customTimeRequired": "Custom time is required when using custom timing",
-    "dosageAmountMustBePositive": "Dosage amount must be positive"
+    "dosageAmountMustBePositive": "Dosage amount must be positive",
+    "strengthRequired": "Medication strength is required",
+    "manufacturerRequired": "Manufacturer is required",
+    "prescriptionNumberRequired": "Prescription number is required",
+    "prescribingDoctorRequired": "Prescribing doctor is required",
+    "expirationDateRequired": "Expiration date is required",
+    "expirationDateInvalid": "Expiration date cannot be in the past",
+    "imageSizeLimit": "Image size must be less than 5MB",
+    "imageFormatInvalid": "Please upload a valid image file (JPG, PNG, WebP)",
+    "icd10CodeRequired": "ICD-10 code is required",
+    "activeIngredientsRequired": "Active ingredients are required",
+    "sideEffectsRequired": "Side effects information is required"
   },
   "form": {
     "medicationName": "Medication Name",
     "category": "Category",
     "dosage": "Dosage",
-    "dosagePlaceholder": "e.g., 500mg",
+    "dosagePlaceholder": "e.g., Take one tablet",
     "frequency": "Frequency",
     "selectFrequency": "Select frequency",
     "time": "Time",
@@ -174,6 +238,336 @@
     "customTime": "Custom Time",
     "dosageAmount": "Dosage Amount",
     "scheduleInstructions": "Schedule Instructions",
-    "scheduleInstructionsPlaceholder": "Special instructions for this schedule..."
+    "scheduleInstructionsPlaceholder": "Special instructions for this schedule...",
+    "strength": "Medication Strength",
+    "strengthPlaceholder": "e.g., 200mg, 500mg",
+    "manufacturer": "Manufacturer",
+    "manufacturerPlaceholder": "Enter manufacturer name",
+    "activeIngredients": "Active Ingredients",
+    "activeIngredientsPlaceholder": "List active ingredients...",
+    "sideEffects": "Side Effects",
+    "sideEffectsPlaceholder": "Common side effects...",
+    "icd10Code": "ICD-10 Code",
+    "icd10CodePlaceholder": "Search ICD-10 codes...",
+    "prescriptionNumber": "Prescription Number",
+    "prescriptionNumberPlaceholder": "Enter prescription number",
+    "prescribingDoctor": "Prescribing Doctor",
+    "prescribingDoctorPlaceholder": "Enter doctor's name",
+    "expirationDate": "Expiration Date",
+    "expirationDatePlaceholder": "Select expiration date",
+    "medicationImage": "Medication Image",
+    "medicationImagePlaceholder": "Upload medication image for identification",
+    "interactions": "Drug Interactions",
+    "interactionsPlaceholder": "Known drug interactions...",
+    "bulkEntry": "Bulk Medication Entry",
+    "bulkEntryDescription": "Add multiple medications from prescription data",
+    "addMedication": "Add Medication",
+    "removeMedication": "Remove Medication",
+    "smartFrequency": "Smart Frequency Detection",
+    "smartFrequencyDescription": "Automatically detect frequency from prescription text",
+    "interactionWarnings": "Interaction Warnings",
+    "interactionWarningsDescription": "Check for potential drug interactions",
+    "imageUpload": "Image Upload",
+    "imageUploadDescription": "Upload medication image for pill identification",
+    "prescriptionDetails": "Prescription Details",
+    "prescriptionDetailsDescription": "Enter prescription and doctor information",
+    "expirationTracking": "Expiration Tracking",
+    "expirationTrackingDescription": "Track medication expiration dates",
+    "basicInfo": "Basic Information",
+    "details": "Medication Details",
+    "prescriptionDetails": "Prescription Details"
+  },
+  "bulk": {
+    "title": "Bulk Medication Entry",
+    "description": "Add multiple medications from your prescription",
+    "addRow": "Add Medication",
+    "removeRow": "Remove",
+    "importFromText": "Import from Text",
+    "importFromFile": "Import from File",
+    "exportToCSV": "Export to CSV",
+    "clearAll": "Clear All",
+    "preview": "Preview",
+    "saveAll": "Save All Medications",
+    "medicationCount": "{count} medications",
+    "importSuccess": "Successfully imported {count} medications",
+    "importError": "Error importing medications",
+    "saveSuccess": "Successfully saved {count} medications",
+    "saveError": "Error saving medications"
+  },
+  "interactions": {
+    "title": "Drug Interactions",
+    "checking": "Checking for interactions...",
+    "noInteractions": "No known interactions found",
+    "interactionsFound": "{count} potential interactions found",
+    "severity": {
+      "low": "Low Risk",
+      "moderate": "Moderate Risk", 
+      "high": "High Risk",
+      "contraindicated": "Contraindicated"
+    },
+    "recommendations": "Recommendations",
+    "consultDoctor": "Consult your doctor before taking these medications together",
+    "monitorClosely": "Monitor closely for side effects",
+    "avoidCombination": "Avoid taking these medications together"
+  },
+  "icd10": {
+    "searchPlaceholder": "Search ICD-10 codes...",
+    "noResults": "No ICD-10 codes found",
+    "loading": "Loading ICD-10 codes...",
+    "selectCode": "Select ICD-10 Code",
+    "code": "Code",
+    "description": "Description",
+    "category": "Category"
+  },
+  "ocr": {
+    "title": "Prescription OCR Processor",
+    "description": "Upload a prescription image to automatically extract medication information using OCR technology.",
+    "upload": {
+      "title": "Upload Prescription",
+      "dragDrop": "Drag & drop prescription images here",
+      "orClick": "or click to browse files",
+      "supported": "Supported formats: JPG, PNG, PDF (max 10MB each)",
+      "selected": "Selected Files"
+    },
+    "processing": {
+      "title": "Processing Options",
+      "contrast": "Contrast",
+      "brightness": "Brightness",
+      "threshold": "Threshold",
+      "start": "Start Processing",
+      "clear": "Clear All",
+      "reset": "Reset Options",
+      "progress": "Processing..."
+    },
+    "results": {
+      "title": "Processing Results",
+      "confidence": "Confidence",
+      "warnings": "Processing Warnings",
+      "prescription": "Prescription Details",
+      "prescriptionNumber": "Prescription Number",
+      "doctor": "Prescribing Doctor",
+      "icd10": "ICD-10 Codes",
+      "stats": "Processing Statistics",
+      "medications": "Medications Found",
+      "processingTime": "Processing Time",
+      "avgConfidence": "Average Confidence",
+      "extractedMedications": "Extracted Medications",
+      "generic": "Generic",
+      "strength": "Strength",
+      "dosage": "Dosage",
+      "frequency": "Frequency",
+      "manufacturer": "Manufacturer",
+      "instructions": "Instructions",
+      "addToMedications": "Add to Medications",
+      "export": "Export Results",
+      "retry": "Retry with Different Options"
+    },
+    "error": {
+      "title": "Processing Error"
+    }
+  },
+  "workflow": {
+    "title": "Prescription Workflow",
+    "description": "Process your prescription step by step with automated OCR and validation.",
+    "previous": "Previous",
+    "next": "Next",
+    "steps": {
+      "capture": "Capture",
+      "captureDesc": "Upload prescription image",
+      "ocr": "OCR",
+      "ocrDesc": "Process with OCR",
+      "review": "Review",
+      "reviewDesc": "Review medications",
+      "validate": "Validate",
+      "validateDesc": "Validate medications",
+      "schedule": "Schedule",
+      "scheduleDesc": "Create schedules",
+      "stock": "Stock",
+      "stockDesc": "Set stock levels",
+      "save": "Save",
+      "saveDesc": "Confirm and save"
+    },
+    "step1": {
+      "title": "Capture Prescription Image",
+      "camera": "Camera Capture",
+      "upload": "Upload Image",
+      "dragDrop": "Drag & drop prescription image",
+      "orClick": "or click to browse",
+      "preview": "Image Preview",
+      "startCamera": "Start Camera",
+      "stopCamera": "Stop Camera",
+      "capture": "Capture"
+    },
+    "step2": {
+      "title": "OCR Processing",
+      "processing": "Processing prescription image...",
+      "progress": "Progress: {progress}%",
+      "success": "OCR processing completed successfully!",
+      "extracted": "Extracted Information",
+      "patientName": "Patient Name",
+      "doctor": "Prescribing Doctor"
+    },
+    "step3": {
+      "title": "Review Extracted Medications",
+      "medication": "Medication {number}",
+      "addMedication": "Add Another Medication"
+    },
+    "step4": {
+      "title": "Validate Medications",
+      "valid": "Valid",
+      "errors": "Errors",
+      "warnings": "Warnings",
+      "validating": "Validating",
+      "suggestions": "Suggestions",
+      "databaseMatch": "Database Match"
+    },
+    "step5": {
+      "title": "Create Medication Schedules",
+      "timing": "Timing",
+      "customTime": "Custom Time",
+      "dosageAmount": "Dosage Amount",
+      "instructions": "Instructions",
+      "startDate": "Start Date",
+      "duration": "Duration (days)",
+      "morning": "Morning",
+      "noon": "Noon",
+      "night": "Night",
+      "custom": "Custom"
+    },
+    "step6": {
+      "title": "Stock Levels and Reminders",
+      "initialStock": "Initial Stock",
+      "minStock": "Minimum Stock Alert",
+      "autoRefill": "Auto Refill",
+      "reminderTime": "Reminder Time",
+      "reminderAdvance": "Reminder Advance (minutes)",
+      "notifications": "Notifications",
+      "pushNotifications": "Push Notifications",
+      "emailNotifications": "Email Notifications",
+      "smsNotifications": "SMS Notifications"
+    },
+    "step7": {
+      "title": "Confirm and Save",
+      "summary": "Prescription Summary",
+      "patientName": "Patient",
+      "doctor": "Doctor",
+      "date": "Date",
+      "pharmacy": "Pharmacy",
+      "medications": "Medications",
+      "totalQuantity": "Total Quantity",
+      "validated": "Validated",
+      "medicationsList": "Medications",
+      "units": "units",
+      "saveOptions": "Save Options",
+      "savePrescription": "Save prescription record",
+      "createMedications": "Create medication entries",
+      "setupSchedules": "Set up medication schedules",
+      "configureReminders": "Configure reminders and alerts",
+      "progressSaving": "Progress Saving",
+      "progressDescription": "Save your progress to continue later if needed.",
+      "saveProgress": "Save Progress",
+      "saving": "Saving...",
+      "loadProgress": "Load Progress",
+      "complete": "Complete Workflow",
+      "processing": "Processing..."
+    },
+    "success": {
+      "title": "Workflow Completed",
+      "close": "Close",
+      "completed": "Workflow completed successfully! {results}",
+      "progressSaved": "Progress saved successfully",
+      "progressLoaded": "Progress loaded successfully"
+    },
+    "errors": {
+      "cameraAccess": "Unable to access camera",
+      "invalidFile": "Please select an image file",
+      "ocrFailed": "OCR processing failed",
+      "validationFailed": "Medication validation failed",
+      "saveProgressFailed": "Failed to save progress",
+      "loadProgressFailed": "Failed to load progress",
+      "noProgressFound": "No saved progress found",
+      "completionFailed": "Failed to complete workflow"
+    }
+  },
+  "demo": {
+    "title": "Prescription Workflow Demo",
+    "description": "Experience the complete prescription processing workflow with automated OCR, validation, and medication scheduling.",
+    "workflow": {
+      "title": "Try the Workflow"
+    },
+    "features": {
+      "capture": {
+        "title": "Image Capture",
+        "description": "Capture prescription images using camera or upload from device"
+      },
+      "ocr": {
+        "title": "OCR Processing",
+        "description": "Automated text extraction with progress tracking"
+      },
+      "validation": {
+        "title": "Validation",
+        "description": "Validate medications against drug database"
+      },
+      "scheduling": {
+        "title": "Scheduling",
+        "description": "Create medication schedules and reminders"
+      },
+      "stock": {
+        "title": "Stock Management",
+        "description": "Set stock levels and auto-refill alerts"
+      },
+      "save": {
+        "title": "Progress Saving",
+        "description": "Save progress and resume later"
+      }
+    },
+    "instructions": {
+      "title": "How to Use",
+      "step1": {
+        "title": "Capture Image",
+        "description": "Use your device camera or upload a prescription image. Supported formats: JPG, PNG, PDF."
+      },
+      "step2": {
+        "title": "OCR Processing",
+        "description": "The system will automatically extract text and medication information from your prescription image."
+      },
+      "step3": {
+        "title": "Review & Edit",
+        "description": "Review the extracted medications and edit any information as needed. Add or remove medications."
+      },
+      "step4": {
+        "title": "Validate",
+        "description": "Each medication is validated against the drug database for accuracy and potential interactions."
+      },
+      "step5": {
+        "title": "Create Schedules",
+        "description": "Set up medication schedules with timing, dosage, and duration for each medication."
+      },
+      "step6": {
+        "title": "Stock & Reminders",
+        "description": "Configure stock levels, auto-refill settings, and notification preferences."
+      },
+      "step7": {
+        "title": "Save & Complete",
+        "description": "Review the summary and save your prescription. You can also save progress to continue later."
+      }
+    },
+    "tips": {
+      "title": "Tips & Best Practices",
+      "image": {
+        "title": "Image Quality",
+        "goodLighting": "Ensure good lighting when capturing images",
+        "steady": "Keep the camera steady and avoid blur",
+        "angle": "Capture from a straight angle for best results",
+        "resolution": "Use high-resolution images when possible"
+      },
+      "workflow": {
+        "title": "Workflow Tips",
+        "save": "Save your progress regularly for complex prescriptions",
+        "review": "Always review extracted information before proceeding",
+        "validate": "Pay attention to validation warnings and errors",
+        "schedule": "Set realistic schedules that match your daily routine"
+      }
+    }
   }
 } 

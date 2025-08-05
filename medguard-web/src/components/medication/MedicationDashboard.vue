@@ -133,6 +133,20 @@ const handleAddMedication = async (medicationData: any) => {
   }
 }
 
+const handleBulkAddMedications = async (medications: any[]) => {
+  console.log('📝 handleBulkAddMedications called with data:', medications)
+  try {
+    console.log('🔄 Calling medicationApi.createBulkMedications...')
+    const result = await medicationApi.createBulkMedications(medications)
+    console.log('✅ Bulk medications created successfully:', result)
+    await loadData() // Reload data
+    showAddModal.value = false
+  } catch (error) {
+    console.error('❌ Failed to add bulk medications:', error)
+    // Show user-friendly error message
+  }
+}
+
 const handleDeleteMedication = async (medicationId: string) => {
   try {
     await medicationApi.deleteMedication(medicationId)
@@ -319,6 +333,7 @@ onMounted(() => {
       v-if="showAddModal"
       @close="showAddModal = false"
       @add="handleAddMedication"
+      @bulk-add="handleBulkAddMedications"
     />
 
     <!-- Edit Medication Modal -->

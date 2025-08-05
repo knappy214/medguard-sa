@@ -15,10 +15,12 @@
     "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.1.11",
     "axios": "^1.11.0",
+    "canvas": "^3.1.2",
     "crypto-js": "^4.2.0",
     "daisyui": "^5.0.50",
     "pinia": "^3.0.3",
     "tailwindcss": "^4.1.11",
+    "tesseract.js": "^6.0.1",
     "vue": "^3.5.17",
     "vue-i18n": "^11.1.11",
     "vue-router": "^4.5.1"

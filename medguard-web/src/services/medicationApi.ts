@@ -8,7 +8,26 @@ import type {
   MedicationFormData,
   StockAnalytics,
   ApiResponse,
-  PaginatedResponse 
+  PaginatedResponse,
+  BulkMedicationEntry,
+  // New types for enhanced features
+  ParsedPrescription,
+  PrescriptionMedication,
+  MedicationValidation,
+  DrugDatabaseEntry,
+  MedicationEnrichment,
+  PrescriptionStorage,
+  BatchMedicationResponse,
+  BatchMedicationResult,
+  MedicationHistory,
+  AdherenceTracking,
+  PrescriptionRenewal,
+  MedicationImage,
+  PerplexityEnrichmentRequest,
+  PerplexityEnrichmentResponse,
+  MedicationInteraction,
+  CostAnalysis,
+  AvailabilityInfo
 } from '@/types/medication'
 
 // Import mock data
@@ -26,24 +45,32 @@ const transformToBackendFormat = (data: MedicationFormData) => ({
   brand_name: data.name, // Use name as brand name for now
   medication_type: 'tablet', // Default to tablet
   prescription_type: 'otc', // Default to over the counter
-  strength: data.dosage,
+  strength: data.strength || data.dosage,
   dosage_unit: 'mg', // Default unit
   pill_count: data.stock || 0,
   low_stock_threshold: data.minStock || 10,
   description: data.instructions || '',
-  manufacturer: 'Unknown', // Default manufacturer
-  active_ingredients: '',
-  side_effects: '',
+  manufacturer: data.manufacturer || 'Unknown',
+  active_ingredients: data.activeIngredients || '',
+  side_effects: data.sideEffects || '',
   contraindications: '',
   storage_instructions: '',
-  expiration_date: null
+  expiration_date: data.expirationDate || null,
+  // Additional fields for enhanced medication management
+  icd10_code: data.icd10Code || '',
+  prescription_number: data.prescriptionNumber || '',
+  prescribing_doctor: data.prescribingDoctor || '',
+  // Image handling would be done separately via FormData
+  interactions: data.interactions || [],
+  // Handle medicationImage properly - convert File to string URL or undefined
+  medication_image: data.medicationImage instanceof File ? undefined : data.medicationImage || undefined
 })
 
 // Helper function to transform backend data to frontend format
 const transformToFrontendFormat = (backendData: any): Medication => ({
   id: String(backendData.id), // Ensure id is a string
   name: backendData.name,
-  dosage: backendData.strength,
+  dosage: backendData.dosage_instructions || 'Take as prescribed', // Default dosage instructions
   frequency: 'Once daily', // Default frequency
   time: '08:00', // Default time
   stock: backendData.pill_count,
@@ -53,7 +80,18 @@ const transformToFrontendFormat = (backendData: any): Medication => ({
   category: 'Other', // Default category
   isActive: true,
   createdAt: backendData.created_at,
-  updatedAt: backendData.updated_at
+  updatedAt: backendData.updated_at,
+  // Enhanced fields
+  strength: backendData.strength || '',
+  manufacturer: backendData.manufacturer || '',
+  activeIngredients: backendData.active_ingredients || '',
+  sideEffects: backendData.side_effects || '',
+  icd10Code: backendData.icd10_code || '',
+  prescriptionNumber: backendData.prescription_number || '',
+  prescribingDoctor: backendData.prescribing_doctor || '',
+  expirationDate: backendData.expiration_date || '',
+  medicationImage: backendData.medication_image || undefined,
+  interactions: backendData.interactions || []
 })
 
 // Helper function to transform backend schedule data to frontend format
@@ -390,9 +428,15 @@ export const medicationApi = {
         // Fallback to mock data
         const index = mockMedications.findIndex(med => med.id === id)
         if (index !== -1) {
+          // Handle medicationImage type conversion
+          const updatedData = { ...data }
+          if (updatedData.medicationImage !== undefined) {
+            updatedData.medicationImage = updatedData.medicationImage instanceof File ? undefined : (updatedData.medicationImage as string | undefined)
+          }
+          
           mockMedications[index] = {
             ...mockMedications[index],
-            ...data,
+            ...updatedData,
             updatedAt: new Date().toISOString()
           }
           return mockMedications[index]
@@ -671,61 +715,600 @@ export const medicationApi = {
     }
   },
 
-  // Get medication history
-  async getMedicationHistory(medicationId: string): Promise<any[]> {
+  // 1. Create medications from prescription data
+  async createMedicationsFromPrescription(prescription: ParsedPrescription): Promise<Medication[]> {
     try {
+      console.log('📋 Creating medications from prescription:', prescription)
+      
       if (shouldUseRealApi()) {
-        const response = await apiClientEnhanced.get<ApiResponse<any[]>>(
-          `${API_ENDPOINTS.MEDICATIONS.LOGS}?medication=${medicationId}`
-        )
-        return response.data || []
+        const createdMedications: Medication[] = []
+        
+        for (const prescriptionMed of prescription.medications) {
+          try {
+            // Transform prescription medication to form data
+            const formData: MedicationFormData = {
+              name: prescriptionMed.name,
+              strength: prescriptionMed.strength,
+              dosage: prescriptionMed.dosage,
+              frequency: prescriptionMed.frequency,
+              time: '08:00', // Default time
+              stock: prescriptionMed.quantity,
+              minStock: Math.ceil(prescriptionMed.quantity * 0.2), // 20% of quantity
+              instructions: prescriptionMed.instructions,
+              category: 'Prescription',
+              manufacturer: '',
+              prescriptionNumber: prescription.id,
+              prescribingDoctor: prescription.prescribingDoctor,
+                           activeIngredients: '',
+             sideEffects: prescriptionMed.sideEffects?.join(', ') || '',
+             icd10Code: '',
+             expirationDate: '',
+             medicationImage: undefined,
+             interactions: prescriptionMed.interactions || [],
+             isBulkEntry: false,
+             bulkMedications: []
+            }
+            
+            // Validate medication before creating
+            const validation = await this.validateMedication(formData)
+            if (!validation.isValid) {
+              console.warn(`⚠️ Validation failed for ${prescriptionMed.name}:`, validation.errors)
+            }
+            
+            const createdMedication = await this.createMedication(formData)
+            if (createdMedication) {
+              // Enrich with drug database information
+              try {
+                await this.enrichMedicationWithPerplexity(createdMedication.id, {
+                  medicationName: prescriptionMed.name,
+                  genericName: prescriptionMed.genericName,
+                  strength: prescriptionMed.strength,
+                  includeInteractions: true,
+                  includeSideEffects: true,
+                  includeCost: true,
+                  includeAvailability: true
+                })
+              } catch (enrichmentError) {
+                console.warn(`⚠️ Failed to enrich ${prescriptionMed.name}:`, enrichmentError)
+              }
+              
+              createdMedications.push(createdMedication)
+            }
+          } catch (error) {
+            console.error(`❌ Failed to create medication ${prescriptionMed.name}:`, error)
+            // Continue with other medications even if one fails
+          }
+        }
+        
+        // Store prescription for future reference
+        await this.storePrescription(prescription, createdMedications)
+        
+        return createdMedications
       } else {
         // Fallback to mock data
-        return []
-      }
-    } catch (error) {
-      console.error('Failed to fetch medication history:', error)
-      if (shouldUseRealApi()) {
-        throw error
-      }
-      return []
-    }
-  },
-
-  // Export medication data
-  async exportMedicationData(format: 'json' | 'csv' = 'json'): Promise<Blob> {
-    try {
-      if (shouldUseRealApi()) {
-        const response = await apiClientEnhanced.raw.get(
-          `${API_ENDPOINTS.MEDICATIONS.LIST}export/?format=${format}`,
-          { responseType: 'blob' }
-        )
-        return response.data
-      } else {
-        // Fallback to mock data export
-        const data = format === 'json' 
-          ? JSON.stringify(mockMedications, null, 2)
-          : mockMedications.map(med => `${med.name},${med.dosage},${med.frequency}`).join('\n')
+        const createdMedications: Medication[] = []
         
-        return new Blob([data], { 
-          type: format === 'json' ? 'application/json' : 'text/csv' 
-        })
+        for (const prescriptionMed of prescription.medications) {
+          const newMedication: Medication = {
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            name: prescriptionMed.name,
+            strength: prescriptionMed.strength,
+            dosage: prescriptionMed.dosage,
+            frequency: prescriptionMed.frequency,
+            time: '08:00',
+            stock: prescriptionMed.quantity,
+            pill_count: prescriptionMed.quantity,
+            minStock: Math.ceil(prescriptionMed.quantity * 0.2),
+            instructions: prescriptionMed.instructions,
+            category: 'Prescription',
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            manufacturer: '',
+            prescriptionNumber: prescription.id,
+            prescribingDoctor: prescription.prescribingDoctor,
+            activeIngredients: '',
+            sideEffects: prescriptionMed.sideEffects?.join(', ') || '',
+            icd10Code: '',
+            expirationDate: '',
+            medicationImage: undefined,
+            interactions: prescriptionMed.interactions || [],
+            prescriptionId: prescription.id,
+            isPrescription: true,
+            refillsRemaining: prescriptionMed.refills,
+            totalRefills: prescriptionMed.refills
+          }
+          
+          mockMedications.push(newMedication)
+          createdMedications.push(newMedication)
+        }
+        
+        return createdMedications
       }
     } catch (error) {
-      console.error('Failed to export medication data:', error)
+      console.error('❌ Failed to create medications from prescription:', error)
       throw error
     }
   },
 
-  // Import medication data
-  async importMedicationData(file: File): Promise<boolean> {
+  // 2. Validate medication against drug databases
+  async validateMedication(medicationData: MedicationFormData): Promise<MedicationValidation> {
+    try {
+      console.log('🔍 Validating medication:', medicationData.name)
+      
+      if (shouldUseRealApi()) {
+        const response = await apiClientEnhanced.post<MedicationValidation>(
+          API_ENDPOINTS.MEDICATIONS.VALIDATION.VALIDATE,
+          {
+            name: medicationData.name,
+            strength: medicationData.strength,
+            dosage: medicationData.dosage,
+            frequency: medicationData.frequency,
+            instructions: medicationData.instructions
+          }
+        )
+        
+        return response
+      } else {
+        // Mock validation
+        const warnings: string[] = []
+        const errors: string[] = []
+        const suggestions: string[] = []
+        
+        // Basic validation rules
+        if (!medicationData.name) {
+          errors.push('Medication name is required')
+        }
+        
+        if (!medicationData.dosage) {
+          errors.push('Dosage information is required')
+        }
+        
+        if (!medicationData.frequency) {
+          errors.push('Frequency is required')
+        }
+        
+        if (medicationData.stock < 0) {
+          errors.push('Stock cannot be negative')
+        }
+        
+        if (medicationData.minStock > medicationData.stock) {
+          warnings.push('Minimum stock is higher than current stock')
+        }
+        
+        // Mock drug database match
+        const mockDrugMatch: DrugDatabaseEntry = {
+          id: 'mock-drug-1',
+          name: medicationData.name,
+          genericName: medicationData.name,
+          brandNames: [medicationData.name],
+          activeIngredients: ['Active ingredient'],
+          strength: medicationData.strength || 'Unknown',
+          dosageForm: 'tablet',
+          manufacturer: medicationData.manufacturer || 'Unknown',
+          description: 'Mock drug description',
+          sideEffects: ['Nausea', 'Headache'],
+          contraindications: ['Allergy to active ingredient'],
+          interactions: [],
+          pregnancyCategory: 'C',
+          breastfeedingCategory: 'Unknown',
+          pediatricUse: 'Consult healthcare provider',
+          geriatricUse: 'Consult healthcare provider',
+          renalDoseAdjustment: 'May require adjustment',
+          hepaticDoseAdjustment: 'May require adjustment',
+          storageInstructions: 'Store at room temperature',
+          disposalInstructions: 'Dispose of properly',
+          cost: 25.00,
+          availability: 'available'
+        }
+        
+        return {
+          isValid: errors.length === 0,
+          warnings,
+          errors,
+          suggestions,
+          drugDatabaseMatch: mockDrugMatch,
+          alternatives: []
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to validate medication:', error)
+      return {
+        isValid: false,
+        warnings: [],
+        errors: ['Validation service unavailable'],
+        suggestions: []
+      }
+    }
+  },
+
+  // 3. Store and retrieve prescriptions
+  async storePrescription(prescription: ParsedPrescription, medications: Medication[]): Promise<PrescriptionStorage> {
+    try {
+      console.log('💾 Storing prescription:', prescription.id)
+      
+      if (shouldUseRealApi()) {
+        const storageData = {
+          prescription: prescription,
+          medications: medications.map(med => med.id),
+          tags: ['prescription', 'imported'],
+          notes: `Imported from prescription ${prescription.id}`
+        }
+        
+        const response = await apiClientEnhanced.post<PrescriptionStorage>(
+          API_ENDPOINTS.MEDICATIONS.STORAGE.PRESCRIPTIONS,
+          storageData
+        )
+        
+        return response
+      } else {
+        // Mock storage
+        const storage: PrescriptionStorage = {
+          id: Date.now().toString(),
+          prescriptionId: prescription.id,
+          prescription,
+          medications,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          status: 'active',
+          tags: ['prescription', 'imported'],
+          notes: `Imported from prescription ${prescription.id}`
+        }
+        
+        return storage
+      }
+    } catch (error) {
+      console.error('❌ Failed to store prescription:', error)
+      throw error
+    }
+  },
+
+  async getStoredPrescriptions(): Promise<PrescriptionStorage[]> {
     try {
       if (shouldUseRealApi()) {
-        const formData = new FormData()
-        formData.append('file', file)
+        const response = await apiClientEnhanced.get<PrescriptionStorage[]>(
+          API_ENDPOINTS.MEDICATIONS.STORAGE.PRESCRIPTIONS
+        )
+        return response
+      } else {
+        // Mock data
+        return []
+      }
+    } catch (error) {
+      console.error('❌ Failed to get stored prescriptions:', error)
+      return []
+    }
+  },
+
+  // 4. Medication enrichment using Perplexity API
+  async enrichMedicationWithPerplexity(
+    medicationId: string, 
+    request: PerplexityEnrichmentRequest
+  ): Promise<PerplexityEnrichmentResponse> {
+    try {
+      console.log('🧠 Enriching medication with Perplexity:', medicationId)
+      
+      if (shouldUseRealApi()) {
+        const response = await apiClientEnhanced.post<PerplexityEnrichmentResponse>(
+          API_ENDPOINTS.MEDICATIONS.ENRICHMENT.PERPLEXITY,
+          {
+            medication_id: medicationId,
+            ...request
+          }
+        )
         
-        await apiClientEnhanced.raw.post(
-          `${API_ENDPOINTS.MEDICATIONS.LIST}import/`,
+        return response
+      } else {
+        // Mock enrichment
+        const mockEnrichment: MedicationEnrichment = {
+          drugInfo: {
+            id: 'mock-drug-1',
+            name: request.medicationName,
+            genericName: request.genericName || request.medicationName,
+            brandNames: [request.medicationName],
+            activeIngredients: ['Active ingredient'],
+            strength: request.strength || 'Unknown',
+            dosageForm: 'tablet',
+            manufacturer: request.manufacturer || 'Unknown',
+            description: 'Mock drug information from Perplexity',
+            sideEffects: ['Nausea', 'Headache', 'Dizziness'],
+            contraindications: ['Allergy to active ingredient'],
+            interactions: ['Drug A', 'Drug B'],
+            pregnancyCategory: 'C',
+            breastfeedingCategory: 'Unknown',
+            pediatricUse: 'Consult healthcare provider',
+            geriatricUse: 'Consult healthcare provider',
+            renalDoseAdjustment: 'May require adjustment',
+            hepaticDoseAdjustment: 'May require adjustment',
+            storageInstructions: 'Store at room temperature',
+            disposalInstructions: 'Dispose of properly',
+            cost: 25.00,
+            availability: 'available'
+          },
+          interactions: [
+            {
+              severity: 'moderate',
+              description: 'May interact with other medications',
+              medications: ['Drug A', 'Drug B'],
+              recommendations: 'Monitor for side effects',
+              evidence: 'Clinical studies',
+              source: 'Perplexity API'
+            }
+          ],
+          sideEffects: ['Nausea', 'Headache', 'Dizziness'],
+          contraindications: ['Allergy to active ingredient'],
+          dosageGuidelines: [
+            {
+              ageGroup: 'Adults',
+              condition: 'General',
+              dosage: '1 tablet',
+              frequency: 'Once daily',
+              duration: 'As prescribed',
+              notes: 'Take with food'
+            }
+          ],
+          costAnalysis: {
+            averageCost: 25.00,
+            costRange: { min: 20.00, max: 30.00 },
+            genericAvailable: true,
+            genericCost: 15.00,
+            insuranceCoverage: 80,
+            outOfPocketCost: 5.00,
+            costPerDose: 0.83,
+            monthlyCost: 25.00
+          },
+          availability: {
+            isAvailable: true,
+            stockStatus: 'in_stock',
+            pharmacies: [
+              {
+                name: 'Local Pharmacy',
+                address: '123 Main St',
+                phone: '555-1234',
+                distance: 2.5,
+                stock: 50,
+                price: 25.00
+              }
+            ],
+            onlineAvailability: true,
+            prescriptionRequired: true
+          },
+          enrichedAt: new Date().toISOString(),
+          source: 'perplexity'
+        }
+        
+        return {
+          success: true,
+          data: mockEnrichment,
+          source: 'perplexity',
+          timestamp: new Date().toISOString()
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to enrich medication with Perplexity:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        source: 'perplexity',
+        timestamp: new Date().toISOString()
+      }
+    }
+  },
+
+  // 5. Batch medication creation with proper error handling
+  async createBatchMedications(medications: MedicationFormData[]): Promise<BatchMedicationResponse> {
+    try {
+      console.log('📦 Creating batch medications:', medications.length)
+      
+      if (shouldUseRealApi()) {
+        const response = await apiClientEnhanced.post<BatchMedicationResponse>(
+          API_ENDPOINTS.MEDICATIONS.BATCH.CREATE,
+          { medications }
+        )
+        
+        return response
+      } else {
+        // Mock batch creation
+        const results: BatchMedicationResult[] = []
+        let successful = 0
+        let failed = 0
+        const errors: string[] = []
+        const warnings: string[] = []
+        
+        for (const medicationData of medications) {
+          try {
+            // Validate first
+            const validation = await this.validateMedication(medicationData)
+            
+            if (!validation.isValid) {
+              results.push({
+                success: false,
+                error: validation.errors.join(', '),
+                warnings: validation.warnings,
+                validation
+              })
+              failed++
+              errors.push(`Validation failed for ${medicationData.name}: ${validation.errors.join(', ')}`)
+            } else {
+                             // Create medication
+               const newMedication: Medication = {
+                 id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                 name: medicationData.name,
+                 strength: medicationData.strength || '',
+                 dosage: medicationData.dosage,
+                 frequency: medicationData.frequency,
+                 time: medicationData.time,
+                 stock: medicationData.stock,
+                 pill_count: medicationData.stock,
+                 minStock: medicationData.minStock,
+                 instructions: medicationData.instructions,
+                 category: medicationData.category,
+                 isActive: true,
+                 createdAt: new Date().toISOString(),
+                 updatedAt: new Date().toISOString(),
+                 manufacturer: medicationData.manufacturer || '',
+                 prescriptionNumber: medicationData.prescriptionNumber || '',
+                 prescribingDoctor: medicationData.prescribingDoctor || '',
+                 activeIngredients: medicationData.activeIngredients || '',
+                 sideEffects: medicationData.sideEffects || '',
+                 icd10Code: medicationData.icd10Code || '',
+                 expirationDate: medicationData.expirationDate || '',
+                 medicationImage: medicationData.medicationImage instanceof File ? undefined : (medicationData.medicationImage as string | undefined),
+                 interactions: medicationData.interactions || []
+               }
+              
+              mockMedications.push(newMedication)
+              
+              results.push({
+                success: true,
+                medication: newMedication,
+                warnings: validation.warnings,
+                validation
+              })
+              successful++
+              
+              if (validation.warnings.length > 0) {
+                warnings.push(`Warnings for ${medicationData.name}: ${validation.warnings.join(', ')}`)
+              }
+            }
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+            results.push({
+              success: false,
+              error: errorMessage
+            })
+            failed++
+            errors.push(`Failed to create ${medicationData.name}: ${errorMessage}`)
+          }
+        }
+        
+        return {
+          total: medications.length,
+          successful,
+          failed,
+          results,
+          errors,
+          warnings
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to create batch medications:', error)
+      throw error
+    }
+  },
+
+  // 6. Medication interaction checking
+  async checkMedicationInteractions(medicationIds: string[]): Promise<MedicationInteraction[]> {
+    try {
+      console.log('🔍 Checking medication interactions for:', medicationIds)
+      
+      if (shouldUseRealApi()) {
+        const response = await apiClientEnhanced.post<MedicationInteraction[]>(
+          API_ENDPOINTS.MEDICATIONS.VALIDATION.INTERACTIONS,
+          { medication_ids: medicationIds }
+        )
+        
+        return response
+      } else {
+        // Mock interactions
+        const mockInteractions: MedicationInteraction[] = []
+        
+        if (medicationIds.length > 1) {
+          mockInteractions.push({
+            severity: 'moderate',
+            description: 'May increase risk of side effects',
+            medications: medicationIds,
+            recommendations: 'Monitor for adverse effects and consult healthcare provider',
+            evidence: 'Drug interaction database',
+            source: 'Mock API'
+          })
+        }
+        
+        return mockInteractions
+      }
+    } catch (error) {
+      console.error('❌ Failed to check medication interactions:', error)
+      return []
+    }
+  },
+
+  // 7. Prescription renewal tracking and reminders
+  async createPrescriptionRenewal(prescriptionId: string, renewalData: Partial<PrescriptionRenewal>): Promise<PrescriptionRenewal> {
+    try {
+      console.log('🔄 Creating prescription renewal for:', prescriptionId)
+      
+      if (shouldUseRealApi()) {
+        const response = await apiClientEnhanced.post<PrescriptionRenewal>(
+          API_ENDPOINTS.MEDICATIONS.PRESCRIPTIONS.RENEWALS,
+          {
+            prescription_id: prescriptionId,
+            ...renewalData
+          }
+        )
+        
+        return response
+      } else {
+        // Mock renewal
+        const renewal: PrescriptionRenewal = {
+          id: Date.now().toString(),
+          prescriptionId,
+          originalPrescription: {
+            id: prescriptionId,
+            patientName: 'Mock Patient',
+            prescribingDoctor: 'Dr. Smith',
+            prescriptionDate: new Date().toISOString(),
+            medications: [],
+            status: 'active'
+          },
+          renewalDate: new Date().toISOString(),
+          expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+          refillsRemaining: 2,
+          totalRefills: 3,
+          status: 'active',
+          reminderSent: false,
+          notes: renewalData.notes || 'Prescription renewal'
+        }
+        
+        return renewal
+      }
+    } catch (error) {
+      console.error('❌ Failed to create prescription renewal:', error)
+      throw error
+    }
+  },
+
+  async getPrescriptionRenewals(): Promise<PrescriptionRenewal[]> {
+    try {
+      if (shouldUseRealApi()) {
+        const response = await apiClientEnhanced.get<PrescriptionRenewal[]>(
+          API_ENDPOINTS.MEDICATIONS.PRESCRIPTIONS.RENEWALS
+        )
+        return response
+      } else {
+        // Mock data
+        return []
+      }
+    } catch (error) {
+      console.error('❌ Failed to get prescription renewals:', error)
+      return []
+    }
+  },
+
+  // 8. Medication image storage and retrieval
+  async uploadMedicationImage(medicationId: string, file: File, description?: string): Promise<MedicationImage> {
+    try {
+      console.log('📸 Uploading medication image for:', medicationId)
+      
+      if (shouldUseRealApi()) {
+        const formData = new FormData()
+        formData.append('medication_id', medicationId)
+        formData.append('image', file)
+        if (description) {
+          formData.append('description', description)
+        }
+        
+        const response = await apiClientEnhanced.raw.post<MedicationImage>(
+          API_ENDPOINTS.MEDICATIONS.IMAGES.UPLOAD,
           formData,
           {
             headers: {
@@ -733,100 +1316,298 @@ export const medicationApi = {
             }
           }
         )
-        return true
+        
+        return response.data
       } else {
-        // Fallback to mock data import
-        console.log('Mock import:', file.name)
-        return true
+        // Mock image upload
+        const image: MedicationImage = {
+          id: Date.now().toString(),
+          medicationId,
+          imageUrl: URL.createObjectURL(file),
+          thumbnailUrl: URL.createObjectURL(file),
+          uploadedAt: new Date().toISOString(),
+          fileSize: file.size,
+          mimeType: file.type,
+          description: description || '',
+          isPrimary: true
+        }
+        
+        return image
       }
     } catch (error) {
-      console.error('Failed to import medication data:', error)
+      console.error('❌ Failed to upload medication image:', error)
       throw error
     }
   },
 
-  // Get medication statistics
-  async getMedicationStats(): Promise<any> {
+  async getMedicationImages(medicationId: string): Promise<MedicationImage[]> {
     try {
       if (shouldUseRealApi()) {
-        const response = await apiClientEnhanced.get<ApiResponse<any>>(
-          `${API_ENDPOINTS.MEDICATIONS.LIST}stats/`
+        const response = await apiClientEnhanced.get<MedicationImage[]>(
+          API_ENDPOINTS.MEDICATIONS.IMAGES.LIST(medicationId)
         )
-        return response.data || {}
+        return response
       } else {
-        // Fallback to mock data
-        return {
-          total: mockMedications.length,
-          active: mockMedications.filter(med => med.isActive).length,
-          lowStock: mockMedications.filter(med => med.stock <= med.minStock).length
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch medication stats:', error)
-      if (shouldUseRealApi()) {
-        throw error
-      }
-      return {}
-    }
-  },
-
-  // Get medication reminders
-  async getMedicationReminders(): Promise<any[]> {
-    try {
-      if (shouldUseRealApi()) {
-        const response = await apiClientEnhanced.get<ApiResponse<any[]>>(
-          `${API_ENDPOINTS.MEDICATIONS.LIST}reminders/`
-        )
-        return response.data || []
-      } else {
-        // Fallback to mock data
+        // Mock data
         return []
       }
     } catch (error) {
-      console.error('Failed to fetch medication reminders:', error)
-      if (shouldUseRealApi()) {
-        throw error
-      }
+      console.error('❌ Failed to get medication images:', error)
       return []
     }
   },
 
-  // Set medication reminder
-  async setMedicationReminder(medicationId: string, reminderData: any): Promise<boolean> {
+  // 9. Medication history and adherence tracking
+  async getMedicationHistory(medicationId: string): Promise<MedicationHistory[]> {
     try {
       if (shouldUseRealApi()) {
-        await apiClientEnhanced.post(
-          `${API_ENDPOINTS.MEDICATIONS.LIST}${medicationId}/reminders/`,
-          reminderData
+        const response = await apiClientEnhanced.get<MedicationHistory[]>(
+          API_ENDPOINTS.MEDICATIONS.ADHERENCE.HISTORY(medicationId)
         )
-        return true
+        return response
       } else {
-        // Fallback to mock data
-        console.log('Mock reminder set:', medicationId, reminderData)
-        return true
+        // Mock history
+        const history: MedicationHistory[] = [
+          {
+            id: '1',
+            medicationId,
+            action: 'taken',
+            timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Yesterday
+            notes: 'Taken as prescribed',
+            doseAmount: 1,
+            stockBefore: 10,
+            stockAfter: 9,
+            adherenceScore: 100
+          },
+          {
+            id: '2',
+            medicationId,
+            action: 'taken',
+            timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+            notes: 'Taken as prescribed',
+            doseAmount: 1,
+            stockBefore: 11,
+            stockAfter: 10,
+            adherenceScore: 100
+          }
+        ]
+        
+        return history
       }
     } catch (error) {
-      console.error('Failed to set medication reminder:', error)
-      throw error
+      console.error('❌ Failed to get medication history:', error)
+      return []
     }
   },
 
-  // Delete medication reminder
-  async deleteMedicationReminder(reminderId: string): Promise<boolean> {
+  async getAdherenceTracking(medicationId: string): Promise<AdherenceTracking | null> {
     try {
       if (shouldUseRealApi()) {
-        await apiClientEnhanced.delete(
-          `${API_ENDPOINTS.MEDICATIONS.LIST}reminders/${reminderId}/`
+        const response = await apiClientEnhanced.get<AdherenceTracking>(
+          API_ENDPOINTS.MEDICATIONS.ADHERENCE.TRACKING(medicationId)
         )
-        return true
+        return response
       } else {
-        // Fallback to mock data
-        console.log('Mock reminder deleted:', reminderId)
-        return true
+        // Mock adherence tracking
+        const medication = mockMedications.find(med => med.id === medicationId)
+        if (!medication) return null
+        
+        const history = await this.getMedicationHistory(medicationId)
+        const takenDoses = history.filter(h => h.action === 'taken').length
+        const missedDoses = history.filter(h => h.action === 'missed').length
+        const totalDoses = takenDoses + missedDoses
+        const adherenceRate = totalDoses > 0 ? (takenDoses / totalDoses) * 100 : 0
+        
+        return {
+          medicationId,
+          medication,
+          totalDoses,
+          takenDoses,
+          missedDoses,
+          adherenceRate,
+          streakDays: 5, // Mock streak
+          lastTaken: history[0]?.timestamp || '',
+          nextDose: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+          history
+        }
       }
     } catch (error) {
-      console.error('Failed to delete medication reminder:', error)
-      throw error
+      console.error('❌ Failed to get adherence tracking:', error)
+      return null
+    }
+  },
+
+  // 10. Proper error handling for failed batch operations
+  async processBatchWithRetry(
+    medications: MedicationFormData[], 
+    maxRetries: number = 3
+  ): Promise<BatchMedicationResponse> {
+    try {
+      console.log('🔄 Processing batch with retry logic:', medications.length)
+      
+      let lastError: Error | null = null
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`📦 Batch attempt ${attempt}/${maxRetries}`)
+          
+          // Validate all medications first
+          const validationPromises = medications.map(med => this.validateMedication(med))
+          const validations = await Promise.all(validationPromises)
+          
+          const invalidMedications = validations.filter(v => !v.isValid)
+          if (invalidMedications.length > 0) {
+            console.warn(`⚠️ ${invalidMedications.length} medications failed validation`)
+          }
+          
+          // Create batch
+          const result = await this.createBatchMedications(medications)
+          
+          // Check if we need to retry
+          if (result.failed === 0 || result.successful > result.failed) {
+            console.log(`✅ Batch completed successfully: ${result.successful}/${result.total}`)
+            return result
+          } else {
+            console.warn(`⚠️ Batch partially failed: ${result.successful}/${result.total}`)
+            // If more than 50% succeeded, don't retry
+            if (result.successful / result.total > 0.5) {
+              return result
+            }
+            throw new Error(`Batch failed: ${result.failed} medications failed`)
+          }
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error('Unknown error')
+          console.error(`❌ Batch attempt ${attempt} failed:`, lastError.message)
+          
+          if (attempt < maxRetries) {
+            // Wait before retrying (exponential backoff)
+            const delay = Math.pow(2, attempt) * 1000
+            console.log(`⏳ Waiting ${delay}ms before retry...`)
+            await new Promise(resolve => setTimeout(resolve, delay))
+          }
+        }
+      }
+      
+      // All retries failed
+      throw lastError || new Error('All batch attempts failed')
+    } catch (error) {
+      console.error('❌ All batch processing attempts failed:', error)
+      
+      // Return a response with all failures
+      return {
+        total: medications.length,
+        successful: 0,
+        failed: medications.length,
+        results: medications.map(med => ({
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        })),
+        errors: [error instanceof Error ? error.message : 'Unknown error'],
+        warnings: []
+      }
+    }
+  },
+
+  // Additional utility methods
+
+  // Get drug database information
+  async getDrugDatabaseInfo(medicationName: string): Promise<DrugDatabaseEntry | null> {
+    try {
+      if (shouldUseRealApi()) {
+        const response = await apiClientEnhanced.get<DrugDatabaseEntry>(
+          `${API_ENDPOINTS.MEDICATIONS.VALIDATION.DRUG_DATABASE}?name=${encodeURIComponent(medicationName)}`
+        )
+        return response
+      } else {
+        // Mock drug database info
+        return {
+          id: 'mock-drug-1',
+          name: medicationName,
+          genericName: medicationName,
+          brandNames: [medicationName],
+          activeIngredients: ['Active ingredient'],
+          strength: 'Unknown',
+          dosageForm: 'tablet',
+          manufacturer: 'Unknown',
+          description: 'Mock drug description',
+          sideEffects: ['Nausea', 'Headache'],
+          contraindications: ['Allergy to active ingredient'],
+          interactions: [],
+          pregnancyCategory: 'C',
+          breastfeedingCategory: 'Unknown',
+          pediatricUse: 'Consult healthcare provider',
+          geriatricUse: 'Consult healthcare provider',
+          renalDoseAdjustment: 'May require adjustment',
+          hepaticDoseAdjustment: 'May require adjustment',
+          storageInstructions: 'Store at room temperature',
+          disposalInstructions: 'Dispose of properly',
+          cost: 25.00,
+          availability: 'available'
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to get drug database info:', error)
+      return null
+    }
+  },
+
+  // Get cost analysis
+  async getCostAnalysis(medicationName: string): Promise<CostAnalysis | null> {
+    try {
+      if (shouldUseRealApi()) {
+        const response = await apiClientEnhanced.get<CostAnalysis>(
+          `${API_ENDPOINTS.MEDICATIONS.ENRICHMENT.COST_ANALYSIS}?name=${encodeURIComponent(medicationName)}`
+        )
+        return response
+      } else {
+        // Mock cost analysis
+        return {
+          averageCost: 25.00,
+          costRange: { min: 20.00, max: 30.00 },
+          genericAvailable: true,
+          genericCost: 15.00,
+          insuranceCoverage: 80,
+          outOfPocketCost: 5.00,
+          costPerDose: 0.83,
+          monthlyCost: 25.00
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to get cost analysis:', error)
+      return null
+    }
+  },
+
+  // Get availability information
+  async getAvailabilityInfo(medicationName: string): Promise<AvailabilityInfo | null> {
+    try {
+      if (shouldUseRealApi()) {
+        const response = await apiClientEnhanced.get<AvailabilityInfo>(
+          `${API_ENDPOINTS.MEDICATIONS.ENRICHMENT.AVAILABILITY}?name=${encodeURIComponent(medicationName)}`
+        )
+        return response
+      } else {
+        // Mock availability info
+        return {
+          isAvailable: true,
+          stockStatus: 'in_stock',
+          pharmacies: [
+            {
+              name: 'Local Pharmacy',
+              address: '123 Main St',
+              phone: '555-1234',
+              distance: 2.5,
+              stock: 50,
+              price: 25.00
+            }
+          ],
+          onlineAvailability: true,
+          prescriptionRequired: true
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to get availability info:', error)
+      return null
     }
   }
 }

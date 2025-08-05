@@ -20,7 +20,7 @@
     "markAsMissed": "Merk as Gemis",
     "refillReminder": "Hervul Herinnering",
     "time": "Tyd",
-    "dosage": "Dosage",
+    "dosage": "Dosis",
     "status": "Status",
     "pending": "Hangende",
     "remaining": "oor",
@@ -39,11 +39,11 @@
     "minStock": "Min",
     "deleteConfirmation": "Is jy seker jy wil hierdie medikasie verwyder?",
     "tip": "Wenk",
-    "tipText": "Klik die knoppies om medikasie as geneem of gemis te merk. Dit help om jou medikasie nakoming dop te hou.",
+    "tipText": "Klik die knoppies om medikasie as geneem of gemis te merk. Dit help om jou medikasie nakoming te volg.",
     "legend": "Legende",
-    "legendText": "🚨 Kritiese waarskuwings benodig onmiddellike aandag. ⚠️ Waarskuwing waarskuwings dui op lae voorraad. ℹ️ Inligting waarskuwings verskaf algemene opdaterings.",
-    "stockLowMessage": "{medication} voorraad is laag. Slegs {count} tablette oor.",
-    "stockCriticalMessage": "{medication} voorraad is krities laag. Slegs {count} tablette oor.",
+    "legendText": "🚨 Kritieke waarskuwings vereis onmiddellike aandag. ⚠️ Waarskuwing waarskuwings dui op lae voorraad. ℹ️ Inligting waarskuwings verskaf algemene opdaterings.",
+    "stockLowMessage": "{medication} voorraad raak laag. Slegs {count} tablette oor.",
+    "stockCriticalMessage": "{medication} voorraad is kritiek laag. Slegs {count} tablette oor.",
     "stockDeducted": "Voorraad afgetrek",
     "remainingStock": "Oorblywende voorraad",
     "insufficientStock": "Onvoldoende voorraad",
@@ -87,10 +87,10 @@
       "noIntegrations": "Geen Apteek Integrasies",
       "noIntegrationsDesc": "Koppel aan apteek stelsels vir outomatiese bestelling en voorraad sinchronisasie",
       "addIntegration": "Voeg Integrasie By",
-      "editIntegration": "Redigeer Integrasie",
+      "editIntegration": "Wysig Integrasie",
       "type": "Integrasie Tipe",
-      "autoOrder": "Outo Bestelling",
-      "lastSync": "Laaste Sinchronisasie",
+      "autoOrder": "Outo Bestel",
+      "lastSync": "Laas Sinchroniseer",
       "testConnection": "Toets Verbinding",
       "name": "Integrasie Naam",
       "namePlaceholder": "Voer integrasie naam in",
@@ -100,6 +100,50 @@
       "typeEdi": "EDI Integrasie",
       "typeManual": "Handmatige Integrasie",
       "typeWebhook": "Webhook Integrasie"
+    },
+    "prescriptionScanner": {
+      "title": "Voorskrif Skandeerder",
+      "scanPrescription": "Skandeer Voorskrif",
+      "stepCapture": "Vang",
+      "stepProcess": "Verwerk",
+      "stepExtract": "Onttrek",
+      "stepParse": "Ontleed",
+      "stepReview": "Hersien",
+      "cameraMode": "Kamera Modus",
+      "uploadMode": "Oplaai Modus",
+      "capture": "Vang",
+      "retryCamera": "Probeer Kamera Weer",
+      "uploadHint": "Laai 'n duidelike beeld van jou voorskrif op",
+      "preprocessing": "Beeld Voorverwerking",
+      "enhanceContrast": "Verbeter Kontras",
+      "removeNoise": "Verwyder Geraas",
+      "sharpen": "Skerp",
+      "rotate": "Roteer",
+      "processImage": "Verwerk Beeld",
+      "back": "Terug",
+      "extractingText": "Onttrek teks uit beeld...",
+      "parsingMedications": "Ontleed medikasie...",
+      "reviewTitle": "Hersien Onttrekte Medikasie",
+      "noMedicationsFound": "Geen medikasie in die voorskrif gevind",
+      "tryAgain": "Probeer Weer",
+      "ocrTextPreview": "OCR Teks Voorskou",
+      "extractedMedications": "Onttrekte Medikasie",
+      "deselectAll": "Ontselekteer Alles",
+      "selectAll": "Selekteer Alles",
+      "edit": "Wysig",
+      "scanAnother": "Skandeer Nog Een",
+      "addSelected": "Voeg Geselekteerde By ({count})",
+      "editMedication": "Wysig Medikasie",
+      "cancel": "Kanselleer",
+      "save": "Stoor",
+      "frequency": "Frekvensie",
+      "instructions": "Instruksies",
+      "doctor": "Dokter",
+      "cameraError": "Kon nie kamera toegang kry nie. Kontroleer asseblief toestemmings.",
+      "invalidFileType": "Selekteer asseblief 'n geldige beeld lêer.",
+      "ocrError": "Kon nie teks uit beeld onttrek nie.",
+      "processingError": "Kon nie beeld verwerk nie.",
+      "processingComplete": "Suksesvol {count} medikasie onttrek"
     }
   },
   "schedule": {
@@ -116,13 +160,22 @@
     "save": "Stoor",
     "update": "Opdateer",
     "delete": "Verwyder",
-    "edit": "Redigeer",
+    "edit": "Wysig",
     "add": "Voeg By",
     "close": "Sluit",
     "details": "Besonderhede",
     "enable": "Aktiveer",
     "disable": "Deaktiveer",
-    "refresh": "Verfris"
+    "refresh": "Verfris",
+    "upload": "Oplaai",
+    "remove": "Verwyder",
+    "select": "Kies",
+    "search": "Soek",
+    "clear": "Maak Skoon",
+    "next": "Volgende",
+    "previous": "Vorige",
+    "submit": "Dien In",
+    "reset": "Herstel"
   },
   "footer": {
     "tagline": "Professionele Gesondheidsorg Bestuurstelsel",
@@ -138,26 +191,37 @@
   },
   "theme": {
     "switchToDark": "Skakel na donker modus",
-    "switchToLight": "Skakel na ligte modus",
+    "switchToLight": "Skakel na lig modus",
     "toggleTheme": "Wissel tema"
   },
   "validation": {
-    "medicationNameRequired": "Medikasie naam is verpligtend",
-    "dosageRequired": "Dosis is verpligtend",
-    "frequencyRequired": "Frekwensie is verpligtend",
-    "timeRequired": "Tyd is verpligtend",
+    "medicationNameRequired": "Medikasie naam is vereis",
+    "dosageRequired": "Dosis is vereis",
+    "frequencyRequired": "Frekwensie is vereis",
+    "timeRequired": "Tyd is vereis",
     "stockCannotBeNegative": "Voorraad kan nie negatief wees nie",
     "minStockCannotBeNegative": "Minimum voorraad kan nie negatief wees nie",
-    "instructionsRequired": "Instruksies is verpligtend",
-    "categoryRequired": "Kategorie is verpligtend",
-    "customTimeRequired": "Aangepaste tyd is verpligtend wanneer aangepaste tyd gebruik word",
-    "dosageAmountMustBePositive": "Dosis hoeveelheid moet positief wees"
+    "instructionsRequired": "Instruksies is vereis",
+    "categoryRequired": "Kategorie is vereis",
+    "customTimeRequired": "Aangepaste tyd is vereis wanneer aangepaste tydsberekening gebruik word",
+    "dosageAmountMustBePositive": "Dosis hoeveelheid moet positief wees",
+    "strengthRequired": "Medikasie sterkte is vereis",
+    "manufacturerRequired": "Vervaardiger is vereis",
+    "prescriptionNumberRequired": "Voorskrif nommer is vereis",
+    "prescribingDoctorRequired": "Voorskrywende dokter is vereis",
+    "expirationDateRequired": "Vervaldatum is vereis",
+    "expirationDateInvalid": "Vervaldatum kan nie in die verlede wees nie",
+    "imageSizeLimit": "Beeld grootte moet minder as 5MB wees",
+    "imageFormatInvalid": "Laai asseblief 'n geldige beeld lêer op (JPG, PNG, WebP)",
+    "icd10CodeRequired": "ICD-10 kode is vereis",
+    "activeIngredientsRequired": "Aktiewe bestanddele is vereis",
+    "sideEffectsRequired": "Newe-effek inligting is vereis"
   },
   "form": {
     "medicationName": "Medikasie Naam",
     "category": "Kategorie",
     "dosage": "Dosis",
-    "dosagePlaceholder": "bv., 500mg",
+    "dosagePlaceholder": "bv., Neem een tablet",
     "frequency": "Frekwensie",
     "selectFrequency": "Kies frekwensie",
     "time": "Tyd",
@@ -166,14 +230,344 @@
     "minimumStock": "Minimum Voorraad",
     "instructions": "Instruksies",
     "instructionsPlaceholder": "Spesiale instruksies vir die neem van hierdie medikasie...",
-    "scheduleInformation": "Skeduleer Inligting",
-    "scheduleTiming": "Skeduleer Tyd",
+    "scheduleInformation": "Skedule Inligting",
+    "scheduleTiming": "Skedule Tydsberekening",
     "morning": "Oggend",
     "noon": "Middag",
     "night": "Nag",
     "customTime": "Aangepaste Tyd",
     "dosageAmount": "Dosis Hoeveelheid",
-    "scheduleInstructions": "Skeduleer Instruksies",
-    "scheduleInstructionsPlaceholder": "Spesiale instruksies vir hierdie skeduleer..."
+    "scheduleInstructions": "Skedule Instruksies",
+    "scheduleInstructionsPlaceholder": "Spesiale instruksies vir hierdie skedule...",
+    "strength": "Medikasie Sterkte",
+    "strengthPlaceholder": "bv., 200mg, 500mg",
+    "manufacturer": "Vervaardiger",
+    "manufacturerPlaceholder": "Voer vervaardiger naam in",
+    "activeIngredients": "Aktiewe Bestanddele",
+    "activeIngredientsPlaceholder": "Lys aktiewe bestanddele...",
+    "sideEffects": "Newe-effekte",
+    "sideEffectsPlaceholder": "Algemene newe-effekte...",
+    "icd10Code": "ICD-10 Kode",
+    "icd10CodePlaceholder": "Soek ICD-10 kodes...",
+    "prescriptionNumber": "Voorskrif Nommer",
+    "prescriptionNumberPlaceholder": "Voer voorskrif nommer in",
+    "prescribingDoctor": "Voorskrywende Dokter",
+    "prescribingDoctorPlaceholder": "Voer dokter se naam in",
+    "expirationDate": "Vervaldatum",
+    "expirationDatePlaceholder": "Kies vervaldatum",
+    "medicationImage": "Medikasie Beeld",
+    "medicationImagePlaceholder": "Laai medikasie beeld op vir identifikasie",
+    "interactions": "Geneesmiddel Interaksies",
+    "interactionsPlaceholder": "Bekende geneesmiddel interaksies...",
+    "bulkEntry": "Grootmaat Medikasie Invoer",
+    "bulkEntryDescription": "Voeg veelvuldige medikasie by vanaf voorskrif data",
+    "addMedication": "Voeg Medikasie By",
+    "removeMedication": "Verwyder Medikasie",
+    "smartFrequency": "Slim Frekwensie Ontdekking",
+    "smartFrequencyDescription": "Ontdek outomaties frekwensie vanaf voorskrif teks",
+    "interactionWarnings": "Interaksie Waarskuwings",
+    "interactionWarningsDescription": "Kontroleer vir potensiële geneesmiddel interaksies",
+    "imageUpload": "Beeld Oplaai",
+    "imageUploadDescription": "Laai medikasie beeld op vir pil identifikasie",
+    "prescriptionDetails": "Voorskrif Besonderhede",
+    "prescriptionDetailsDescription": "Voer voorskrif en dokter inligting in",
+    "expirationTracking": "Vervaldatum Opvolging",
+    "expirationTrackingDescription": "Volg medikasie vervaldatums",
+    "basicInfo": "Basiese Inligting",
+    "details": "Medikasie Besonderhede",
+    "prescriptionDetails": "Voorskrif Besonderhede"
+  },
+  "bulk": {
+    "title": "Grootmaat Medikasie Invoer",
+    "description": "Voeg veelvuldige medikasie by vanaf jou voorskrif",
+    "addRow": "Voeg Medikasie By",
+    "removeRow": "Verwyder",
+    "importFromText": "Voer In vanaf Teks",
+    "importFromFile": "Voer In vanaf Lêer",
+    "exportToCSV": "Eksporteer na CSV",
+    "clearAll": "Maak Alles Skoon",
+    "preview": "Voorskou",
+    "saveAll": "Stoor Alle Medikasie",
+    "medicationCount": "{count} medikasie",
+    "importSuccess": "Suksesvol {count} medikasie ingevoer",
+    "importError": "Fout met invoer van medikasie",
+    "saveSuccess": "Suksesvol {count} medikasie gestoor",
+    "saveError": "Fout met stoor van medikasie"
+  },
+  "interactions": {
+    "title": "Geneesmiddel Interaksies",
+    "checking": "Kontroleer vir interaksies...",
+    "noInteractions": "Geen bekende interaksies gevind nie",
+    "interactionsFound": "{count} potensiële interaksies gevind",
+    "severity": {
+      "low": "Lae Risiko",
+      "moderate": "Matige Risiko",
+      "high": "Hoë Risiko",
+      "contraindicated": "Tegengestel"
+    },
+    "recommendations": "Aanbevelings",
+    "consultDoctor": "Raadpleeg jou dokter voordat jy hierdie medikasie saam neem",
+    "monitorClosely": "Monitor noukeurig vir newe-effekte",
+    "avoidCombination": "Vermy om hierdie medikasie saam te neem"
+  },
+  "icd10": {
+    "searchPlaceholder": "Soek ICD-10 kodes...",
+    "noResults": "Geen ICD-10 kodes gevind nie",
+    "loading": "Laai ICD-10 kodes...",
+    "selectCode": "Kies ICD-10 Kode",
+    "code": "Kode",
+    "description": "Beskrywing",
+    "category": "Kategorie"
+  },
+  "ocr": {
+    "title": "Voorskrif OCR Verwerker",
+    "description": "Laai 'n voorskrif beeld op om outomaties medikasie inligting te onttrek met OCR tegnologie.",
+    "upload": {
+      "title": "Laai Voorskrif Op",
+      "dragDrop": "Sleep & laat val voorskrif beelde hier",
+      "orClick": "of klik om lêers te blaai",
+      "supported": "Ondersteunde formate: JPG, PNG, PDF (maks 10MB elk)",
+      "selected": "Geselekteerde Lêers"
+    },
+    "processing": {
+      "title": "Verwerkings Opsies",
+      "contrast": "Kontras",
+      "brightness": "Helderheid",
+      "threshold": "Drempel",
+      "start": "Begin Verwerking",
+      "clear": "Maak Alles Skoon",
+      "reset": "Herstel Opsies",
+      "progress": "Verwerk..."
+    },
+    "results": {
+      "title": "Verwerkings Resultate",
+      "confidence": "Vertroue",
+      "warnings": "Verwerkings Waarskuwings",
+      "prescription": "Voorskrif Besonderhede",
+      "prescriptionNumber": "Voorskrif Nommer",
+      "doctor": "Voorskrywende Dokter",
+      "icd10": "ICD-10 Kodes",
+      "stats": "Verwerkings Statistieke",
+      "medications": "Medikasie Gevind",
+      "processingTime": "Verwerkings Tyd",
+      "avgConfidence": "Gemiddelde Vertroue",
+      "extractedMedications": "Onttrekte Medikasie",
+      "generic": "Generies",
+      "strength": "Sterkte",
+      "dosage": "Dosis",
+      "frequency": "Frekwensie",
+      "manufacturer": "Vervaardiger",
+      "instructions": "Instruksies",
+      "addToMedications": "Voeg by Medikasie",
+      "export": "Eksporteer Resultate",
+      "retry": "Probeer Weer met Verskillende Opsies"
+    },
+    "error": {
+      "title": "Verwerkings Fout"
+    }
+  },
+  "workflow": {
+    "title": "Voorskrif Werkvloei",
+    "description": "Verwerk jou voorskrif stap vir stap met outomatiese OCR en validering.",
+    "previous": "Vorige",
+    "next": "Volgende",
+    "steps": {
+      "capture": "Vang",
+      "captureDesc": "Laai voorskrif beeld op",
+      "ocr": "OCR",
+      "ocrDesc": "Verwerk met OCR",
+      "review": "Hersien",
+      "reviewDesc": "Hersien medikasie",
+      "validate": "Valideer",
+      "validateDesc": "Valideer medikasie",
+      "schedule": "Skeduleer",
+      "scheduleDesc": "Skep skedules",
+      "stock": "Voorraad",
+      "stockDesc": "Stel voorraad vlakke",
+      "save": "Stoor",
+      "saveDesc": "Bevestig en stoor"
+    },
+    "step1": {
+      "title": "Vang Voorskrif Beeld",
+      "camera": "Kamera Vang",
+      "upload": "Laai Beeld Op",
+      "dragDrop": "Sleep & laat val voorskrif beeld",
+      "orClick": "of klik om te blaai",
+      "preview": "Beeld Voorskou",
+      "startCamera": "Begin Kamera",
+      "stopCamera": "Stop Kamera",
+      "capture": "Vang"
+    },
+    "step2": {
+      "title": "OCR Verwerking",
+      "processing": "Verwerk voorskrif beeld...",
+      "progress": "Vordering: {progress}%",
+      "success": "OCR verwerking suksesvol voltooi!",
+      "extracted": "Onttrekte Inligting",
+      "patientName": "Pasiënt Naam",
+      "doctor": "Voorskrywende Dokter"
+    },
+    "step3": {
+      "title": "Hersien Onttrekte Medikasie",
+      "medication": "Medikasie {number}",
+      "addMedication": "Voeg Nog 'n Medikasie By"
+    },
+    "step4": {
+      "title": "Valideer Medikasie",
+      "valid": "Geldig",
+      "errors": "Foute",
+      "warnings": "Waarskuwings",
+      "validating": "Valideer",
+      "suggestions": "Voorstelle",
+      "databaseMatch": "Databasis Pas"
+    },
+    "step5": {
+      "title": "Skep Medikasie Skedules",
+      "timing": "Tydberekening",
+      "customTime": "Aangepaste Tyd",
+      "dosageAmount": "Dosis Hoeveelheid",
+      "instructions": "Instruksies",
+      "startDate": "Begin Datum",
+      "duration": "Duur (dae)",
+      "morning": "Oggend",
+      "noon": "Middag",
+      "night": "Nag",
+      "custom": "Aangepas"
+    },
+    "step6": {
+      "title": "Voorraad Vlakke en Herinnerings",
+      "initialStock": "Aanvanklike Voorraad",
+      "minStock": "Minimum Voorraad Waarskuwing",
+      "autoRefill": "Outo Herlaai",
+      "reminderTime": "Herinnering Tyd",
+      "reminderAdvance": "Herinnering Vooruit (minute)",
+      "notifications": "Kennisgewings",
+      "pushNotifications": "Druk Kennisgewings",
+      "emailNotifications": "E-pos Kennisgewings",
+      "smsNotifications": "SMS Kennisgewings"
+    },
+    "step7": {
+      "title": "Bevestig en Stoor",
+      "summary": "Voorskrif Opsomming",
+      "patientName": "Pasiënt",
+      "doctor": "Dokter",
+      "date": "Datum",
+      "pharmacy": "Apteek",
+      "medications": "Medikasie",
+      "totalQuantity": "Totale Hoeveelheid",
+      "validated": "Gevalideer",
+      "medicationsList": "Medikasie",
+      "units": "eenhede",
+      "saveOptions": "Stoor Opsies",
+      "savePrescription": "Stoor voorskrif rekord",
+      "createMedications": "Skep medikasie inskrywings",
+      "setupSchedules": "Stel medikasie skedules op",
+      "configureReminders": "Konfigureer herinnerings en waarskuwings",
+      "progressSaving": "Vordering Stoor",
+      "progressDescription": "Stoor jou vordering om later voort te gaan indien nodig.",
+      "saveProgress": "Stoor Vordering",
+      "saving": "Stoor...",
+      "loadProgress": "Laai Vordering",
+      "complete": "Voltooi Werkvloei",
+      "processing": "Verwerk..."
+    },
+    "success": {
+      "title": "Werkvloei Voltooi",
+      "close": "Sluit",
+      "completed": "Werkvloei suksesvol voltooi! {results}",
+      "progressSaved": "Vordering suksesvol gestoor",
+      "progressLoaded": "Vordering suksesvol gelaai"
+    },
+    "errors": {
+      "cameraAccess": "Kan nie kamera toegang kry nie",
+      "invalidFile": "Kies asseblief 'n beeld lêer",
+      "ocrFailed": "OCR verwerking het misluk",
+      "validationFailed": "Medikasie validering het misluk",
+      "saveProgressFailed": "Kon nie vordering stoor nie",
+      "loadProgressFailed": "Kon nie vordering laai nie",
+      "noProgressFound": "Geen gestoorde vordering gevind nie",
+      "completionFailed": "Kon nie werkvloei voltooi nie"
+    }
+  },
+  "demo": {
+    "title": "Voorskrif Werkvloei Demo",
+    "description": "Ervaar die volledige voorskrif verwerkings werkvloei met outomatiese OCR, validering en medikasie skedulering.",
+    "workflow": {
+      "title": "Probeer die Werkvloei"
+    },
+    "features": {
+      "capture": {
+        "title": "Beeld Vang",
+        "description": "Vang voorskrif beelde met kamera of laai op vanaf toestel"
+      },
+      "ocr": {
+        "title": "OCR Verwerking",
+        "description": "Outomatiese teks onttrekking met vordering opvolging"
+      },
+      "validation": {
+        "title": "Validering",
+        "description": "Valideer medikasie teen geneesmiddel databasis"
+      },
+      "scheduling": {
+        "title": "Skedulering",
+        "description": "Skep medikasie skedules en herinnerings"
+      },
+      "stock": {
+        "title": "Voorraad Bestuur",
+        "description": "Stel voorraad vlakke en outo-herlaai waarskuwings"
+      },
+      "save": {
+        "title": "Vordering Stoor",
+        "description": "Stoor vordering en hervat later"
+      }
+    },
+    "instructions": {
+      "title": "Hoe om te Gebruik",
+      "step1": {
+        "title": "Vang Beeld",
+        "description": "Gebruik jou toestel kamera of laai 'n voorskrif beeld op. Ondersteunde formate: JPG, PNG, PDF."
+      },
+      "step2": {
+        "title": "OCR Verwerking",
+        "description": "Die stelsel sal outomaties teks en medikasie inligting uit jou voorskrif beeld onttrek."
+      },
+      "step3": {
+        "title": "Hersien & Redigeer",
+        "description": "Hersien die onttrekte medikasie en redigeer enige inligting soos benodig. Voeg by of verwyder medikasie."
+      },
+      "step4": {
+        "title": "Valideer",
+        "description": "Elke medikasie word gevalideer teen die geneesmiddel databasis vir akkuraatheid en potensiële interaksies."
+      },
+      "step5": {
+        "title": "Skep Skedules",
+        "description": "Stel medikasie skedules op met tydberekening, dosis en duur vir elke medikasie."
+      },
+      "step6": {
+        "title": "Voorraad & Herinnerings",
+        "description": "Konfigureer voorraad vlakke, outo-herlaai instellings en kennisgewing voorkeure."
+      },
+      "step7": {
+        "title": "Stoor & Voltooi",
+        "description": "Hersien die opsomming en stoor jou voorskrif. Jy kan ook vordering stoor om later voort te gaan."
+      }
+    },
+    "tips": {
+      "title": "Wenke & Beste Praktyke",
+      "image": {
+        "title": "Beeld Kwaliteit",
+        "goodLighting": "Verseker goeie beligting wanneer beelde vang",
+        "steady": "Hou die kamera stabiel en vermy waas",
+        "angle": "Vang vanaf 'n reguit hoek vir beste resultate",
+        "resolution": "Gebruik hoë resolusie beelde wanneer moontlik"
+      },
+      "workflow": {
+        "title": "Werkvloei Wenke",
+        "save": "Stoor jou vordering gereeld vir komplekse voorskrifte",
+        "review": "Hersien altyd onttrekte inligting voordat jy voortgaan",
+        "validate": "Let op validering waarskuwings en foute",
+        "schedule": "Stel realistiese skedules op wat by jou daaglikse roetine pas"
+      }
+    }
   }
 } 
