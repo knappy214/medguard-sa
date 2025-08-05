@@ -12,6 +12,8 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@google-cloud/vision": "^4.0.2",
+    "@azure/cognitiveservices-computervision": "^8.2.0",
     "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.1.11",
     "axios": "^1.11.0",

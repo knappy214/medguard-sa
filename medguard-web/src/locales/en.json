@@ -274,8 +274,7 @@
     "expirationTracking": "Expiration Tracking",
     "expirationTrackingDescription": "Track medication expiration dates",
     "basicInfo": "Basic Information",
-    "details": "Medication Details",
-    "prescriptionDetails": "Prescription Details"
+    "details": "Medication Details"
   },
   "bulk": {
     "title": "Bulk Medication Entry",

@@ -274,8 +274,7 @@
     "expirationTracking": "Vervaldatum Opvolging",
     "expirationTrackingDescription": "Volg medikasie vervaldatums",
     "basicInfo": "Basiese Inligting",
-    "details": "Medikasie Besonderhede",
-    "prescriptionDetails": "Voorskrif Besonderhede"
+    "details": "Medikasie Besonderhede"
   },
   "bulk": {
     "title": "Grootmaat Medikasie Invoer",
