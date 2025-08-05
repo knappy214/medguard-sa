@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-08-05T20:25:22.567525",
+  "duration_seconds": 20.0046,
+  "dry_run": false,
+  "backup_created": true,
+  "backup_path": "backups\\medguard_backup_20250805_202523.sql",
+  "migration_results": {
+    "Database Connection Check": true,
+    "Database Backup": true,
+    "Migration Preview": true,
+    "Create Migrations": true,
+    "SQL Migration Review": true,
+    "Fake Initial Migration": true,
+    "Execute Migrations": true,
+    "Custom Data Migrations": true,
+    "Table Verification": false
+  },
+  "summary": {
+    "total_checks": 9,
+    "passed_checks": 8,
+    "failed_checks": 1
+  }
+}
