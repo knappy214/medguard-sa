@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en-ZA" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="description" content="Secure medication management and tracking for South African healthcare">
+    <meta name="keywords" content="medication management, healthcare, South Africa, prescription tracking, medical reminders">
+    
+    <title>MedGuard SA</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/api/pwa/manifest/">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'pwa/icons/icon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'pwa/icons/icon-16x16.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'pwa/icons/icon-192x192.png' %}">
+    
+    <!-- PWA Styles -->
+    <link rel="stylesheet" href="{% static 'pwa/css/app.css' %}">
+    
+    <!-- CSRF Token -->
+    {% csrf_token %}
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="{% static 'pwa/js/service-worker.js' %}" as="script">
+    <link rel="preload" href="{% static 'pwa/js/pwa-register.js' %}" as="script">
+    <link rel="preload" href="{% static 'pwa/js/offline-schedule.js' %}" as="script">
+    <link rel="preload" href="{% static 'pwa/js/background-sync.js' %}" as="script">
+</head>
+<body>
+    <!-- Offline Indicator -->
+    <div id="offline-indicator" class="offline-indicator">
+        <span>You are currently offline. Some features may be limited.</span>
+    </div>
+
+    <!-- App Shell Structure -->
+    <div class="pwa-app-shell">
+        <!-- Header -->
+        <header class="pwa-header">
+            <div class="header-content">
+                <h1>MedGuard SA</h1>
+                <div class="header-actions">
+                    <button id="sync-status-btn" class="pwa-btn pwa-btn-outline" title="Sync Status">
+                        <span class="sync-icon">🔄</span>
+                    </button>
+                    <button id="notifications-btn" class="pwa-btn pwa-btn-outline" title="Notifications">
+                        <span class="notification-icon">🔔</span>
+                        <span id="notification-count" class="notification-badge">0</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="pwa-main" id="main-content">
+            <!-- Loading State -->
+            <div id="loading-state" class="pwa-loading">
+                <div class="pwa-spinner"></div>
+                <p>Loading MedGuard SA...</p>
+            </div>
+
+            <!-- Content will be dynamically loaded here -->
+            <div id="dynamic-content" class="dynamic-content"></div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="pwa-nav" id="bottom-nav">
+            <a href="{% url 'home' %}" class="pwa-nav-item active" data-page="dashboard">
+                <span class="pwa-nav-icon">🏠</span>
+                <span class="pwa-nav-label">Dashboard</span>
+            </a>
+            <a href="{% url 'medications:list' %}" class="pwa-nav-item" data-page="medications">
+                <span class="pwa-nav-icon">💊</span>
+                <span class="pwa-nav-label">Medications</span>
+            </a>
+            <a href="{% url 'schedule:view' %}" class="pwa-nav-item" data-page="schedule">
+                <span class="pwa-nav-icon">📅</span>
+                <span class="pwa-nav-label">Schedule</span>
+            </a>
+            <a href="{% url 'emergency:view' %}" class="pwa-nav-item" data-page="emergency">
+                <span class="pwa-nav-icon">🚨</span>
+                <span class="pwa-nav-label">Emergency</span>
+            </a>
+            <a href="{% url 'settings:view' %}" class="pwa-nav-item" data-page="settings">
+                <span class="pwa-nav-icon">⚙️</span>
+                <span class="pwa-nav-label">Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Quick Actions Modal -->
+    <div id="quick-actions-modal" class="pwa-modal">
+        <div class="pwa-modal-content">
+            <div class="pwa-modal-header">
+                <h3>Quick Actions</h3>
+                <button class="pwa-modal-close" onclick="closeQuickActions()">×</button>
+            </div>
+            <div class="pwa-modal-body">
+                <div id="quick-actions-list" class="quick-actions-grid">
+                    <!-- Quick actions will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div id="notifications-modal" class="pwa-modal">
+        <div class="pwa-modal-content">
+            <div class="pwa-modal-header">
+                <h3>Notifications</h3>
+                <button class="pwa-modal-close" onclick="closeNotifications()">×</button>
+            </div>
+            <div class="pwa-modal-body">
+                <div id="notifications-list">
+                    <!-- Notifications will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sync Status Modal -->
+    <div id="sync-status-modal" class="pwa-modal">
+        <div class="pwa-modal-content">
+            <div class="pwa-modal-header">
+                <h3>Sync Status</h3>
+                <button class="pwa-modal-close" onclick="closeSyncStatus()">×</button>
+            </div>
+            <div class="pwa-modal-body">
+                <div id="sync-status-content">
+                    <!-- Sync status will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button id="fab" class="pwa-fab" onclick="showQuickActions()">
+        <span class="fab-icon">+</span>
+    </button>
+
+    <!-- Scripts -->
+    <script>
+        // Initial app data
+        window.medguardAppData = {{ content|safe }};
+        window.isCached = {{ is_cached|yesno:"true,false" }};
+        window.cacheTimestamp = "{{ cache_timestamp }}";
+    </script>
+    
+    <!-- PWA Scripts -->
+    <script src="{% static 'pwa/js/pwa-register.js' %}"></script>
+    <script src="{% static 'pwa/js/offline-schedule.js' %}"></script>
+    <script src="{% static 'pwa/js/background-sync.js' %}"></script>
+    <script src="{% static 'pwa/js/installable-pwa.js' %}"></script>
+    <script src="{% static 'pwa/js/offline-emergency.js' %}"></script>
+    <script src="{% static 'pwa/js/biometric-auth.js' %}"></script>
+    
+    <!-- App Shell Script -->
+    <script>
+        class MedGuardAppShell {
+            constructor() {
+                this.currentPage = 'dashboard';
+                this.appData = window.medguardAppData;
+                this.isOnline = navigator.onLine;
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.hideLoadingState();
+                this.renderDashboard();
+                this.updateNotifications();
+                this.setupNavigation();
+                this.checkSyncStatus();
+            }
+
+            setupEventListeners() {
+                // Navigation events
+                document.querySelectorAll('.pwa-nav-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const page = item.dataset.page;
+                        this.navigateToPage(page);
+                    });
+                });
+
+                // Modal events
+                document.getElementById('notifications-btn').addEventListener('click', () => {
+                    this.showNotifications();
+                });
+
+                document.getElementById('sync-status-btn').addEventListener('click', () => {
+                    this.showSyncStatus();
+                });
+
+                // Online/offline events
+                window.addEventListener('online', () => {
+                    this.isOnline = true;
+                    this.updateOnlineStatus();
+                    this.syncData();
+                });
+
+                window.addEventListener('offline', () => {
+                    this.isOnline = false;
+                    this.updateOnlineStatus();
+                });
+            }
+
+            hideLoadingState() {
+                document.getElementById('loading-state').style.display = 'none';
+                document.getElementById('dynamic-content').classList.add('show');
+            }
+
+            renderDashboard() {
+                const content = document.getElementById('dynamic-content');
+                
+                if (!this.appData.user.is_authenticated) {
+                    content.innerHTML = this.renderLoginPrompt();
+                    return;
+                }
+
+                content.innerHTML = `
+                    <div class="dashboard-container">
+                        <!-- Welcome Section -->
+                        <div class="pwa-card welcome-card">
+                            <div class="welcome-content">
+                                <h2>Welcome back, ${this.appData.user.first_name || this.appData.user.username}!</h2>
+                                <p>Here's your medication overview for today</p>
+                            </div>
+                        </div>
+
+                        <!-- Medication Summary -->
+                        <div class="pwa-card summary-card">
+                            <div class="pwa-card-header">
+                                <h3 class="pwa-card-title">Today's Summary</h3>
+                            </div>
+                            <div class="summary-stats">
+                                <div class="stat-item">
+                                    <span class="stat-number">${this.appData.medication_summary?.total_medications || 0}</span>
+                                    <span class="stat-label">Active Medications</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${this.appData.medication_summary?.active_prescriptions || 0}</span>
+                                    <span class="stat-label">Prescriptions</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">${this.appData.medication_summary?.overdue_count || 0}</span>
+                                    <span class="stat-label">Overdue</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Today's Schedule -->
+                        <div class="pwa-card schedule-card">
+                            <div class="pwa-card-header">
+                                <h3 class="pwa-card-title">Today's Schedule</h3>
+                                <a href="/schedule/" class="pwa-btn pwa-btn-outline">View All</a>
+                            </div>
+                            <div class="schedule-list">
+                                ${this.renderTodaySchedule()}
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="pwa-card actions-card">
+                            <div class="pwa-card-header">
+                                <h3 class="pwa-card-title">Quick Actions</h3>
+                            </div>
+                            <div class="quick-actions-grid">
+                                ${this.renderQuickActions()}
+                            </div>
+                        </div>
+
+                        <!-- Emergency Contacts -->
+                        <div class="pwa-card emergency-card">
+                            <div class="pwa-card-header">
+                                <h3 class="pwa-card-title">Emergency Contacts</h3>
+                                <a href="/emergency/contacts/" class="pwa-btn pwa-btn-outline">Manage</a>
+                            </div>
+                            <div class="emergency-contacts-list">
+                                ${this.renderEmergencyContacts()}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderTodaySchedule() {
+                const schedule = this.appData.medication_summary?.today_schedule || [];
+                
+                if (schedule.length === 0) {
+                    return '<p class="empty-state">No medications scheduled for today</p>';
+                }
+
+                return schedule.map(item => `
+                    <div class="schedule-item ${item.status}">
+                        <div class="schedule-time">${this.formatTime(item.scheduled_time)}</div>
+                        <div class="schedule-medication">${item.medication_name}</div>
+                        <div class="schedule-status">${item.status}</div>
+                    </div>
+                `).join('');
+            }
+
+            renderQuickActions() {
+                const actions = this.appData.quick_actions || [];
+                
+                return actions.map(action => `
+                    <button class="pwa-btn pwa-btn-${action.color}" onclick="appShell.handleQuickAction('${action.url}')">
+                        <span class="action-icon">${action.icon}</span>
+                        <span class="action-label">${action.label}</span>
+                    </button>
+                `).join('');
+            }
+
+            renderEmergencyContacts() {
+                const contacts = this.appData.emergency_contacts || [];
+                
+                if (contacts.length === 0) {
+                    return '<p class="empty-state">No emergency contacts added</p>';
+                }
+
+                return contacts.map(contact => `
+                    <div class="contact-item ${contact.is_primary ? 'primary' : ''}">
+                        <div class="contact-info">
+                            <div class="contact-name">${contact.name}</div>
+                            <div class="contact-relationship">${contact.relationship}</div>
+                        </div>
+                        <div class="contact-actions">
+                            <a href="tel:${contact.phone}" class="pwa-btn pwa-btn-primary">Call</a>
+                            ${contact.email ? `<a href="mailto:${contact.email}" class="pwa-btn pwa-btn-outline">Email</a>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            renderLoginPrompt() {
+                return `
+                    <div class="login-prompt">
+                        <div class="pwa-card">
+                            <h2>Welcome to MedGuard SA</h2>
+                            <p>Please log in to access your medication management features.</p>
+                            <div class="login-actions">
+                                <a href="/accounts/login/" class="pwa-btn pwa-btn-primary">Log In</a>
+                                <a href="/accounts/register/" class="pwa-btn pwa-btn-outline">Register</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            navigateToPage(page) {
+                // Update navigation
+                document.querySelectorAll('.pwa-nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelector(`[data-page="${page}"]`).classList.add('active');
+
+                this.currentPage = page;
+
+                // Load page content
+                this.loadPageContent(page);
+            }
+
+            async loadPageContent(page) {
+                const content = document.getElementById('dynamic-content');
+                content.innerHTML = '<div class="pwa-loading"><div class="pwa-spinner"></div><p>Loading...</p></div>';
+
+                try {
+                    const response = await fetch(`/api/pwa/pages/${page}/`);
+                    if (response.ok) {
+                        const pageData = await response.json();
+                        content.innerHTML = pageData.html;
+                    } else {
+                        content.innerHTML = '<div class="error-state"><p>Failed to load page</p></div>';
+                    }
+                } catch (error) {
+                    console.error('Failed to load page:', error);
+                    content.innerHTML = '<div class="error-state"><p>Network error</p></div>';
+                }
+            }
+
+            updateNotifications() {
+                const notifications = this.appData.notifications || [];
+                const count = notifications.length;
+                const badge = document.getElementById('notification-count');
+                
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.classList.add('show');
+                } else {
+                    badge.classList.remove('show');
+                }
+            }
+
+            showNotifications() {
+                const modal = document.getElementById('notifications-modal');
+                const list = document.getElementById('notifications-list');
+                const notifications = this.appData.notifications || [];
+
+                if (notifications.length === 0) {
+                    list.innerHTML = '<p class="empty-state">No notifications</p>';
+                } else {
+                    list.innerHTML = notifications.map(notification => `
+                        <div class="notification-item ${notification.type}">
+                            <div class="notification-content">
+                                <div class="notification-title">${notification.title}</div>
+                                <div class="notification-message">${notification.message}</div>
+                                <div class="notification-time">${this.formatTime(notification.time)}</div>
+                            </div>
+                            <div class="notification-actions">
+                                <button class="pwa-btn pwa-btn-primary" onclick="appShell.handleNotification('${notification.id}')">
+                                    Action
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                modal.classList.add('show');
+            }
+
+            showSyncStatus() {
+                const modal = document.getElementById('sync-status-modal');
+                const content = document.getElementById('sync-status-content');
+                const status = this.appData.offline_status;
+
+                content.innerHTML = `
+                    <div class="sync-status">
+                        <div class="status-item">
+                            <span class="status-label">Connection:</span>
+                            <span class="status-value ${status.is_online ? 'online' : 'offline'}">
+                                ${status.is_online ? 'Online' : 'Offline'}
+                            </span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Last Sync:</span>
+                            <span class="status-value">${status.last_sync || 'Never'}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Pending Items:</span>
+                            <span class="status-value">${status.offline_data_count}</span>
+                        </div>
+                        <div class="sync-actions">
+                            <button class="pwa-btn pwa-btn-primary" onclick="appShell.triggerSync()">
+                                Sync Now
+                            </button>
+                            <button class="pwa-btn pwa-btn-outline" onclick="appShell.clearCache()">
+                                Clear Cache
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                modal.classList.add('show');
+            }
+
+            updateOnlineStatus() {
+                const indicator = document.getElementById('offline-indicator');
+                if (!this.isOnline) {
+                    indicator.classList.add('show');
+                } else {
+                    indicator.classList.remove('show');
+                }
+            }
+
+            async syncData() {
+                if (window.backgroundSync) {
+                    await window.backgroundSync.triggerSync();
+                }
+            }
+
+            async triggerSync() {
+                try {
+                    const response = await fetch('/api/pwa/sync/', { method: 'POST' });
+                    if (response.ok) {
+                        console.log('Sync triggered successfully');
+                    }
+                } catch (error) {
+                    console.error('Sync failed:', error);
+                }
+            }
+
+            async clearCache() {
+                try {
+                    const response = await fetch('/api/pwa/clear-cache/', { method: 'POST' });
+                    if (response.ok) {
+                        console.log('Cache cleared successfully');
+                        location.reload();
+                    }
+                } catch (error) {
+                    console.error('Cache clear failed:', error);
+                }
+            }
+
+            handleQuickAction(url) {
+                window.location.href = url;
+            }
+
+            handleNotification(id) {
+                // Handle notification action
+                console.log('Handling notification:', id);
+            }
+
+            setupNavigation() {
+                // Set up navigation based on current page
+                const currentPage = window.location.pathname.split('/')[1] || 'dashboard';
+                this.navigateToPage(currentPage);
+            }
+
+            checkSyncStatus() {
+                // Check sync status periodically
+                setInterval(() => {
+                    if (this.isOnline) {
+                        this.syncData();
+                    }
+                }, 5 * 60 * 1000); // Every 5 minutes
+            }
+
+            formatTime(isoString) {
+                const date = new Date(isoString);
+                return date.toLocaleTimeString('en-ZA', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            }
+        }
+
+        // Initialize app shell when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.appShell = new MedGuardAppShell();
+        });
+
+        // Modal functions
+        function closeQuickActions() {
+            document.getElementById('quick-actions-modal').classList.remove('show');
+        }
+
+        function closeNotifications() {
+            document.getElementById('notifications-modal').classList.remove('show');
+        }
+
+        function closeSyncStatus() {
+            document.getElementById('sync-status-modal').classList.remove('show');
+        }
+
+        function showQuickActions() {
+            const modal = document.getElementById('quick-actions-modal');
+            const list = document.getElementById('quick-actions-list');
+            const actions = window.medguardAppData?.quick_actions || [];
+
+            list.innerHTML = actions.map(action => `
+                <button class="pwa-btn pwa-btn-${action.color}" onclick="window.location.href='${action.url}'">
+                    <span class="action-icon">${action.icon}</span>
+                    <span class="action-label">${action.label}</span>
+                </button>
+            `).join('');
+
+            modal.classList.add('show');
+        }
+
+        // Close modals when clicking outside
+        window.addEventListener('click', (event) => {
+            const modals = document.querySelectorAll('.pwa-modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
