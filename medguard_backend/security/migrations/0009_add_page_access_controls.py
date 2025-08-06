@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('security', '0008_add_wagtail_audit_log'),
-        ('wagtailcore', '0095_query_searchpromotion_querydailyhits'),
+        ('wagtailcore', '0001_squashed_0016_change_page_url_path_to_text_field'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

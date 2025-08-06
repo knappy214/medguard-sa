@@ -10,6 +10,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls.i18n import i18n_patterns
+from django.views.generic import RedirectView
 from users import views as user_views
 
 # Admin site customization
@@ -31,6 +32,9 @@ urlpatterns = [
 
 # Non-translatable URLs (admin, etc.)
 urlpatterns += [
+    # Favicon
+    path('favicon.ico', RedirectView.as_view(url='/static/wagtailadmin/images/favicon.ico', permanent=True)),
+    
     # Internationalization
     path('i18n/', include('django.conf.urls.i18n')),
     

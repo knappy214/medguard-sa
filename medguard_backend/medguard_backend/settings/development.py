@@ -98,11 +98,11 @@ if DEBUG:
     DEBUG_TOOLBAR_CONFIG = {
         'SHOW_TOOLBAR_CALLBACK': lambda request: True,
         'SHOW_COLLAPSED': True,
-        'SHOW_TEMPLATE_CONTEXT': True,
+        'SHOW_TEMPLATE_CONTEXT': False,  # Disabled to prevent URLResolver name lookup errors
         'IS_RUNNING_TESTS': False,
     }
     
-    # Debug toolbar panels
+    # Debug toolbar panels - templates panel disabled to prevent URLResolver name lookup errors
     DEBUG_TOOLBAR_PANELS = [
         'debug_toolbar.panels.versions.VersionsPanel',
         'debug_toolbar.panels.timer.TimerPanel',
@@ -111,7 +111,7 @@ if DEBUG:
         'debug_toolbar.panels.request.RequestPanel',
         'debug_toolbar.panels.sql.SQLPanel',
         'debug_toolbar.panels.staticfiles.StaticFilesPanel',
-        'debug_toolbar.panels.templates.TemplatesPanel',
+        # 'debug_toolbar.panels.templates.TemplatesPanel',  # Disabled - causes URLResolver name lookup errors
         'debug_toolbar.panels.cache.CachePanel',
         'debug_toolbar.panels.signals.SignalsPanel',
         'debug_toolbar.panels.logging.LoggingPanel',

@@ -471,6 +471,39 @@ def log_audit_event(
     )
 
 
+def log_security_event(
+    user: Optional[User],
+    action: str,
+    description: str,
+    severity: str = AuditLog.Severity.HIGH,
+    request=None,
+    metadata: Optional[Dict] = None
+) -> AuditLog:
+    """
+    Convenience function for logging security events.
+    
+    Args:
+        user: User involved in the security event
+        action: Type of security action
+        description: Description of the security event
+        severity: Severity level (defaults to HIGH for security events)
+        request: HTTP request object
+        metadata: Additional metadata
+        
+    Returns:
+        Created AuditLog instance
+    """
+    audit_logger = get_audit_logger()
+    return audit_logger.log_security_event(
+        user=user,
+        action=action,
+        description=description,
+        severity=severity,
+        request=request,
+        metadata=metadata
+    )
+
+
 class AuditMiddleware:
     """
     Django middleware for automatic audit logging.

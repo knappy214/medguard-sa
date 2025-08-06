@@ -23,13 +23,11 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from wagtail.forms import WagtailAdminPageForm
-from wagtail.admin.forms import WagtailAdminModelForm
-from wagtail.forms.forms import BaseForm
+from wagtail.admin.forms import WagtailAdminPageForm, WagtailAdminModelForm
 
-from .models import SecurityEvent, FormSubmissionLog, RateLimitViolation
+from .models import SecurityEvent
 from .audit import log_security_event
-from .encryption import encrypt_form_data, decrypt_form_data
+from .encryption import encrypt_sensitive_data, decrypt_sensitive_data
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -559,7 +557,7 @@ def secure_form_submission(form_type: str, security_level: str = 'medium'):
 # Wagtail integration
 def register_secure_forms():
     """Register secure forms with Wagtail."""
-    from wagtail.forms.forms import BaseForm
+    from django import forms
     
-    # Override default form classes
-    BaseForm.__bases__ = (HealthcareFormSecurityMixin,) + BaseForm.__bases__ 
+    # Override default form classes - using Django's Form as base
+    forms.Form.__bases__ = (HealthcareFormSecurityMixin,) + forms.Form.__bases__ 

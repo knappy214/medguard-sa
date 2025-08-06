@@ -255,4 +255,48 @@ def decrypt_sensitive_data(data: Dict[str, Any], fields_to_decrypt: list) -> Dic
         Dictionary with sensitive fields decrypted
     """
     encryption_service = get_encryption_service()
-    return encryption_service.decrypt_dict(data, fields_to_decrypt) 
+    return encryption_service.decrypt_dict(data, fields_to_decrypt)
+
+
+# Key storage for encryption keys (in-memory for now, should be replaced with secure storage)
+_key_store = {}
+
+
+def store_encryption_key(key_id: str, key: bytes) -> None:
+    """
+    Store an encryption key securely.
+    
+    Args:
+        key_id: Unique identifier for the key
+        key: The encryption key to store
+        
+    Note:
+        This is a simple in-memory implementation. In production,
+        keys should be stored in a secure key management system.
+    """
+    global _key_store
+    _key_store[key_id] = key
+    logger.info(f"Stored encryption key: {key_id}")
+
+
+def get_encryption_key(key_id: str) -> Optional[bytes]:
+    """
+    Retrieve an encryption key by ID.
+    
+    Args:
+        key_id: Unique identifier for the key
+        
+    Returns:
+        The encryption key if found, None otherwise
+        
+    Note:
+        This is a simple in-memory implementation. In production,
+        keys should be retrieved from a secure key management system.
+    """
+    global _key_store
+    key = _key_store.get(key_id)
+    if key:
+        logger.debug(f"Retrieved encryption key: {key_id}")
+    else:
+        logger.warning(f"Encryption key not found: {key_id}")
+    return key 

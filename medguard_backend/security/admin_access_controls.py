@@ -20,15 +20,13 @@ from django.http import HttpRequest
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from wagtail.admin.auth import require_admin_access
-from wagtail.admin.decorators import require_admin_access
 from wagtail.admin.forms import WagtailAdminPageForm
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel
 from wagtail.admin.views.pages import listing
-from wagtail.permissions import PermissionPolicy
+from wagtail.permissions import ModelPermissionPolicy
 
-from .models import SecurityEvent, AdminAccessLog, HealthcareRole
+from .models import SecurityEvent, HealthcareRole
 from .audit import log_security_event
-from .session_management import get_user_session_info
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -384,7 +382,7 @@ class SecureAdminAccessMiddleware:
         )
 
 
-class HealthcareAdminPermissionPolicy(PermissionPolicy):
+class HealthcareAdminPermissionPolicy(ModelPermissionPolicy):
     """
     Custom permission policy for healthcare admin access.
     """
