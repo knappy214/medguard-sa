@@ -263,6 +263,65 @@ class Notification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    # Wagtail 7.0.2: Enhanced search configuration
+    search_fields = [
+        # Primary search fields with boost factors
+        index.SearchField('title', boost=3.0, partial_match=True),
+        index.SearchField('content', boost=2.0),
+        index.SearchField('notification_type', boost=1.5),
+        index.SearchField('priority', boost=1.2),
+        
+        # Autocomplete fields for quick search
+        index.AutocompleteField('title'),
+        index.AutocompleteField('notification_type'),
+        index.AutocompleteField('priority'),
+        
+        # Filter fields for faceted search
+        index.FilterField('notification_type'),
+        index.FilterField('priority'),
+        index.FilterField('status'),
+        index.FilterField('is_active'),
+        index.FilterField('scheduled_at'),
+        index.FilterField('expires_at'),
+        index.FilterField('created_by'),
+    ]
+    
+    # Wagtail 7.0.2: Enhanced admin panels with improved organization
+    panels = [
+        # Basic Information Panel
+        MultiFieldPanel([
+            FieldPanel('title'),
+            FieldPanel('content'),
+            FieldPanel('notification_type'),
+            FieldPanel('priority'),
+            FieldPanel('status'),
+        ], heading=_('Basic Information'), classname='collapsible'),
+        
+        # Target Audience Panel
+        MultiFieldPanel([
+            FieldPanel('target_user_types'),
+            FieldPanel('target_users'),
+        ], heading=_('Target Audience'), classname='collapsible'),
+        
+        # Scheduling Panel
+        MultiFieldPanel([
+            FieldPanel('scheduled_at'),
+            FieldPanel('expires_at'),
+        ], heading=_('Scheduling'), classname='collapsible'),
+        
+        # Display Settings Panel
+        MultiFieldPanel([
+            FieldPanel('is_active'),
+            FieldPanel('show_on_dashboard'),
+            FieldPanel('require_acknowledgment'),
+        ], heading=_('Display Settings'), classname='collapsible'),
+        
+        # Metadata Panel
+        MultiFieldPanel([
+            FieldPanel('created_by'),
+        ], heading=_('Metadata'), classname='collapsible'),
+    ]
+    
     class Meta:
         verbose_name = _('Notification')
         verbose_name_plural = _('Notifications')
@@ -279,7 +338,7 @@ class Notification(models.Model):
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"{self.title} ({self.get_priority_display()})"
+        return f"{self.title} ({self.get_notification_type_display()})"
     
     @property
     def is_expired(self):
@@ -300,19 +359,111 @@ class Notification(models.Model):
         """Check if notification is critical priority."""
         return self.priority == self.Priority.CRITICAL
     
+    # Wagtail 7.0.2: Enhanced validation with improved error messages
     def clean(self):
-        """Custom validation for the model."""
-        # Validate expires_at is after scheduled_at
-        if self.scheduled_at and self.expires_at and self.expires_at <= self.scheduled_at:
+        """Enhanced validation for the notification model."""
+        super().clean()
+        
+        # Validate title length and content
+        if len(self.title.strip()) < 5:
             raise ValidationError({
-                'expires_at': _('Expiration date must be after scheduled date')
+                'title': _('Title must be at least 5 characters long.')
             })
         
-        # Validate target_user_types is a list
-        if not isinstance(self.target_user_types, list):
+        if len(self.title) > 200:
             raise ValidationError({
-                'target_user_types': _('Target user types must be a list')
+                'title': _('Title cannot exceed 200 characters.')
             })
+        
+        # Validate content is not empty
+        if not self.content or len(self.content.strip()) < 10:
+            raise ValidationError({
+                'content': _('Content must be at least 10 characters long.')
+            })
+        
+        # Validate scheduling logic
+        if self.scheduled_at and self.expires_at:
+            if self.scheduled_at >= self.expires_at:
+                raise ValidationError({
+                    'expires_at': _('Expiration date must be after scheduled date.')
+                })
+        
+        # Validate target user types format
+        if self.target_user_types and not isinstance(self.target_user_types, list):
+            raise ValidationError({
+                'target_user_types': _('Target user types must be a list.')
+            })
+        
+        # Validate status transitions
+        if self.pk:  # Only for existing notifications
+            old_instance = Notification.objects.get(pk=self.pk)
+            if old_instance.status == self.Status.ARCHIVED and self.status != self.Status.ARCHIVED:
+                raise ValidationError({
+                    'status': _('Archived notifications cannot be reactivated.')
+                })
+        
+        # Validate critical notifications require acknowledgment
+        if self.priority == self.Priority.CRITICAL and not self.require_acknowledgment:
+            raise ValidationError({
+                'require_acknowledgment': _('Critical notifications must require acknowledgment.')
+            })
+    
+    # Wagtail 7.0.2: Enhanced admin methods
+    def get_admin_display_title(self):
+        """Return the title to display in admin."""
+        priority_icon = {
+            self.Priority.LOW: '🔵',
+            self.Priority.MEDIUM: '🟡',
+            self.Priority.HIGH: '🟠',
+            self.Priority.CRITICAL: '🔴',
+        }
+        icon = priority_icon.get(self.priority, '⚪')
+        return f"{icon} {self.title}"
+    
+    def get_admin_display_subtitle(self):
+        """Return the subtitle to display in admin."""
+        status_info = f"Status: {self.get_status_display()}"
+        if self.is_expired:
+            status_info += " (Expired)"
+        elif self.is_scheduled:
+            status_info += " (Scheduled)"
+        return f"{self.get_notification_type_display()} - {status_info}"
+    
+    def get_admin_url(self):
+        """Return the admin URL for this notification."""
+        from django.urls import reverse
+        return reverse('admin:medguard_notifications_notification_change', args=[self.id])
+    
+    def get_absolute_url(self):
+        """Return the public URL for this notification."""
+        return f"/notifications/{self.id}/"
+    
+    # Wagtail 7.0.2: Enhanced search methods
+    def get_search_display_title(self):
+        """Return the title to display in search results."""
+        return self.title
+    
+    def get_search_description(self):
+        """Return the description to display in search results."""
+        # Strip HTML tags for search description
+        import re
+        clean_content = re.sub(r'<[^>]+>', '', self.content)
+        return clean_content[:200] + "..." if len(clean_content) > 200 else clean_content
+    
+    def get_search_url(self, request=None):
+        """Return the URL for this notification in search results."""
+        return self.get_absolute_url()
+    
+    def get_search_meta(self):
+        """Return additional metadata for search results."""
+        return {
+            'notification_type': self.get_notification_type_display(),
+            'priority': self.get_priority_display(),
+            'status': self.get_status_display(),
+            'is_active': self.is_active,
+            'is_expired': self.is_expired,
+            'is_scheduled': self.is_scheduled,
+        }
 
 
 class UserNotification(models.Model):

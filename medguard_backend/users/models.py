@@ -6,6 +6,8 @@ from django.utils.translation import gettext_lazy as _
 from PIL import Image as PILImage
 from io import BytesIO
 from django.core.files import File
+from wagtail.admin.panels import FieldPanel, MultiFieldPanel, InlinePanel, HelpPanel
+from wagtail.search import index
 
 
 class User(AbstractUser):
@@ -132,6 +134,103 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
     
+    # Wagtail 7.0.2: Enhanced search configuration with improved indexing
+    search_fields = [
+        # Primary search fields with boost factors
+        index.SearchField('username', boost=2.0),
+        index.SearchField('email', boost=2.0),
+        index.SearchField('first_name', boost=1.5),
+        index.SearchField('last_name', boost=1.5),
+        index.SearchField('phone', boost=1.0),
+        index.SearchField('address', boost=1.0),
+        index.SearchField('city', boost=1.0),
+        
+        # Autocomplete fields for quick search
+        index.AutocompleteField('username'),
+        index.AutocompleteField('email'),
+        index.AutocompleteField('first_name'),
+        index.AutocompleteField('last_name'),
+        index.AutocompleteField('phone'),
+        
+        # Filter fields for faceted search
+        index.FilterField('user_type'),
+        index.FilterField('gender'),
+        index.FilterField('province'),
+        index.FilterField('blood_type'),
+        index.FilterField('preferred_language'),
+        index.FilterField('timezone'),
+        index.FilterField('is_active'),
+        index.FilterField('is_staff'),
+        index.FilterField('date_joined'),
+        index.FilterField('last_login'),
+    ]
+    
+    # Wagtail 7.0.2: Enhanced admin panels with improved widgets
+    panels = [
+        # Basic Information Panel
+        MultiFieldPanel([
+            FieldPanel('username'),
+            FieldPanel('email'),
+            FieldPanel('first_name'),
+            FieldPanel('last_name'),
+            FieldPanel('user_type'),
+        ], heading=_('Basic Information'), classname='collapsible'),
+        
+        # Contact Information Panel
+        MultiFieldPanel([
+            FieldPanel('phone'),
+            FieldPanel('address'),
+            FieldPanel('city'),
+            FieldPanel('province'),
+            FieldPanel('postal_code'),
+        ], heading=_('Contact Information'), classname='collapsible'),
+        
+        # Personal Information Panel
+        MultiFieldPanel([
+            FieldPanel('date_of_birth'),
+            FieldPanel('gender'),
+            FieldPanel('blood_type'),
+        ], heading=_('Personal Information'), classname='collapsible'),
+        
+        # Medical Information Panel
+        MultiFieldPanel([
+            FieldPanel('allergies'),
+            FieldPanel('medical_conditions'),
+            FieldPanel('current_medications'),
+        ], heading=_('Medical Information'), classname='collapsible'),
+        
+        # Emergency Contact Panel
+        MultiFieldPanel([
+            FieldPanel('emergency_contact_name'),
+            FieldPanel('emergency_contact_phone'),
+            FieldPanel('emergency_contact_relationship'),
+        ], heading=_('Emergency Contact'), classname='collapsible'),
+        
+        # Account Settings Panel
+        MultiFieldPanel([
+            FieldPanel('preferred_language'),
+            FieldPanel('timezone'),
+            FieldPanel('email_notifications'),
+            FieldPanel('sms_notifications'),
+            FieldPanel('mfa_enabled'),
+        ], heading=_('Account Settings'), classname='collapsible'),
+        
+        # Security Panel
+        MultiFieldPanel([
+            FieldPanel('is_active'),
+            FieldPanel('is_staff'),
+            FieldPanel('is_superuser'),
+            FieldPanel('groups'),
+            FieldPanel('user_permissions'),
+        ], heading=_('Security & Permissions'), classname='collapsible'),
+        
+        # Timestamps Panel
+        MultiFieldPanel([
+            FieldPanel('date_joined'),
+            FieldPanel('last_login'),
+        ], heading=_('Timestamps'), classname='collapsible'),
+    ]
+    
     class Meta:
         verbose_name = _('User')
         verbose_name_plural = _('Users')
@@ -156,6 +255,45 @@ class User(AbstractUser):
     def display_name(self):
         """Return a display name for the user"""
         return self.full_name or self.email
+    
+    # Wagtail 7.0.2: Enhanced admin display methods
+    def get_admin_display_title(self):
+        """Return the title to display in the admin interface"""
+        return f"{self.display_name} ({self.email})"
+    
+    def get_admin_display_subtitle(self):
+        """Return the subtitle to display in the admin interface"""
+        return f"{self.get_user_type_display()} • {self.city or 'No city'}"
+    
+    def get_admin_url(self):
+        """Return the admin URL for this user"""
+        from django.urls import reverse
+        return reverse('admin:users_user_change', args=[self.pk])
+    
+    def get_absolute_url(self):
+        """Return the absolute URL for this user"""
+        from django.urls import reverse
+        return reverse('user_detail', args=[self.pk])
+    
+    def get_search_display_title(self):
+        """Return the title to display in search results"""
+        return self.get_admin_display_title()
+    
+    def get_search_description(self):
+        """Return the description to display in search results"""
+        return f"{self.get_user_type_display()} • {self.phone or 'No phone'}"
+    
+    def get_search_url(self, request=None):
+        """Return the URL to display in search results"""
+        return self.get_admin_url()
+    
+    def get_search_meta(self):
+        """Return additional metadata for search results"""
+        return {
+            'user_type': self.user_type,
+            'is_active': self.is_active,
+            'date_joined': self.date_joined.isoformat() if self.date_joined else None,
+        }
 
 
 class UserAvatar(models.Model):
@@ -170,6 +308,29 @@ class UserAvatar(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # Wagtail 7.0.2: Enhanced search configuration
+    search_fields = [
+        index.SearchField('user__username', boost=2.0),
+        index.SearchField('user__email', boost=2.0),
+        index.SearchField('user__first_name', boost=1.5),
+        index.SearchField('user__last_name', boost=1.5),
+        index.FilterField('created_at'),
+        index.FilterField('updated_at'),
+    ]
+    
+    # Wagtail 7.0.2: Enhanced admin panels
+    panels = [
+        MultiFieldPanel([
+            FieldPanel('user'),
+            FieldPanel('image'),
+        ], heading=_('Avatar Information'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('created_at'),
+            FieldPanel('updated_at'),
+        ], heading=_('Timestamps'), classname='collapsible'),
+    ]
     
     class Meta:
         verbose_name = _('User Avatar')
@@ -280,6 +441,49 @@ class UserProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    # Wagtail 7.0.2: Enhanced search configuration
+    search_fields = [
+        index.SearchField('user__username', boost=2.0),
+        index.SearchField('user__email', boost=2.0),
+        index.SearchField('professional_title', boost=1.5),
+        index.SearchField('license_number', boost=1.5),
+        index.SearchField('specialization', boost=1.5),
+        index.SearchField('facility_name', boost=1.0),
+        index.SearchField('facility_address', boost=1.0),
+        index.SearchField('facility_phone', boost=1.0),
+        index.FilterField('created_at'),
+        index.FilterField('updated_at'),
+    ]
+    
+    # Wagtail 7.0.2: Enhanced admin panels
+    panels = [
+        MultiFieldPanel([
+            FieldPanel('user'),
+        ], heading=_('User Information'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('professional_title'),
+            FieldPanel('license_number'),
+            FieldPanel('specialization'),
+        ], heading=_('Professional Information'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('facility_name'),
+            FieldPanel('facility_address'),
+            FieldPanel('facility_phone'),
+        ], heading=_('Facility Information'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('notification_preferences'),
+            FieldPanel('privacy_settings'),
+        ], heading=_('Preferences'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('created_at'),
+            FieldPanel('updated_at'),
+        ], heading=_('Timestamps'), classname='collapsible'),
+    ]
+    
     class Meta:
         verbose_name = _('User Profile')
         verbose_name_plural = _('User Profiles')
@@ -287,6 +491,46 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return f"Profile for {self.user.email}"
+    
+    # Wagtail 7.0.2: Enhanced admin display methods
+    def get_admin_display_title(self):
+        """Return the title to display in the admin interface"""
+        return f"Profile: {self.user.display_name}"
+    
+    def get_admin_display_subtitle(self):
+        """Return the subtitle to display in the admin interface"""
+        return f"{self.professional_title or 'No title'} • {self.facility_name or 'No facility'}"
+    
+    def get_admin_url(self):
+        """Return the admin URL for this profile"""
+        from django.urls import reverse
+        return reverse('admin:users_userprofile_change', args=[self.pk])
+    
+    def get_absolute_url(self):
+        """Return the absolute URL for this profile"""
+        from django.urls import reverse
+        return reverse('user_profile_detail', args=[self.pk])
+    
+    def get_search_display_title(self):
+        """Return the title to display in search results"""
+        return self.get_admin_display_title()
+    
+    def get_search_description(self):
+        """Return the description to display in search results"""
+        return f"{self.professional_title or 'No title'} • {self.specialization or 'No specialization'}"
+    
+    def get_search_url(self, request=None):
+        """Return the URL to display in search results"""
+        return self.get_admin_url()
+    
+    def get_search_meta(self):
+        """Return additional metadata for search results"""
+        return {
+            'professional_title': self.professional_title,
+            'specialization': self.specialization,
+            'facility_name': self.facility_name,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
     
     @property
     def avatar_url(self):

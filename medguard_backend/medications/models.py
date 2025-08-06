@@ -16,15 +16,17 @@ from wagtail.blocks import (
     CharBlock, TextBlock, IntegerBlock, DecimalBlock, BooleanBlock,
     DateBlock, TimeBlock, ChoiceBlock, URLBlock, EmailBlock,
     StructBlock, ListBlock, StreamBlock, PageChooserBlock,
-    RawHTMLBlock, StaticBlock, RichTextBlock
+    RawHTMLBlock, StaticBlock, RichTextBlock, DateTimeBlock
 )
 from wagtail.images.blocks import ImageChooserBlock
+from wagtail.snippets.blocks import SnippetChooserBlock
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel, InlinePanel
 from wagtail.search import index
 from wagtail.images.models import Image
 from wagtail.blocks.field_block import FieldBlock
 from wagtail.blocks.struct_block import StructBlockValidationError
 from wagtail.rich_text import expand_db_html
+from wagtail.snippets.models import register_snippet
 import re
 
 User = get_user_model()
@@ -1103,6 +1105,42 @@ class Medication(models.Model):
         help_text=_('Manufacturer of the medication')
     )
     
+    # Wagtail 7.0.2: Enhanced ForeignKey relationships to snippet models
+    manufacturer_snippet = models.ForeignKey(
+        'medications.MedicationManufacturer',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='medications',
+        help_text=_('Manufacturer information from snippet')
+    )
+    
+    category = models.ForeignKey(
+        'medications.MedicationCategory',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='medications',
+        help_text=_('Medication category')
+    )
+    
+    dosage_form = models.ForeignKey(
+        'medications.DosageForm',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='medications',
+        help_text=_('Dosage form of the medication')
+    )
+    
+    # Many-to-many relationship with active ingredients
+    active_ingredients_snippets = models.ManyToManyField(
+        'medications.ActiveIngredient',
+        blank=True,
+        related_name='medications',
+        help_text=_('Active ingredients from snippets')
+    )
+    
     # Safety information
     side_effects = models.TextField(
         blank=True,
@@ -1239,6 +1277,181 @@ class Medication(models.Model):
         help_text=_('Level of image optimization applied')
     )
     
+    # Wagtail 7.0.2: Enhanced image fields with improved integration
+    medication_image = models.ForeignKey(
+        Image,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='medication_images',
+        help_text=_('Primary medication image with enhanced focal point handling and responsive sizing')
+    )
+    
+    # Additional medication images for different purposes
+    medication_image_packaging = models.ForeignKey(
+        Image,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='medication_packaging_images',
+        help_text=_('Image of medication packaging')
+    )
+    
+    medication_image_tablet = models.ForeignKey(
+        Image,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='medication_tablet_images',
+        help_text=_('Image of tablet/capsule form')
+    )
+    
+    medication_image_injection = models.ForeignKey(
+        Image,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='medication_injection_images',
+        help_text=_('Image of injection device if applicable')
+    )
+    
+    medication_image_inhaler = models.ForeignKey(
+        Image,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='medication_inhaler_images',
+        help_text=_('Image of inhaler device if applicable')
+    )
+    
+    # Enhanced image processing fields
+    image_alt_text = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text=_('Alt text for medication image accessibility')
+    )
+    
+    image_caption = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text=_('Caption for the medication image')
+    )
+    
+    image_credit = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text=_('Image credit/attribution')
+    )
+    
+    image_license = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text=_('License information for the image')
+    )
+    
+    # Wagtail 7.0.2: Enhanced image processing status
+    image_processing_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', _('Pending')),
+            ('processing', _('Processing')),
+            ('completed', _('Completed')),
+            ('failed', _('Failed')),
+            ('optimized', _('Optimized')),
+            ('responsive_ready', _('Responsive Ready')),
+        ],
+        default='pending',
+        help_text=_('Status of image processing and optimization')
+    )
+    
+    image_processing_priority = models.CharField(
+        max_length=10,
+        choices=[
+            ('low', _('Low')),
+            ('medium', _('Medium')),
+            ('high', _('High')),
+            ('urgent', _('Urgent'))
+        ],
+        default='medium',
+        help_text=_('Priority level for image processing')
+    )
+    
+    image_processing_attempts = models.PositiveIntegerField(
+        default=0,
+        help_text=_('Number of image processing attempts')
+    )
+    
+    image_processing_last_attempt = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_('Last time image processing was attempted')
+    )
+    
+    image_processing_error = models.TextField(
+        blank=True,
+        help_text=_('Last error message from image processing')
+    )
+    
+    # Wagtail 7.0.2: Enhanced image metadata
+    image_metadata = models.JSONField(
+        default=dict,
+        help_text=_('Enhanced metadata about the medication image (dimensions, format, focal points, etc.)')
+    )
+    
+    image_optimization_level = models.CharField(
+        max_length=10,
+        choices=[
+            ('none', _('None')),
+            ('basic', _('Basic')),
+            ('standard', _('Standard')),
+            ('high', _('High')),
+            ('maximum', _('Maximum'))
+        ],
+        default='standard',
+        help_text=_('Level of image optimization applied')
+    )
+    
+    # Wagtail 7.0.2: Responsive image configuration
+    image_responsive_sizes = models.JSONField(
+        default=list,
+        help_text=_('Responsive image sizes configuration')
+    )
+    
+    image_focal_point_x = models.FloatField(
+        null=True,
+        blank=True,
+        help_text=_('Focal point X coordinate (0-1)')
+    )
+    
+    image_focal_point_y = models.FloatField(
+        null=True,
+        blank=True,
+        help_text=_('Focal point Y coordinate (0-1)')
+    )
+    
+    image_aspect_ratio = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text=_('Preferred aspect ratio for this image')
+    )
+    
+    # Wagtail 7.0.2: Image accessibility features
+    image_accessibility_features = models.JSONField(
+        default=dict,
+        help_text=_('Accessibility features for the image (high contrast, color blind friendly, etc.)')
+    )
+    
+    image_alt_text_auto_generated = models.BooleanField(
+        default=False,
+        help_text=_('Whether alt text was auto-generated')
+    )
+    
+    image_alt_text_confidence = models.FloatField(
+        null=True,
+        blank=True,
+        help_text=_('Confidence score for auto-generated alt text (0-1)')
+    )
+    
     expiration_date = models.DateField(
         null=True,
         blank=True,
@@ -1254,6 +1467,217 @@ class Medication(models.Model):
         auto_now=True,
         help_text=_('When this medication was last updated')
     )
+    
+    # Wagtail 7.0.2: Enhanced search configuration with custom indexing
+    search_fields = [
+        # Primary search fields with high boost factors
+        index.SearchField('name', boost=3.0, partial_match=True),
+        index.SearchField('generic_name', boost=2.5, partial_match=True),
+        index.SearchField('brand_name', boost=2.0, partial_match=True),
+        
+        # Content fields with medium boost
+        index.SearchField('description', boost=1.5),
+        index.SearchField('active_ingredients', boost=1.8),
+        index.SearchField('side_effects', boost=1.2),
+        index.SearchField('contraindications', boost=1.2),
+        index.SearchField('storage_instructions', boost=1.0),
+        
+        # Manufacturer and type fields
+        index.SearchField('manufacturer', boost=1.5, partial_match=True),
+        index.SearchField('medication_type', boost=1.0),
+        index.SearchField('prescription_type', boost=1.0),
+        
+        # StreamField content with enhanced indexing
+        index.SearchField('content', boost=1.3),
+        
+        # Strength and dosage information
+        index.SearchField('strength', boost=1.2, partial_match=True),
+        index.SearchField('dosage_unit', boost=0.8),
+        
+        # Autocomplete fields for quick search
+        index.AutocompleteField('name'),
+        index.AutocompleteField('generic_name'),
+        index.AutocompleteField('brand_name'),
+        index.AutocompleteField('manufacturer'),
+        
+        # Filter fields for faceted search
+        index.FilterField('medication_type'),
+        index.FilterField('prescription_type'),
+        index.FilterField('manufacturer'),
+        index.FilterField('expiration_date'),
+        index.FilterField('pill_count'),
+        index.FilterField('is_low_stock'),
+        index.FilterField('is_expired'),
+    ]
+    
+    # Wagtail 7.0.2: Enhanced admin panels
+    panels = [
+        # Basic Information Panel with enhanced ForeignKey panels
+        MultiFieldPanel([
+            FieldPanel('name'),
+            FieldPanel('generic_name'),
+            FieldPanel('brand_name'),
+            FieldPanel('medication_type'),
+            FieldPanel('prescription_type'),
+            FieldPanel('category'),  # Enhanced ForeignKey panel with snippet
+            FieldPanel('dosage_form'),  # Enhanced ForeignKey panel with snippet
+        ], heading=_('Basic Information'), classname='collapsible'),
+        
+        # Content Panel with StreamField and enhanced relationships
+        MultiFieldPanel([
+            FieldPanel('content'),
+            FieldPanel('description'),
+            FieldPanel('active_ingredients'),
+            FieldPanel('active_ingredients_snippets'),  # Many-to-many with snippets
+        ], heading=_('Content & Description'), classname='collapsible'),
+        
+        # Dosage Information Panel
+        MultiFieldPanel([
+            FieldPanel('strength'),
+            FieldPanel('dosage_unit'),
+        ], heading=_('Dosage Information'), classname='collapsible'),
+        
+        # Stock Management Panel
+        MultiFieldPanel([
+            FieldPanel('pill_count'),
+            FieldPanel('low_stock_threshold'),
+            FieldPanel('expiration_date'),
+        ], heading=_('Stock Management'), classname='collapsible'),
+        
+        # Safety Information Panel
+        MultiFieldPanel([
+            FieldPanel('side_effects'),
+            FieldPanel('contraindications'),
+            FieldPanel('storage_instructions'),
+        ], heading=_('Safety & Storage'), classname='collapsible'),
+        
+        # Enhanced Image Panel with Wagtail 7.0.2 features
+        MultiFieldPanel([
+            FieldPanel('medication_image'),
+            FieldPanel('medication_image_packaging'),
+            FieldPanel('medication_image_tablet'),
+            FieldPanel('medication_image_injection'),
+            FieldPanel('medication_image_inhaler'),
+        ], heading=_('Primary Images'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('image_alt_text'),
+            FieldPanel('image_caption'),
+            FieldPanel('image_credit'),
+            FieldPanel('image_license'),
+        ], heading=_('Image Metadata'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('image_processing_status'),
+            FieldPanel('image_processing_priority'),
+            FieldPanel('image_optimization_level'),
+            FieldPanel('image_focal_point_x'),
+            FieldPanel('image_focal_point_y'),
+            FieldPanel('image_aspect_ratio'),
+        ], heading=_('Image Processing'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('image_accessibility_features'),
+            FieldPanel('image_alt_text_auto_generated'),
+            FieldPanel('image_alt_text_confidence'),
+        ], heading=_('Accessibility'), classname='collapsible'),
+        
+        # Enhanced Manufacturer Information Panel with snippet integration
+        MultiFieldPanel([
+            FieldPanel('manufacturer'),  # Legacy field for backward compatibility
+            FieldPanel('manufacturer_snippet'),  # Enhanced ForeignKey panel with snippet
+        ], heading=_('Manufacturer Information'), classname='collapsible'),
+        
+        # Wagtail 7.0.2: Enhanced inline panels for medication schedules
+        InlinePanel('schedules', label=_('Medication Schedules'), min_num=0, max_num=10),
+    ]
+    
+    # Wagtail 7.0.2: Enhanced admin panels
+    panels = [
+        # Basic Information Panel with enhanced ForeignKey panels
+        MultiFieldPanel([
+            FieldPanel('name'),
+            FieldPanel('generic_name'),
+            FieldPanel('brand_name'),
+            FieldPanel('medication_type'),
+            FieldPanel('prescription_type'),
+            FieldPanel('category'),  # Enhanced ForeignKey panel with snippet
+            FieldPanel('dosage_form'),  # Enhanced ForeignKey panel with snippet
+        ], heading=_('Basic Information'), classname='collapsible'),
+        
+        # Content Panel with StreamField and enhanced relationships
+        MultiFieldPanel([
+            FieldPanel('content'),
+            FieldPanel('description'),
+            FieldPanel('active_ingredients'),
+            FieldPanel('active_ingredients_snippets'),  # Many-to-many with snippets
+        ], heading=_('Content & Description'), classname='collapsible'),
+        
+        # Dosage Information Panel
+        MultiFieldPanel([
+            FieldPanel('strength'),
+            FieldPanel('dosage_unit'),
+        ], heading=_('Dosage Information'), classname='collapsible'),
+        
+        # Stock Management Panel
+        MultiFieldPanel([
+            FieldPanel('pill_count'),
+            FieldPanel('low_stock_threshold'),
+            FieldPanel('expiration_date'),
+        ], heading=_('Stock Management'), classname='collapsible'),
+        
+        # Safety Information Panel
+        MultiFieldPanel([
+            FieldPanel('side_effects'),
+            FieldPanel('contraindications'),
+            FieldPanel('storage_instructions'),
+        ], heading=_('Safety & Storage'), classname='collapsible'),
+        
+        # Enhanced Image Panel with Wagtail 7.0.2 features
+        MultiFieldPanel([
+            FieldPanel('medication_image'),
+            FieldPanel('image_alt_text'),
+            FieldPanel('image_processing_status'),
+            FieldPanel('image_processing_priority'),
+        ], heading=_('Images & Media'), classname='collapsible'),
+        
+        # Enhanced Image Panel with Wagtail 7.0.2 features
+        MultiFieldPanel([
+            FieldPanel('medication_image'),
+            FieldPanel('medication_image_packaging'),
+            FieldPanel('medication_image_tablet'),
+            FieldPanel('medication_image_injection'),
+            FieldPanel('medication_image_inhaler'),
+        ], heading=_('Primary Images'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('image_alt_text'),
+            FieldPanel('image_caption'),
+            FieldPanel('image_credit'),
+            FieldPanel('image_license'),
+        ], heading=_('Image Metadata'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('image_processing_status'),
+            FieldPanel('image_processing_priority'),
+            FieldPanel('image_optimization_level'),
+            FieldPanel('image_focal_point_x'),
+            FieldPanel('image_focal_point_y'),
+            FieldPanel('image_aspect_ratio'),
+        ], heading=_('Image Processing'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('image_accessibility_features'),
+            FieldPanel('image_alt_text_auto_generated'),
+            FieldPanel('image_alt_text_confidence'),
+        ], heading=_('Accessibility'), classname='collapsible'),
+        
+        # Enhanced Manufacturer Information Panel with snippet integration
+        MultiFieldPanel([
+            FieldPanel('manufacturer'),  # Legacy field for backward compatibility
+            FieldPanel('manufacturer_snippet'),  # Enhanced ForeignKey panel with snippet
+        ], heading=_('Manufacturer Information'), classname='collapsible'),
+    ]
     
     class Meta:
         verbose_name = _('Medication')
@@ -1324,6 +1748,32 @@ class Medication(models.Model):
             raise ValidationError({
                 'expiration_date': _('Expiration date cannot be in the past')
             })
+    
+    # Wagtail 7.0.2: Enhanced search methods
+    def get_search_display_title(self):
+        """Return the title to display in search results."""
+        return f"{self.name} ({self.strength})"
+    
+    def get_search_description(self):
+        """Return the description to display in search results."""
+        if self.description:
+            return self.description[:200] + "..." if len(self.description) > 200 else self.description
+        return f"{self.medication_type} medication by {self.manufacturer}" if self.manufacturer else f"{self.medication_type} medication"
+    
+    def get_search_url(self, request=None):
+        """Return the URL for this medication in search results."""
+        # This would typically link to a detail page
+        return f"/medications/{self.id}/"
+    
+    def get_search_meta(self):
+        """Return additional metadata for search results."""
+        return {
+            'medication_type': self.get_medication_type_display(),
+            'prescription_type': self.get_prescription_type_display(),
+            'manufacturer': self.manufacturer,
+            'stock_status': 'Low Stock' if self.is_low_stock else 'In Stock',
+            'expiration_status': 'Expired' if self.is_expired else 'Valid',
+        }
 
 
 class MedicationSchedule(models.Model):
@@ -1452,6 +1902,58 @@ class MedicationSchedule(models.Model):
         auto_now=True,
         help_text=_('When this medication schedule was last updated')
     )
+    
+    # Wagtail 7.0.2: Enhanced search configuration
+    search_fields = [
+        index.SearchField('instructions', boost=1.5),
+        index.SearchField('frequency', boost=1.2),
+        index.RelatedFields('patient', [
+            index.SearchField('first_name', boost=1.5),
+            index.SearchField('last_name', boost=1.5),
+        ]),
+        index.RelatedFields('medication', [
+            index.SearchField('name', boost=2.0),
+        ]),
+        index.FilterField('status'),
+        index.FilterField('timing'),
+        index.FilterField('start_date'),
+        index.FilterField('end_date'),
+    ]
+    
+    # Wagtail 7.0.2: Enhanced admin panels for inline editing
+    panels = [
+        MultiFieldPanel([
+            FieldPanel('patient'),
+            FieldPanel('medication'),
+            FieldPanel('status'),
+        ], heading=_('Basic Information')),
+        
+        MultiFieldPanel([
+            FieldPanel('timing'),
+            FieldPanel('custom_time'),
+            FieldPanel('dosage_amount'),
+            FieldPanel('frequency'),
+        ], heading=_('Schedule Details')),
+        
+        MultiFieldPanel([
+            FieldPanel('monday'),
+            FieldPanel('tuesday'),
+            FieldPanel('wednesday'),
+            FieldPanel('thursday'),
+            FieldPanel('friday'),
+            FieldPanel('saturday'),
+            FieldPanel('sunday'),
+        ], heading=_('Days of Week')),
+        
+        MultiFieldPanel([
+            FieldPanel('start_date'),
+            FieldPanel('end_date'),
+        ], heading=_('Schedule Period')),
+        
+        MultiFieldPanel([
+            FieldPanel('instructions'),
+        ], heading=_('Instructions')),
+    ]
     
     class Meta:
         verbose_name = _('Medication Schedule')
@@ -2475,3 +2977,1279 @@ class StockVisualization(models.Model):
         from datetime import timedelta
         refresh_time = self.last_generated + timedelta(hours=self.refresh_interval_hours)
         return timezone.now() > refresh_time
+
+
+# Wagtail 7.0.2: Enhanced snippet models for reusable medication data
+@register_snippet
+class MedicationManufacturer(models.Model):
+    """
+    Snippet model for medication manufacturers with enhanced Wagtail 7.0.2 features.
+    """
+    
+    name = models.CharField(
+        max_length=200,
+        unique=True,
+        help_text=_('Name of the manufacturer')
+    )
+    
+    code = models.CharField(
+        max_length=50,
+        unique=True,
+        blank=True,
+        help_text=_('Manufacturer code/identifier')
+    )
+    
+    website = models.URLField(
+        blank=True,
+        help_text=_('Manufacturer website')
+    )
+    
+    email = models.EmailField(
+        blank=True,
+        help_text=_('Contact email')
+    )
+    
+    phone = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text=_('Contact phone number')
+    )
+    
+    address = models.TextField(
+        blank=True,
+        help_text=_('Manufacturer address')
+    )
+    
+    country = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text=_('Country of origin')
+    )
+    
+    description = RichTextField(
+        blank=True,
+        help_text=_('Description of the manufacturer'),
+        features=['bold', 'italic', 'link', 'ul', 'ol']
+    )
+    
+    logo = models.ForeignKey(
+        Image,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='manufacturer_logos',
+        help_text=_('Manufacturer logo')
+    )
+    
+    is_active = models.BooleanField(
+        default=True,
+        help_text=_('Whether this manufacturer is active')
+    )
+    
+    # Wagtail 7.0.2: Enhanced search configuration
+    search_fields = [
+        index.SearchField('name', boost=2.0, partial_match=True),
+        index.SearchField('code', boost=1.5, partial_match=True),
+        index.SearchField('description', boost=1.0),
+        index.SearchField('country', boost=1.0),
+        index.AutocompleteField('name'),
+        index.AutocompleteField('code'),
+        index.FilterField('is_active'),
+        index.FilterField('country'),
+    ]
+    
+    # Wagtail 7.0.2: Enhanced admin panels
+    panels = [
+        MultiFieldPanel([
+            FieldPanel('name'),
+            FieldPanel('code'),
+            FieldPanel('is_active'),
+        ], heading=_('Basic Information')),
+        
+        MultiFieldPanel([
+            FieldPanel('website'),
+            FieldPanel('email'),
+            FieldPanel('phone'),
+        ], heading=_('Contact Information')),
+        
+        MultiFieldPanel([
+            FieldPanel('address'),
+            FieldPanel('country'),
+        ], heading=_('Location')),
+        
+        MultiFieldPanel([
+            FieldPanel('description'),
+            FieldPanel('logo'),
+        ], heading=_('Additional Information')),
+    ]
+    
+    class Meta:
+        verbose_name = _('Medication Manufacturer')
+        verbose_name_plural = _('Medication Manufacturers')
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+    
+    def get_medication_count(self):
+        """Return the number of medications by this manufacturer."""
+        return self.medication_set.count()
+    
+    get_medication_count.short_description = _('Medication Count')
+
+
+@register_snippet
+class ActiveIngredient(models.Model):
+    """
+    Snippet model for active ingredients with enhanced Wagtail 7.0.2 features.
+    """
+    
+    name = models.CharField(
+        max_length=200,
+        unique=True,
+        help_text=_('Name of the active ingredient')
+    )
+    
+    chemical_name = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text=_('Chemical name of the ingredient')
+    )
+    
+    molecular_formula = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text=_('Molecular formula')
+    )
+    
+    molecular_weight = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_('Molecular weight')
+    )
+    
+    description = RichTextField(
+        blank=True,
+        help_text=_('Description of the active ingredient'),
+        features=['bold', 'italic', 'link', 'ul', 'ol']
+    )
+    
+    mechanism_of_action = RichTextField(
+        blank=True,
+        help_text=_('How this ingredient works'),
+        features=['bold', 'italic', 'link', 'ul', 'ol']
+    )
+    
+    therapeutic_class = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text=_('Therapeutic class of the ingredient')
+    )
+    
+    side_effects = RichTextField(
+        blank=True,
+        help_text=_('Common side effects'),
+        features=['bold', 'italic', 'link', 'ul', 'ol']
+    )
+    
+    contraindications = RichTextField(
+        blank=True,
+        help_text=_('Contraindications and warnings'),
+        features=['bold', 'italic', 'link', 'ul', 'ol']
+    )
+    
+    interactions = RichTextField(
+        blank=True,
+        help_text=_('Drug interactions'),
+        features=['bold', 'italic', 'link', 'ul', 'ol']
+    )
+    
+    is_controlled_substance = models.BooleanField(
+        default=False,
+        help_text=_('Whether this is a controlled substance')
+    )
+    
+    schedule = models.CharField(
+        max_length=20,
+        choices=[
+            ('none', _('Not Scheduled')),
+            ('schedule_1', _('Schedule 1')),
+            ('schedule_2', _('Schedule 2')),
+            ('schedule_3', _('Schedule 3')),
+            ('schedule_4', _('Schedule 4')),
+            ('schedule_5', _('Schedule 5')),
+        ],
+        default='none',
+        help_text=_('Drug schedule classification')
+    )
+    
+    # Wagtail 7.0.2: Enhanced search configuration
+    search_fields = [
+        index.SearchField('name', boost=3.0, partial_match=True),
+        index.SearchField('chemical_name', boost=2.5, partial_match=True),
+        index.SearchField('description', boost=1.5),
+        index.SearchField('mechanism_of_action', boost=1.3),
+        index.SearchField('therapeutic_class', boost=1.2),
+        index.SearchField('side_effects', boost=1.0),
+        index.SearchField('contraindications', boost=1.0),
+        index.SearchField('interactions', boost=1.0),
+        index.AutocompleteField('name'),
+        index.AutocompleteField('chemical_name'),
+        index.AutocompleteField('therapeutic_class'),
+        index.FilterField('is_controlled_substance'),
+        index.FilterField('schedule'),
+    ]
+    
+    # Wagtail 7.0.2: Enhanced admin panels
+    panels = [
+        MultiFieldPanel([
+            FieldPanel('name'),
+            FieldPanel('chemical_name'),
+            FieldPanel('molecular_formula'),
+            FieldPanel('molecular_weight'),
+        ], heading=_('Basic Information')),
+        
+        MultiFieldPanel([
+            FieldPanel('description'),
+            FieldPanel('mechanism_of_action'),
+            FieldPanel('therapeutic_class'),
+        ], heading=_('Description & Action')),
+        
+        MultiFieldPanel([
+            FieldPanel('side_effects'),
+            FieldPanel('contraindications'),
+            FieldPanel('interactions'),
+        ], heading=_('Safety Information')),
+        
+        MultiFieldPanel([
+            FieldPanel('is_controlled_substance'),
+            FieldPanel('schedule'),
+        ], heading=_('Regulatory Information')),
+    ]
+    
+    class Meta:
+        verbose_name = _('Active Ingredient')
+        verbose_name_plural = _('Active Ingredients')
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+    
+    def get_medication_count(self):
+        """Return the number of medications containing this ingredient."""
+        return self.medication_set.count()
+    
+    get_medication_count.short_description = _('Medication Count')
+
+
+@register_snippet
+class MedicationCategory(models.Model):
+    """
+    Snippet model for medication categories with enhanced Wagtail 7.0.2 features.
+    """
+    
+    name = models.CharField(
+        max_length=200,
+        unique=True,
+        help_text=_('Name of the medication category')
+    )
+    
+    code = models.CharField(
+        max_length=50,
+        unique=True,
+        blank=True,
+        help_text=_('Category code/identifier')
+    )
+    
+    description = RichTextField(
+        blank=True,
+        help_text=_('Description of the category'),
+        features=['bold', 'italic', 'link', 'ul', 'ol']
+    )
+    
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='children',
+        help_text=_('Parent category')
+    )
+    
+    icon = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text=_('Icon class for the category')
+    )
+    
+    color = models.CharField(
+        max_length=7,
+        blank=True,
+        help_text=_('Color code for the category (hex format)')
+    )
+    
+    is_active = models.BooleanField(
+        default=True,
+        help_text=_('Whether this category is active')
+    )
+    
+    sort_order = models.PositiveIntegerField(
+        default=0,
+        help_text=_('Sort order for display')
+    )
+    
+    # Wagtail 7.0.2: Enhanced search configuration
+    search_fields = [
+        index.SearchField('name', boost=2.0, partial_match=True),
+        index.SearchField('code', boost=1.5, partial_match=True),
+        index.SearchField('description', boost=1.0),
+        index.AutocompleteField('name'),
+        index.AutocompleteField('code'),
+        index.FilterField('is_active'),
+        index.FilterField('parent'),
+    ]
+    
+    # Wagtail 7.0.2: Enhanced admin panels
+    panels = [
+        MultiFieldPanel([
+            FieldPanel('name'),
+            FieldPanel('code'),
+            FieldPanel('parent'),
+            FieldPanel('is_active'),
+            FieldPanel('sort_order'),
+        ], heading=_('Basic Information')),
+        
+        MultiFieldPanel([
+            FieldPanel('description'),
+        ], heading=_('Description')),
+        
+        MultiFieldPanel([
+            FieldPanel('icon'),
+            FieldPanel('color'),
+        ], heading=_('Display Options')),
+    ]
+    
+    class Meta:
+        verbose_name = _('Medication Category')
+        verbose_name_plural = _('Medication Categories')
+        ordering = ['sort_order', 'name']
+    
+    def __str__(self):
+        if self.parent:
+            return f"{self.parent.name} > {self.name}"
+        return self.name
+    
+    def get_medication_count(self):
+        """Return the number of medications in this category."""
+        return self.medication_set.count()
+    
+    get_medication_count.short_description = _('Medication Count')
+    
+    def get_all_children(self):
+        """Get all child categories recursively."""
+        children = []
+        for child in self.children.all():
+            children.append(child)
+            children.extend(child.get_all_children())
+        return children
+    
+    def get_all_medications(self):
+        """Get all medications in this category and its children."""
+        from django.db.models import Q
+        category_ids = [self.id] + [child.id for child in self.get_all_children()]
+        return Medication.objects.filter(category_id__in=category_ids)
+
+
+@register_snippet
+class DosageForm(models.Model):
+    """
+    Snippet model for dosage forms with enhanced Wagtail 7.0.2 features.
+    """
+    
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        help_text=_('Name of the dosage form')
+    )
+    
+    code = models.CharField(
+        max_length=20,
+        unique=True,
+        blank=True,
+        help_text=_('Dosage form code')
+    )
+    
+    description = RichTextField(
+        blank=True,
+        help_text=_('Description of the dosage form'),
+        features=['bold', 'italic', 'link', 'ul', 'ol']
+    )
+    
+    administration_method = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text=_('How this form is administered')
+    )
+    
+    absorption_rate = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text=_('Typical absorption rate')
+    )
+    
+    onset_of_action = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text=_('Typical onset of action')
+    )
+    
+    duration_of_action = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text=_('Typical duration of action')
+    )
+    
+    storage_requirements = RichTextField(
+        blank=True,
+        help_text=_('Special storage requirements'),
+        features=['bold', 'italic', 'link', 'ul', 'ol']
+    )
+    
+    is_active = models.BooleanField(
+        default=True,
+        help_text=_('Whether this dosage form is active')
+    )
+    
+    # Wagtail 7.0.2: Enhanced search configuration
+    search_fields = [
+        index.SearchField('name', boost=2.0, partial_match=True),
+        index.SearchField('code', boost=1.5, partial_match=True),
+        index.SearchField('description', boost=1.0),
+        index.SearchField('administration_method', boost=1.2),
+        index.AutocompleteField('name'),
+        index.AutocompleteField('code'),
+        index.FilterField('is_active'),
+    ]
+    
+    # Wagtail 7.0.2: Enhanced admin panels
+    panels = [
+        MultiFieldPanel([
+            FieldPanel('name'),
+            FieldPanel('code'),
+            FieldPanel('is_active'),
+        ], heading=_('Basic Information')),
+        
+        MultiFieldPanel([
+            FieldPanel('description'),
+            FieldPanel('administration_method'),
+        ], heading=_('Description & Administration')),
+        
+        MultiFieldPanel([
+            FieldPanel('absorption_rate'),
+            FieldPanel('onset_of_action'),
+            FieldPanel('duration_of_action'),
+        ], heading=_('Pharmacokinetics')),
+        
+        MultiFieldPanel([
+            FieldPanel('storage_requirements'),
+        ], heading=_('Storage Requirements')),
+    ]
+    
+    class Meta:
+        verbose_name = _('Dosage Form')
+        verbose_name_plural = _('Dosage Forms')
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+    
+    def get_medication_count(self):
+        """Return the number of medications in this dosage form."""
+        return self.medication_set.count()
+    
+    get_medication_count.short_description = _('Medication Count')
+
+
+# Wagtail 7.0.2: Enhanced Prescription model with improved admin features
+class EnhancedPrescription(models.Model):
+    """
+    Enhanced Prescription model with Wagtail 7.0.2 admin improvements.
+    This is separate from the original Prescription model to avoid conflicts.
+    """
+    
+    # Status choices
+    class Status(models.TextChoices):
+        DRAFT = 'draft', _('Draft')
+        PENDING = 'pending', _('Pending Approval')
+        APPROVED = 'approved', _('Approved')
+        DISPENSED = 'dispensed', _('Dispensed')
+        COMPLETED = 'completed', _('Completed')
+        CANCELLED = 'cancelled', _('Cancelled')
+        EXPIRED = 'expired', _('Expired')
+    
+    # Priority choices
+    class Priority(models.TextChoices):
+        LOW = 'low', _('Low')
+        NORMAL = 'normal', _('Normal')
+        HIGH = 'high', _('High')
+        URGENT = 'urgent', _('Urgent')
+        EMERGENCY = 'emergency', _('Emergency')
+    
+    # Relationships
+    patient = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='prescriptions',
+        limit_choices_to={'user_type': 'PATIENT'},
+        help_text=_('Patient for this prescription')
+    )
+    
+    prescriber = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='prescribed_medications',
+        limit_choices_to={'user_type__in': ['DOCTOR', 'PHARMACIST', 'NURSE']},
+        help_text=_('Healthcare provider who prescribed the medication')
+    )
+    
+    medication = models.ForeignKey(
+        Medication,
+        on_delete=models.CASCADE,
+        related_name='prescriptions',
+        help_text=_('Prescribed medication')
+    )
+    
+    # Prescription details
+    prescription_number = models.CharField(
+        max_length=100,
+        unique=True,
+        help_text=_('Unique prescription number')
+    )
+    
+    prescribed_date = models.DateField(
+        default=timezone.now,
+        help_text=_('Date when prescription was issued')
+    )
+    
+    expiry_date = models.DateField(
+        help_text=_('Date when prescription expires')
+    )
+    
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
+        help_text=_('Current status of the prescription')
+    )
+    
+    priority = models.CharField(
+        max_length=20,
+        choices=Priority.choices,
+        default=Priority.NORMAL,
+        help_text=_('Priority level of the prescription')
+    )
+    
+    # Dosage information
+    dosage_instructions = RichTextField(
+        help_text=_('Detailed dosage instructions'),
+        features=['bold', 'italic', 'link', 'ul', 'ol']
+    )
+    
+    dosage_amount = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        help_text=_('Amount of medication to take')
+    )
+    
+    dosage_unit = models.CharField(
+        max_length=20,
+        help_text=_('Unit of dosage (e.g., mg, ml, tablets)')
+    )
+    
+    frequency = models.CharField(
+        max_length=100,
+        help_text=_('How often to take the medication')
+    )
+    
+    duration = models.CharField(
+        max_length=100,
+        help_text=_('Duration of treatment')
+    )
+    
+    # Quantity and refills
+    quantity_prescribed = models.PositiveIntegerField(
+        help_text=_('Quantity prescribed')
+    )
+    
+    refills_allowed = models.PositiveIntegerField(
+        default=0,
+        help_text=_('Number of refills allowed')
+    )
+    
+    refills_used = models.PositiveIntegerField(
+        default=0,
+        help_text=_('Number of refills already used')
+    )
+    
+    # Additional information
+    diagnosis = models.TextField(
+        blank=True,
+        help_text=_('Diagnosis or reason for prescription')
+    )
+    
+    allergies = models.TextField(
+        blank=True,
+        help_text=_('Known allergies or contraindications')
+    )
+    
+    special_instructions = RichTextField(
+        blank=True,
+        help_text=_('Special instructions for the patient'),
+        features=['bold', 'italic', 'link', 'ul', 'ol']
+    )
+    
+    prescriber_notes = RichTextField(
+        blank=True,
+        help_text=_('Private notes from the prescriber'),
+        features=['bold', 'italic', 'link', 'ul', 'ol']
+    )
+    
+    # Workflow tracking
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_prescriptions',
+        help_text=_('User who approved the prescription')
+    )
+    
+    approved_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_('When the prescription was approved')
+    )
+    
+    dispensed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='dispensed_prescriptions',
+        help_text=_('User who dispensed the medication')
+    )
+    
+    dispensed_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_('When the medication was dispensed')
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text=_('When this prescription was created')
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text=_('When this prescription was last updated')
+    )
+    
+    # Wagtail 7.0.2: Enhanced search configuration
+    search_fields = [
+        # Primary search fields
+        index.SearchField('prescription_number', boost=3.0, partial_match=True),
+        index.SearchField('dosage_instructions', boost=2.0),
+        index.SearchField('diagnosis', boost=1.5),
+        index.SearchField('special_instructions', boost=1.2),
+        index.SearchField('prescriber_notes', boost=1.0),
+        
+        # Related fields
+        index.RelatedFields('patient', [
+            index.SearchField('first_name', boost=1.5),
+            index.SearchField('last_name', boost=1.5),
+            index.SearchField('email', boost=1.0),
+        ]),
+        index.RelatedFields('prescriber', [
+            index.SearchField('first_name', boost=1.5),
+            index.SearchField('last_name', boost=1.5),
+        ]),
+        index.RelatedFields('medication', [
+            index.SearchField('name', boost=2.0),
+            index.SearchField('generic_name', boost=1.8),
+        ]),
+        
+        # Autocomplete fields
+        index.AutocompleteField('prescription_number'),
+        index.AutocompleteField('patient__first_name'),
+        index.AutocompleteField('patient__last_name'),
+        index.AutocompleteField('prescriber__first_name'),
+        index.AutocompleteField('prescriber__last_name'),
+        index.AutocompleteField('medication__name'),
+        
+        # Filter fields
+        index.FilterField('status'),
+        index.FilterField('priority'),
+        index.FilterField('prescribed_date'),
+        index.FilterField('expiry_date'),
+        index.FilterField('patient'),
+        index.FilterField('prescriber'),
+        index.FilterField('medication'),
+    ]
+    
+    # Wagtail 7.0.2: Enhanced admin panels with workflow integration
+    panels = [
+        # Basic Information Panel
+        MultiFieldPanel([
+            FieldPanel('prescription_number'),
+            FieldPanel('patient'),
+            FieldPanel('prescriber'),
+            FieldPanel('medication'),
+        ], heading=_('Basic Information'), classname='collapsible'),
+        
+        # Prescription Details Panel
+        MultiFieldPanel([
+            FieldPanel('prescribed_date'),
+            FieldPanel('expiry_date'),
+            FieldPanel('status'),
+            FieldPanel('priority'),
+        ], heading=_('Prescription Details'), classname='collapsible'),
+        
+        # Dosage Information Panel
+        MultiFieldPanel([
+            FieldPanel('dosage_instructions'),
+            FieldPanel('dosage_amount'),
+            FieldPanel('dosage_unit'),
+            FieldPanel('frequency'),
+            FieldPanel('duration'),
+        ], heading=_('Dosage Information'), classname='collapsible'),
+        
+        # Quantity and Refills Panel
+        MultiFieldPanel([
+            FieldPanel('quantity_prescribed'),
+            FieldPanel('refills_allowed'),
+            FieldPanel('refills_used'),
+        ], heading=_('Quantity & Refills'), classname='collapsible'),
+        
+        # Medical Information Panel
+        MultiFieldPanel([
+            FieldPanel('diagnosis'),
+            FieldPanel('allergies'),
+            FieldPanel('special_instructions'),
+            FieldPanel('prescriber_notes'),
+        ], heading=_('Medical Information'), classname='collapsible'),
+        
+        # Workflow Tracking Panel
+        MultiFieldPanel([
+            FieldPanel('approved_by'),
+            FieldPanel('approved_date'),
+            FieldPanel('dispensed_by'),
+            FieldPanel('dispensed_date'),
+        ], heading=_('Workflow Tracking'), classname='collapsible'),
+    ]
+    
+    class Meta:
+        verbose_name = _('Enhanced Prescription')
+        verbose_name_plural = _('Enhanced Prescriptions')
+        db_table = 'medications_enhanced_prescription'
+        indexes = [
+            models.Index(fields=['prescription_number']),
+            models.Index(fields=['patient', 'status']),
+            models.Index(fields=['prescriber', 'status']),
+            models.Index(fields=['medication', 'status']),
+            models.Index(fields=['prescribed_date']),
+            models.Index(fields=['expiry_date']),
+            models.Index(fields=['status', 'priority']),
+        ]
+        ordering = ['-prescribed_date']
+    
+    def __str__(self):
+        return f"{self.prescription_number} - {self.patient.get_full_name()} - {self.medication.name}"
+    
+    @property
+    def is_expired(self):
+        """Check if prescription is expired."""
+        return self.expiry_date < timezone.now().date()
+    
+    @property
+    def is_expiring_soon(self):
+        """Check if prescription is expiring within 30 days."""
+        from datetime import timedelta
+        thirty_days_from_now = timezone.now().date() + timedelta(days=30)
+        return self.expiry_date <= thirty_days_from_now
+    
+    @property
+    def can_refill(self):
+        """Check if prescription can be refilled."""
+        return (self.status == self.Status.DISPENSED and 
+                self.refills_used < self.refills_allowed and 
+                not self.is_expired)
+    
+    @property
+    def refills_remaining(self):
+        """Get number of refills remaining."""
+        return max(0, self.refills_allowed - self.refills_used)
+    
+    def approve(self, approved_by_user):
+        """Approve the prescription."""
+        self.status = self.Status.APPROVED
+        self.approved_by = approved_by_user
+        self.approved_date = timezone.now()
+        self.save()
+    
+    def dispense(self, dispensed_by_user):
+        """Dispense the medication."""
+        self.status = self.Status.DISPENSED
+        self.dispensed_by = dispensed_by_user
+        self.dispensed_date = timezone.now()
+        self.save()
+    
+    def refill(self):
+        """Refill the prescription."""
+        if self.can_refill:
+            self.refills_used += 1
+            self.status = self.Status.DISPENSED
+            self.save()
+            return True
+        return False
+    
+    def cancel(self):
+        """Cancel the prescription."""
+        self.status = self.Status.CANCELLED
+        self.save()
+    
+    def clean(self):
+        """Custom validation for the model."""
+        # Validate expiry date is after prescribed date
+        if self.expiry_date and self.prescribed_date and self.expiry_date <= self.prescribed_date:
+            raise ValidationError({
+                'expiry_date': _('Expiry date must be after prescribed date')
+            })
+        
+        # Validate refills used doesn't exceed refills allowed
+        if self.refills_used > self.refills_allowed:
+            raise ValidationError({
+                'refills_used': _('Refills used cannot exceed refills allowed')
+            })
+        
+        # Validate quantity is positive
+        if self.quantity_prescribed <= 0:
+            raise ValidationError({
+                'quantity_prescribed': _('Quantity prescribed must be positive')
+            })
+    
+    # Wagtail 7.0.2: Enhanced admin methods
+    def get_admin_display_title(self):
+        """Return the title to display in admin."""
+        return f"{self.prescription_number} - {self.patient.get_full_name()}"
+    
+    def get_admin_display_subtitle(self):
+        """Return the subtitle to display in admin."""
+        return f"{self.medication.name} - {self.get_status_display()}"
+    
+    def get_admin_url(self):
+        """Return the admin URL for this prescription."""
+        from django.urls import reverse
+        return reverse('admin:medications_prescription_change', args=[self.id])
+    
+    def get_absolute_url(self):
+        """Return the public URL for this prescription."""
+        return f"/prescriptions/{self.id}/"
+
+
+class PrescriptionWorkflow(models.Model):
+    """
+    Enhanced prescription workflow model with Wagtail 7.0.2 form integration.
+    
+    This model tracks the complete workflow of prescription processing from
+    creation to completion, with enhanced form validation and admin integration.
+    """
+    
+    # Workflow status choices
+    class WorkflowStatus(models.TextChoices):
+        CREATED = 'created', _('Created')
+        UNDER_REVIEW = 'under_review', _('Under Review')
+        PHARMACY_REVIEW = 'pharmacy_review', _('Pharmacy Review')
+        APPROVED = 'approved', _('Approved')
+        DISPENSED = 'dispensed', _('Dispensed')
+        COMPLETED = 'completed', _('Completed')
+        CANCELLED = 'cancelled', _('Cancelled')
+        ON_HOLD = 'on_hold', _('On Hold')
+        REQUIRES_CLARIFICATION = 'requires_clarification', _('Requires Clarification')
+    
+    # Workflow step choices
+    class WorkflowStep(models.TextChoices):
+        INITIAL_REVIEW = 'initial_review', _('Initial Review')
+        PHARMACY_VERIFICATION = 'pharmacy_verification', _('Pharmacy Verification')
+        INSURANCE_VERIFICATION = 'insurance_verification', _('Insurance Verification')
+        CLINICAL_REVIEW = 'clinical_review', _('Clinical Review')
+        DISPENSING = 'dispensing', _('Dispensing')
+        PATIENT_EDUCATION = 'patient_education', _('Patient Education')
+        FOLLOW_UP = 'follow_up', _('Follow-up')
+    
+    # Relationships
+    prescription = models.OneToOneField(
+        EnhancedPrescription,
+        on_delete=models.CASCADE,
+        related_name='workflow',
+        help_text=_('Associated prescription')
+    )
+    
+    # Workflow tracking
+    current_status = models.CharField(
+        max_length=30,
+        choices=WorkflowStatus.choices,
+        default=WorkflowStatus.CREATED,
+        help_text=_('Current workflow status')
+    )
+    
+    current_step = models.CharField(
+        max_length=30,
+        choices=WorkflowStep.choices,
+        default=WorkflowStep.INITIAL_REVIEW,
+        help_text=_('Current workflow step')
+    )
+    
+    # Workflow history with StreamField for rich content
+    workflow_history = StreamField([
+        ('status_change', StructBlock([
+            ('status', ChoiceBlock(choices=WorkflowStatus.choices)),
+            ('step', ChoiceBlock(choices=WorkflowStep.choices)),
+            ('notes', RichTextBlock(features=['bold', 'italic', 'link', 'ul', 'ol'])),
+            ('timestamp', DateTimeBlock()),
+            ('user', SnippetChooserBlock('users.User')),
+        ])),
+        ('review_notes', RichTextBlock(features=['bold', 'italic', 'link', 'ul', 'ol'])),
+        ('verification_result', StructBlock([
+            ('verified', BooleanBlock()),
+            ('notes', RichTextBlock(features=['bold', 'italic', 'link', 'ul', 'ol'])),
+            ('verifier', SnippetChooserBlock('users.User')),
+            ('timestamp', DateTimeBlock()),
+        ])),
+        ('clinical_decision', StructBlock([
+            ('decision', ChoiceBlock(choices=[
+                ('approve', _('Approve')),
+                ('reject', _('Reject')),
+                ('modify', _('Modify')),
+                ('hold', _('Hold')),
+            ])),
+            ('reasoning', RichTextBlock(features=['bold', 'italic', 'link', 'ul', 'ol'])),
+            ('clinician', SnippetChooserBlock('users.User')),
+            ('timestamp', DateTimeBlock()),
+        ])),
+    ], blank=True, use_json_field=True, help_text=_('Complete workflow history'))
+    
+    # Enhanced form fields for workflow management
+    priority_level = models.CharField(
+        max_length=20,
+        choices=[
+            ('routine', _('Routine')),
+            ('urgent', _('Urgent')),
+            ('emergency', _('Emergency')),
+            ('stat', _('STAT')),
+        ],
+        default='routine',
+        help_text=_('Priority level for processing')
+    )
+    
+    estimated_completion_time = models.DurationField(
+        null=True,
+        blank=True,
+        help_text=_('Estimated time to complete workflow')
+    )
+    
+    actual_completion_time = models.DurationField(
+        null=True,
+        blank=True,
+        help_text=_('Actual time taken to complete workflow')
+    )
+    
+    # Quality assurance fields
+    quality_check_passed = models.BooleanField(
+        default=False,
+        help_text=_('Whether quality assurance checks passed')
+    )
+    
+    quality_check_notes = RichTextField(
+        blank=True,
+        help_text=_('Quality assurance notes'),
+        features=['bold', 'italic', 'link', 'ul', 'ol']
+    )
+    
+    quality_checker = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='quality_checked_workflows',
+        help_text=_('User who performed quality check')
+    )
+    
+    quality_check_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_('When quality check was performed')
+    )
+    
+    # Compliance and audit fields
+    compliance_verified = models.BooleanField(
+        default=False,
+        help_text=_('Whether compliance requirements are met')
+    )
+    
+    compliance_notes = RichTextField(
+        blank=True,
+        help_text=_('Compliance verification notes'),
+        features=['bold', 'italic', 'link', 'ul', 'ol']
+    )
+    
+    audit_trail = models.JSONField(
+        default=list,
+        blank=True,
+        help_text=_('Audit trail for compliance tracking')
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Wagtail 7.0.2: Enhanced search configuration
+    search_fields = [
+        index.SearchField('prescription__prescription_number', boost=3.0),
+        index.SearchField('workflow_history', boost=2.0),
+        index.SearchField('quality_check_notes', boost=1.5),
+        index.SearchField('compliance_notes', boost=1.5),
+        index.RelatedFields('prescription__patient', [
+            index.SearchField('first_name', boost=1.5),
+            index.SearchField('last_name', boost=1.5),
+        ]),
+        index.RelatedFields('prescription__medication', [
+            index.SearchField('name', boost=2.0),
+        ]),
+        index.AutocompleteField('prescription__prescription_number'),
+        index.FilterField('current_status'),
+        index.FilterField('current_step'),
+        index.FilterField('priority_level'),
+        index.FilterField('quality_check_passed'),
+        index.FilterField('compliance_verified'),
+        index.FilterField('created_at'),
+        index.FilterField('completed_at'),
+    ]
+    
+    # Wagtail 7.0.2: Enhanced admin panels with form integration
+    panels = [
+        MultiFieldPanel([
+            FieldPanel('prescription'),
+            FieldPanel('current_status'),
+            FieldPanel('current_step'),
+            FieldPanel('priority_level'),
+        ], heading=_('Workflow Status'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('workflow_history'),
+        ], heading=_('Workflow History'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('estimated_completion_time'),
+            FieldPanel('actual_completion_time'),
+            FieldPanel('started_at'),
+            FieldPanel('completed_at'),
+        ], heading=_('Timing Information'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('quality_check_passed'),
+            FieldPanel('quality_check_notes'),
+            FieldPanel('quality_checker'),
+            FieldPanel('quality_check_date'),
+        ], heading=_('Quality Assurance'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('compliance_verified'),
+            FieldPanel('compliance_notes'),
+            FieldPanel('audit_trail'),
+        ], heading=_('Compliance & Audit'), classname='collapsible'),
+        
+        MultiFieldPanel([
+            FieldPanel('created_at'),
+            FieldPanel('updated_at'),
+        ], heading=_('Timestamps'), classname='collapsible'),
+    ]
+    
+    class Meta:
+        verbose_name = _('Prescription Workflow')
+        verbose_name_plural = _('Prescription Workflows')
+        db_table = 'prescription_workflows'
+        indexes = [
+            models.Index(fields=['current_status', 'priority_level']),
+            models.Index(fields=['current_step', 'created_at']),
+            models.Index(fields=['quality_check_passed', 'compliance_verified']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['completed_at']),
+        ]
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Workflow for {self.prescription.prescription_number}"
+    
+    def save(self, *args, **kwargs):
+        """Override save to track workflow timing."""
+        if not self.pk:  # New workflow
+            self.started_at = timezone.now()
+        elif self.current_status == self.WorkflowStatus.COMPLETED and not self.completed_at:
+            self.completed_at = timezone.now()
+            if self.started_at:
+                self.actual_completion_time = self.completed_at - self.started_at
+        
+        super().save(*args, **kwargs)
+    
+    def clean(self):
+        """Enhanced validation for workflow model."""
+        super().clean()
+        
+        # Validate workflow status transitions
+        if self.pk:
+            old_instance = PrescriptionWorkflow.objects.get(pk=self.pk)
+            valid_transitions = {
+                self.WorkflowStatus.CREATED: [self.WorkflowStatus.UNDER_REVIEW, self.WorkflowStatus.CANCELLED],
+                self.WorkflowStatus.UNDER_REVIEW: [self.WorkflowStatus.PHARMACY_REVIEW, self.WorkflowStatus.REQUIRES_CLARIFICATION, self.WorkflowStatus.CANCELLED],
+                self.WorkflowStatus.PHARMACY_REVIEW: [self.WorkflowStatus.APPROVED, self.WorkflowStatus.REQUIRES_CLARIFICATION, self.WorkflowStatus.CANCELLED],
+                self.WorkflowStatus.APPROVED: [self.WorkflowStatus.DISPENSED, self.WorkflowStatus.ON_HOLD, self.WorkflowStatus.CANCELLED],
+                self.WorkflowStatus.DISPENSED: [self.WorkflowStatus.COMPLETED, self.WorkflowStatus.ON_HOLD],
+                self.WorkflowStatus.ON_HOLD: [self.WorkflowStatus.UNDER_REVIEW, self.WorkflowStatus.CANCELLED],
+                self.WorkflowStatus.REQUIRES_CLARIFICATION: [self.WorkflowStatus.UNDER_REVIEW, self.WorkflowStatus.CANCELLED],
+            }
+            
+            if (old_instance.current_status in valid_transitions and 
+                self.current_status not in valid_transitions[old_instance.current_status]):
+                raise ValidationError({
+                    'current_status': _('Invalid status transition')
+                })
+        
+        # Validate completion time
+        if self.actual_completion_time and self.estimated_completion_time:
+            if self.actual_completion_time > self.estimated_completion_time * 2:
+                raise ValidationError({
+                    'actual_completion_time': _('Actual completion time is significantly longer than estimated')
+                })
+    
+    # Wagtail 7.0.2: Enhanced admin methods
+    def get_admin_display_title(self):
+        """Return the title to display in admin."""
+        return f"Workflow: {self.prescription.prescription_number}"
+    
+    def get_admin_display_subtitle(self):
+        """Return the subtitle to display in admin."""
+        return f"{self.get_current_status_display()} • {self.get_current_step_display()}"
+    
+    def get_admin_url(self):
+        """Return the admin URL for this workflow."""
+        from django.urls import reverse
+        return reverse('admin:medications_prescriptionworkflow_change', args=[self.id])
+    
+    def get_absolute_url(self):
+        """Return the public URL for this workflow."""
+        return f"/workflows/{self.id}/"
+    
+    def get_search_display_title(self):
+        """Return the title to display in search results."""
+        return self.get_admin_display_title()
+    
+    def get_search_description(self):
+        """Return the description to display in search results."""
+        return f"{self.get_current_status_display()} • {self.prescription.patient.get_full_name()}"
+    
+    def get_search_url(self, request=None):
+        """Return the URL to display in search results."""
+        return self.get_admin_url()
+    
+    def get_search_meta(self):
+        """Return additional metadata for search results."""
+        return {
+            'status': self.current_status,
+            'step': self.current_step,
+            'priority': self.priority_level,
+            'patient': self.prescription.patient.get_full_name(),
+            'medication': self.prescription.medication.name,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
+    
+    # Workflow management methods
+    def advance_workflow(self, new_status, new_step, notes=None, user=None):
+        """Advance the workflow to a new status and step."""
+        self.current_status = new_status
+        self.current_step = new_step
+        
+        # Add to workflow history
+        if not self.workflow_history:
+            self.workflow_history = []
+        
+        history_entry = {
+            'type': 'status_change',
+            'value': {
+                'status': new_status,
+                'step': new_step,
+                'notes': notes or '',
+                'timestamp': timezone.now(),
+                'user': user.id if user else None,
+            }
+        }
+        
+        self.workflow_history.append(history_entry)
+        self.save()
+    
+    def add_review_notes(self, notes, user=None):
+        """Add review notes to the workflow history."""
+        if not self.workflow_history:
+            self.workflow_history = []
+        
+        history_entry = {
+            'type': 'review_notes',
+            'value': notes
+        }
+        
+        self.workflow_history.append(history_entry)
+        self.save()
+    
+    def perform_quality_check(self, passed, notes, user):
+        """Perform quality assurance check."""
+        self.quality_check_passed = passed
+        self.quality_check_notes = notes
+        self.quality_checker = user
+        self.quality_check_date = timezone.now()
+        self.save()
+    
+    def verify_compliance(self, verified, notes):
+        """Verify compliance requirements."""
+        self.compliance_verified = verified
+        self.compliance_notes = notes
+        self.save()
+    
+    @property
+    def is_completed(self):
+        """Check if workflow is completed."""
+        return self.current_status == self.WorkflowStatus.COMPLETED
+    
+    @property
+    def is_on_hold(self):
+        """Check if workflow is on hold."""
+        return self.current_status == self.WorkflowStatus.ON_HOLD
+    
+    @property
+    def requires_attention(self):
+        """Check if workflow requires attention."""
+        return self.current_status in [
+            self.WorkflowStatus.REQUIRES_CLARIFICATION,
+            self.WorkflowStatus.ON_HOLD
+        ]
+    
+    @property
+    def workflow_duration(self):
+        """Get the duration of the workflow."""
+        if self.completed_at and self.started_at:
+            return self.completed_at - self.started_at
+        return None
