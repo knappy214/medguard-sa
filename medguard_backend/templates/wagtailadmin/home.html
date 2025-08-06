@@ -270,16 +270,16 @@
     <div class="quick-actions">
         <h3>🚀 Quick Actions</h3>
         <div class="action-buttons">
-            <a href="{% url 'wagtailsnippets_medications_medication:add' %}" class="action-btn">
+            <a href="{% url 'medication:add' %}" class="action-btn">
                 {% icon name="plus" %} Add Medication
             </a>
-            <a href="{% url 'wagtailsnippets_medications_medicationschedule:add' %}" class="action-btn">
+            <a href="{% url 'medication-schedule:add' %}" class="action-btn">
                 {% icon name="date" %} Create Schedule
             </a>
-            <a href="{% url 'wagtailsnippets_medications_stockalert:add' %}" class="action-btn">
+            <a href="{% url 'stock-alert:add' %}" class="action-btn">
                 {% icon name="warning" %} Create Alert
             </a>
-            <a href="{% url 'wagtailsnippets_users_user:add' %}" class="action-btn">
+            <a href="{% url 'user:add' %}" class="action-btn">
                 {% icon name="user" %} Add User
             </a>
         </div>
@@ -306,8 +306,8 @@
             </h3>
             <p>Manage your medication inventory, track stock levels, and monitor medication schedules for patients.</p>
             <div class="action-buttons">
-                <a href="{% url 'wagtailsnippets_medications_medication:list' %}" class="action-btn">View All</a>
-                <a href="{% url 'wagtailsnippets_medications_medication:add' %}" class="action-btn">Add New</a>
+                <a href="{% url 'medication:index' %}" class="action-btn">View All</a>
+                <a href="{% url 'medication:add' %}" class="action-btn">Add New</a>
             </div>
         </div>
 
@@ -319,8 +319,8 @@
             </h3>
             <p>Monitor patient medication schedules, track adherence, and manage individual care plans.</p>
             <div class="action-buttons">
-                <a href="{% url 'wagtailsnippets_medications_medicationschedule:list' %}" class="action-btn">Schedules</a>
-                <a href="{% url 'wagtailsnippets_medications_medicationlog:list' %}" class="action-btn">Logs</a>
+                <a href="{% url 'medication-schedule:index' %}" class="action-btn">Schedules</a>
+                <a href="{% url 'medication-log:index' %}" class="action-btn">Logs</a>
             </div>
         </div>
 
@@ -332,8 +332,8 @@
             </h3>
             <p>Manage user accounts, permissions, and access controls for the healthcare system.</p>
             <div class="action-buttons">
-                <a href="{% url 'wagtailsnippets_users_user:list' %}" class="action-btn">View All</a>
-                <a href="{% url 'wagtailsnippets_users_user:add' %}" class="action-btn">Add New</a>
+                <a href="{% url 'user:index' %}" class="action-btn">View All</a>
+                <a href="{% url 'user:add' %}" class="action-btn">Add New</a>
             </div>
         </div>
 
@@ -345,8 +345,8 @@
             </h3>
             <p>Monitor inventory levels, set up alerts for low stock, and ensure medications are always available.</p>
             <div class="action-buttons">
-                <a href="{% url 'wagtailsnippets_medications_stockalert:list' %}" class="action-btn">Alerts</a>
-                <a href="{% url 'wagtailsnippets_medications_medication:list' %}" class="action-btn">Inventory</a>
+                <a href="{% url 'stock-alert:index' %}" class="action-btn">Alerts</a>
+                <a href="{% url 'medication:index' %}" class="action-btn">Inventory</a>
             </div>
         </div>
     </div>

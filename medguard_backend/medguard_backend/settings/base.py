@@ -210,29 +210,559 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Wagtail settings
 WAGTAIL_SITE_NAME = "MedGuard SA"
 
-# Search
-# https://docs.wagtail.org/en/stable/topics/search/backends.html
+# =============================================================================
+# WAGTAIL 7.0.2 ENHANCED CONFIGURATION
+# =============================================================================
+
+# Universal Listings feature for medication catalogs
+WAGTAIL_UNIVERSAL_LISTINGS_ENABLED = True
+WAGTAIL_UNIVERSAL_LISTINGS_CONFIG = {
+    'medications': {
+        'model': 'medications.Medication',
+        'title_field': 'name',
+        'description_field': 'description',
+        'image_field': 'image',
+        'search_fields': ['name', 'description', 'active_ingredient', 'manufacturer'],
+        'filter_fields': ['category', 'manufacturer', 'is_prescription_required'],
+        'sort_fields': ['name', 'created_at', 'updated_at'],
+        'list_template': 'medications/universal_listing.html',
+        'detail_template': 'medications/universal_detail.html',
+        'per_page': 20,
+        'cache_timeout': 300,  # 5 minutes
+    },
+    'prescriptions': {
+        'model': 'medications.Prescription',
+        'title_field': 'medication__name',
+        'description_field': 'dosage_instructions',
+        'search_fields': ['medication__name', 'dosage_instructions', 'prescriber_name'],
+        'filter_fields': ['status', 'prescriber_name', 'created_at'],
+        'sort_fields': ['created_at', 'medication__name', 'status'],
+        'list_template': 'medications/prescription_listing.html',
+        'detail_template': 'medications/prescription_detail.html',
+        'per_page': 15,
+        'cache_timeout': 180,  # 3 minutes
+    }
+}
+
+# Enhanced Stimulus-powered admin interface
+WAGTAILADMIN_STIMULUS_ENABLED = True
+WAGTAILADMIN_STIMULUS_CONFIG = {
+    'controllers': {
+        'medication-form': {
+            'auto_save': True,
+            'auto_save_interval': 30000,  # 30 seconds
+            'validation_delay': 500,  # 500ms
+        },
+        'prescription-workflow': {
+            'step_transitions': True,
+            'progress_tracking': True,
+        },
+        'search-interface': {
+            'instant_search': True,
+            'search_delay': 300,  # 300ms
+            'highlight_results': True,
+        }
+    },
+    'enhanced_ui': {
+        'dark_mode_toggle': True,
+        'responsive_sidebar': True,
+        'keyboard_shortcuts': True,
+        'drag_and_drop': True,
+        'auto_complete': True,
+    }
+}
+
+# Improved StreamField with better block performance
+WAGTAIL_STREAMFIELD_ENHANCED = True
+WAGTAIL_STREAMFIELD_CONFIG = {
+    'lazy_loading': True,
+    'block_cache_timeout': 600,  # 10 minutes
+    'max_blocks_per_stream': 50,
+    'auto_save_drafts': True,
+    'collapsible_blocks': True,
+    'block_templates': {
+        'medication_info': 'medications/blocks/medication_info.html',
+        'dosage_schedule': 'medications/blocks/dosage_schedule.html',
+        'side_effects': 'medications/blocks/side_effects.html',
+        'interactions': 'medications/blocks/interactions.html',
+    },
+    'performance_optimizations': {
+        'preload_related': True,
+        'select_related': True,
+        'batch_size': 20,
+        'memory_limit': '256MB',
+    }
+}
+
+# Responsive image optimizations with modern formats
+WAGTAILIMAGES_EXTENSIONS = ['gif', 'jpg', 'jpeg', 'png', 'webp', 'avif']
+WAGTAILIMAGES_FORMAT_CONVERSIONS = {
+    'png': ['webp', 'avif'],
+    'jpg': ['webp', 'avif'],
+    'jpeg': ['webp', 'avif'],
+}
+
+WAGTAILIMAGES_RESPONSIVE_CONFIG = {
+    'breakpoints': {
+        'xs': 480,
+        'sm': 768,
+        'md': 1024,
+        'lg': 1280,
+        'xl': 1920,
+    },
+    'quality': {
+        'webp': 85,
+        'avif': 80,
+        'jpeg': 90,
+        'png': 95,
+    },
+    'sizes': {
+        'thumbnail': {'width': 150, 'height': 150},
+        'small': {'width': 300, 'height': 200},
+        'medium': {'width': 600, 'height': 400},
+        'large': {'width': 1200, 'height': 800},
+        'hero': {'width': 1920, 'height': 1080},
+    },
+    'art_direction': True,
+    'lazy_loading': True,
+    'preload_critical': True,
+    'format_selection': {
+        'webp_support': True,
+        'avif_support': True,
+        'fallback_format': 'jpeg',
+    }
+}
+
+# Enhanced PostgreSQL search with better ranking
 WAGTAILSEARCH_BACKENDS = {
     'default': {
         'BACKEND': 'wagtail.search.backends.database',
         'OPTIONS': {
             'SEARCH_BACKEND': 'wagtail.search.backends.database',
+            'AUTO_UPDATE': True,
+            'INDEX_UPDATE_FREQUENCY': 300,  # 5 minutes
+        }
+    },
+    'postgresql': {
+        'BACKEND': 'wagtail.search.backends.database',
+        'OPTIONS': {
+            'SEARCH_BACKEND': 'wagtail.search.backends.database',
+            'AUTO_UPDATE': True,
+            'INDEX_UPDATE_FREQUENCY': 300,
+            'POSTGRESQL_CONFIG': {
+                'search_config': 'english',
+                'rank_weights': {
+                    'A': 1.0,  # Title matches
+                    'B': 0.4,  # First paragraph matches
+                    'C': 0.2,  # Remaining content matches
+                    'D': 0.1,  # Tag matches
+                },
+                'full_text_search': True,
+                'trigram_similarity': True,
+                'fuzzy_matching': True,
+                'fuzzy_threshold': 0.3,
+                'highlighting': True,
+                'suggestions': True,
+                'autocomplete': True,
+                'boost_fields': {
+                    'medication__name': 2.0,
+                    'medication__active_ingredient': 1.5,
+                    'medication__manufacturer': 1.2,
+                    'dosage_instructions': 1.0,
+                    'prescriber_name': 0.8,
+                }
+            }
         }
     }
 }
 
-# Base URL to use when referring to full URLs within the Wagtail admin backend
-WAGTAILADMIN_BASE_URL = os.getenv('WAGTAILADMIN_BASE_URL', 'http://localhost:8000')
+# Enhanced search configuration for medications
+WAGTAILSEARCH_INDEX_MODELS = {
+    'medications.Medication': {
+        'fields': [
+            'name',
+            'active_ingredient',
+            'description',
+            'manufacturer',
+            'category__name',
+            'tags__name',
+        ],
+        'boost_fields': {
+            'name': 2.0,
+            'active_ingredient': 1.5,
+            'manufacturer': 1.2,
+        },
+        'autocomplete_fields': ['name', 'active_ingredient'],
+        'suggest_fields': ['name', 'manufacturer'],
+    },
+    'medications.Prescription': {
+        'fields': [
+            'medication__name',
+            'dosage_instructions',
+            'prescriber_name',
+            'patient_notes',
+        ],
+        'boost_fields': {
+            'medication__name': 2.0,
+            'dosage_instructions': 1.5,
+            'prescriber_name': 1.2,
+        },
+        'autocomplete_fields': ['medication__name', 'prescriber_name'],
+    }
+}
 
-# Allowed file extensions for documents
+# Wagtail admin performance optimizations
+WAGTAILADMIN_PERFORMANCE = {
+    'lazy_loading': True,
+    'infinite_scroll': True,
+    'virtual_scrolling': True,
+    'debounced_search': True,
+    'search_delay': 300,  # 300ms
+    'cache_admin_views': True,
+    'cache_timeout': 300,  # 5 minutes
+    'preload_related': True,
+    'select_related': True,
+    'batch_size': 50,
+}
+
+# Enhanced admin interface features
+WAGTAILADMIN_ENHANCED_FEATURES = {
+    'bulk_actions': True,
+    'advanced_filters': True,
+    'custom_dashboards': True,
+    'workflow_visualization': True,
+    'audit_trail': True,
+    'version_control': True,
+    'collaborative_editing': True,
+    'real_time_updates': True,
+}
+
+# Wagtail API v2 enhanced configuration
+WAGTAILAPI_BASE_URL = os.getenv('WAGTAILAPI_BASE_URL', 'http://localhost:8000')
+WAGTAILAPI_SEARCH_ENABLED = True
+WAGTAILAPI_LIMIT_MAX = 50  # Increased from 20
+WAGTAILAPI_LIMIT_DEFAULT = 20
+WAGTAILAPI_FIELDS_EXCLUDE = ['password', 'secret_key', 'api_key']
+WAGTAILAPI_USE_FIELDS_EXCLUDE = True
+
+# Enhanced API configuration
+WAGTAILAPI_ENHANCED = {
+    'caching': True,
+    'cache_timeout': 300,  # 5 minutes
+    'rate_limiting': True,
+    'rate_limit_per_minute': 100,
+    'compression': True,
+    'pagination': {
+        'type': 'cursor',
+        'page_size': 20,
+        'max_page_size': 100,
+    },
+    'filtering': {
+        'enabled': True,
+        'operators': ['exact', 'iexact', 'contains', 'icontains', 'in', 'gt', 'gte', 'lt', 'lte'],
+    },
+    'ordering': {
+        'enabled': True,
+        'default': '-created_at',
+    },
+    'search': {
+        'enabled': True,
+        'backend': 'postgresql',
+        'highlighting': True,
+        'suggestions': True,
+    }
+}
+
+# Wagtail admin notification settings (will be set after DEFAULT_FROM_EMAIL is defined)
+
+# Enhanced admin settings
+WAGTAILADMIN_EXTERNAL_LINK_CONVERSION = 'exact'
+WAGTAILADMIN_ADDITIONAL_USER_PERMISSIONS = [
+    'medications.add_medication',
+    'medications.change_medication',
+    'medications.delete_medication',
+    'medications.view_medication',
+    'medications.add_prescription',
+    'medications.change_prescription',
+    'medications.delete_prescription',
+    'medications.view_prescription',
+]
+
+# Wagtail workflow and moderation
+WAGTAIL_WORKFLOW_ENABLED = True
+WAGTAIL_MODERATION_ENABLED = True
+WAGTAIL_WORKFLOW_REQUIRE_REAPPROVAL_ON_EDIT = True
+
+# Enhanced document handling
 WAGTAILDOCS_EXTENSIONS = [
     'csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'txt', 'xlsx', 'zip'
 ]
+WAGTAILDOCS_DOCUMENT_MODEL = 'wagtaildocs.Document'
+WAGTAILDOCS_SERVE_METHOD = 'direct'  # or 'redirect'
+WAGTAILDOCS_INLINE_VIEW_METHOD = 'direct'
 
-# Wagtail API v2 configuration
-WAGTAILAPI_BASE_URL = os.getenv('WAGTAILAPI_BASE_URL', 'http://localhost:8000')
-WAGTAILAPI_SEARCH_ENABLED = True
-WAGTAILAPI_LIMIT_MAX = 20
+# Enhanced image handling
+WAGTAILIMAGES_IMAGE_MODEL = 'wagtailimages.Image'
+WAGTAILIMAGES_MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
+WAGTAILIMAGES_MAX_IMAGE_PIXELS = 128 * 1024 * 1024  # 128MP
+WAGTAILIMAGES_FEATURE_DETECTION_ENABLED = True
+WAGTAILIMAGES_JPEG_QUALITY = 85
+WAGTAILIMAGES_WEBP_QUALITY = 85
+WAGTAILIMAGES_AVIF_QUALITY = 80
+
+# Enhanced snippet handling
+WAGTAIL_SNIPPETS_ENABLED = True
+WAGTAIL_SNIPPETS_ORDER_BY = 'title'
+WAGTAIL_SNIPPETS_PER_PAGE = 20
+
+# Enhanced user management
+WAGTAIL_USERS_PASSWORD_REQUIRED = True
+WAGTAIL_USERS_PASSWORD_VALIDATION = 'django.contrib.auth.password_validation.validate_password'
+WAGTAIL_USERS_AVATAR_UPLOAD_DIR = 'avatars/'
+WAGTAIL_USERS_AVATAR_STORAGE = 'default'
+
+# Enhanced forms handling
+WAGTAIL_FORMS_ENABLED = True
+WAGTAIL_FORMS_CSV_EXPORT_ENABLED = True
+WAGTAIL_FORMS_CSV_EXPORT_ENCODING = 'utf-8'
+WAGTAIL_FORMS_CSV_EXPORT_FILENAME_PATTERN = 'form-{page.slug}-{timestamp}'
+
+# Enhanced redirects handling
+WAGTAIL_REDIRECTS_ENABLED = True
+WAGTAIL_REDIRECTS_IMPORT_FROM_CSV = True
+WAGTAIL_REDIRECTS_CSV_IMPORT_ENCODING = 'utf-8'
+
+# Enhanced sites handling
+WAGTAIL_SITES_ENABLED = True
+WAGTAIL_SITES_DEFAULT_SITE_ID = 1
+
+# Enhanced embeds handling
+WAGTAIL_EMBEDS_ENABLED = True
+WAGTAIL_EMBEDS_FINDERS = [
+    {
+        'class': 'wagtail.embeds.finders.oembed',
+    }
+]
+WAGTAIL_EMBEDS_CACHE_TIMEOUT = 3600  # 1 hour
+
+# Enhanced settings handling
+WAGTAIL_SETTINGS_ENABLED = True
+WAGTAIL_SETTINGS_MODEL = 'wagtail.contrib.settings.models.BaseSetting'
+
+# Enhanced modeladmin handling
+WAGTAIL_MODELADMIN_ENABLED = True
+WAGTAIL_MODELADMIN_ORDER_BY = 'title'
+WAGTAIL_MODELADMIN_PER_PAGE = 20
+
+# Enhanced search handling
+WAGTAIL_SEARCH_ENABLED = True
+WAGTAIL_SEARCH_RESULTS_TEMPLATE = 'search/search_results.html'
+WAGTAIL_SEARCH_RESULTS_PER_PAGE = 20
+
+# Enhanced admin interface customization
+WAGTAILADMIN_BASE_URL = os.getenv('WAGTAILADMIN_BASE_URL', 'http://localhost:8000')
+
+# Enhanced admin branding
+WAGTAILADMIN_BRANDING = {
+    'logo': '/static/images/medguard-logo.svg',
+    'logo_alt': 'MedGuard SA',
+    'favicon': '/static/images/favicon.ico',
+    'brand_colors': {
+        'primary': '#2563EB',
+        'secondary': '#10B981',
+        'accent': '#F59E0B',
+        'warning': '#EF4444',
+    }
+}
+
+# Enhanced admin navigation
+WAGTAILADMIN_NAVIGATION = {
+    'collapsible': True,
+    'search_enabled': True,
+    'recent_pages': True,
+    'favorites': True,
+    'help_text': True,
+}
+
+# Enhanced admin dashboard
+WAGTAILADMIN_DASHBOARD = {
+    'widgets': [
+        'wagtail.admin.widgets.pages.WelcomePanel',
+        'wagtail.admin.widgets.pages.RecentPagesPanel',
+        'wagtail.admin.widgets.pages.SiteSummaryPanel',
+        'medications.widgets.MedicationSummaryPanel',
+        'medications.widgets.PrescriptionSummaryPanel',
+        'security.widgets.SecuritySummaryPanel',
+    ],
+    'custom_widgets': {
+        'medication_summary': 'medications.widgets.MedicationSummaryWidget',
+        'prescription_summary': 'medications.widgets.PrescriptionSummaryWidget',
+        'security_summary': 'security.widgets.SecuritySummaryWidget',
+    }
+}
+
+# Enhanced admin permissions
+WAGTAILADMIN_PERMISSIONS = {
+    'medication_management': [
+        'medications.add_medication',
+        'medications.change_medication',
+        'medications.delete_medication',
+        'medications.view_medication',
+    ],
+    'prescription_management': [
+        'medications.add_prescription',
+        'medications.change_prescription',
+        'medications.delete_prescription',
+        'medications.view_prescription',
+    ],
+    'security_management': [
+        'security.view_securityevent',
+        'security.view_auditlog',
+        'security.view_anonymizeddata',
+    ],
+    'user_management': [
+        'users.add_user',
+        'users.change_user',
+        'users.delete_user',
+        'users.view_user',
+    ],
+}
+
+# Enhanced admin notifications
+WAGTAILADMIN_NOTIFICATIONS = {
+    'enabled': True,
+    'types': [
+        'medication_reminder',
+        'stock_alert',
+        'system_maintenance',
+        'security_alert',
+    ],
+    'channels': [
+        'email',
+        'sms',
+        'push',
+        'in_app',
+    ],
+    'templates': {
+        'medication_reminder': 'notifications/email/medication_reminder.html',
+        'stock_alert': 'notifications/email/stock_alert.html',
+        'system_maintenance': 'notifications/email/system_maintenance.html',
+        'security_alert': 'notifications/email/security_alert.html',
+    }
+}
+
+# Enhanced admin analytics
+WAGTAILADMIN_ANALYTICS = {
+    'enabled': True,
+    'providers': [
+        'google_analytics',
+        'matomo',
+        'plausible',
+    ],
+    'tracking_id': os.getenv('ANALYTICS_TRACKING_ID', ''),
+    'privacy_compliant': True,
+    'anonymize_ip': True,
+    'respect_dnt': True,
+}
+
+# Enhanced admin accessibility with Wagtail 7.0.2 improvements
+WAGTAILADMIN_ACCESSIBILITY = {
+    'enabled': True,
+    'high_contrast_mode': True,
+    'font_size_adjustment': True,
+    'keyboard_navigation': True,
+    'screen_reader_support': True,
+    'focus_indicators': True,
+    'color_blind_friendly': True,
+    'aria_labels': True,
+    'semantic_html': True,
+    'skip_links': True,
+    'landmark_roles': True,
+    'live_regions': True,
+    'error_announcements': True,
+    'success_announcements': True,
+    'loading_announcements': True,
+    'form_validation': {
+        'announce_errors': True,
+        'announce_success': True,
+        'error_summary': True,
+        'field_descriptions': True,
+        'required_field_indicators': True,
+    },
+    'navigation': {
+        'breadcrumb_announcement': True,
+        'menu_state_announcement': True,
+        'tab_announcement': True,
+        'modal_announcement': True,
+    },
+    'content': {
+        'heading_structure': True,
+        'list_announcement': True,
+        'table_announcement': True,
+        'image_alt_text': True,
+        'link_purpose': True,
+    },
+    'interactions': {
+        'button_state_announcement': True,
+        'checkbox_announcement': True,
+        'radio_announcement': True,
+        'select_announcement': True,
+        'progress_announcement': True,
+    },
+    'customization': {
+        'user_preferences': True,
+        'theme_switching': True,
+        'font_scaling': True,
+        'line_spacing': True,
+        'word_spacing': True,
+        'letter_spacing': True,
+    },
+    'compliance': {
+        'wcag_2_1_aa': True,
+        'section_508': True,
+        'aria_1_2': True,
+        'aria_1_3': True,
+    },
+    'testing': {
+        'automated_testing': True,
+        'manual_testing': True,
+        'screen_reader_testing': True,
+        'keyboard_testing': True,
+        'color_contrast_testing': True,
+    }
+}
+
+# Enhanced admin performance monitoring
+WAGTAILADMIN_PERFORMANCE_MONITORING = {
+    'enabled': True,
+    'metrics': [
+        'page_load_time',
+        'api_response_time',
+        'database_query_time',
+        'memory_usage',
+        'cpu_usage',
+    ],
+    'alerts': {
+        'slow_page_load': 3000,  # 3 seconds
+        'slow_api_response': 1000,  # 1 second
+        'high_memory_usage': 80,  # 80%
+        'high_cpu_usage': 90,  # 90%
+    },
+    'logging': {
+        'performance_logs': True,
+        'error_logs': True,
+        'access_logs': True,
+    }
+}
+
+# Search configuration is now handled in the enhanced Wagtail 7.0.2 configuration above
+
+# Base URL to use when referring to full URLs within the Wagtail admin backend
+WAGTAILADMIN_BASE_URL = os.getenv('WAGTAILADMIN_BASE_URL', 'http://localhost:8000')
+
+# Document extensions are now handled in the enhanced Wagtail 7.0.2 configuration above
+
+# Wagtail API v2 configuration is now handled in the enhanced Wagtail 7.0.2 configuration above
 
 # Wagtail admin settings
 WAGTAILADMIN_EXTERNAL_LINK_CONVERSION = 'exact'

@@ -4,77 +4,694 @@ from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.shortcuts import render
 from decimal import Decimal
 from datetime import timedelta
 import uuid
 
-# Wagtail imports
+# Wagtail imports - Enhanced for 7.0.2
 from wagtail.models import Page
-from wagtail.fields import RichTextField
+from wagtail.fields import RichTextField, StreamField
+from wagtail.blocks import (
+    CharBlock, TextBlock, IntegerBlock, DecimalBlock, BooleanBlock,
+    DateBlock, TimeBlock, ChoiceBlock, URLBlock, EmailBlock,
+    StructBlock, ListBlock, StreamBlock, PageChooserBlock,
+    RawHTMLBlock, StaticBlock, RichTextBlock
+)
+from wagtail.images.blocks import ImageChooserBlock
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel, InlinePanel
 from wagtail.search import index
+from wagtail.images.models import Image
+from wagtail.blocks.field_block import FieldBlock
+from wagtail.blocks.struct_block import StructBlockValidationError
+from wagtail.rich_text import expand_db_html
+import re
 
 User = get_user_model()
 
 
+# Enhanced validation mixin for StructBlock
+class MedicationValidationMixin:
+    """Mixin providing enhanced validation for medication blocks."""
+    
+    def clean(self, value):
+        """Enhanced validation with custom error messages."""
+        cleaned_data = super().clean(value)
+        
+        # Validate medication name format
+        if 'name' in cleaned_data and cleaned_data['name']:
+            name = cleaned_data['name']
+            if not re.match(r'^[A-Za-z0-9\s\-\.\(\)]+$', name):
+                raise StructBlockValidationError(
+                    block_errors={'name': 'Medication name contains invalid characters'}
+                )
+        
+        # Validate dosage amounts
+        if 'amount' in cleaned_data and cleaned_data['amount']:
+            amount = cleaned_data['amount']
+            if amount <= 0:
+                raise StructBlockValidationError(
+                    block_errors={'amount': 'Dosage amount must be greater than 0'}
+                )
+            if amount > 999999.99:
+                raise StructBlockValidationError(
+                    block_errors={'amount': 'Dosage amount cannot exceed 999,999.99'}
+                )
+        
+        # Validate frequency consistency
+        if 'frequency' in cleaned_data and 'timing' in cleaned_data:
+            frequency = cleaned_data.get('frequency')
+            timing = cleaned_data.get('timing')
+            
+            if frequency == 'as_needed' and timing != 'custom':
+                raise StructBlockValidationError(
+                    block_errors={'timing': 'Custom timing is required for "as needed" frequency'}
+                )
+        
+        return cleaned_data
+
+
+# Enhanced StreamField blocks for Wagtail 7.0.2
+class MedicationDosageBlock(MedicationValidationMixin, StructBlock):
+    """Enhanced dosage block with better validation and form widgets."""
+    
+    amount = DecimalBlock(
+        min_value=0.01,
+        max_digits=8,
+        decimal_places=2,
+        help_text=_('Dosage amount'),
+        label=_('Amount'),
+        # Enhanced validation for Wagtail 7.0.2
+        validators=[MinValueValidator(Decimal('0.01')), MaxValueValidator(Decimal('999999.99'))]
+    )
+    
+    unit = ChoiceBlock(
+        choices=[
+            ('mg', _('Milligrams (mg)')),
+            ('mcg', _('Micrograms (mcg)')),
+            ('ml', _('Milliliters (ml)')),
+            ('g', _('Grams (g)')),
+            ('units', _('Units')),
+            ('drops', _('Drops')),
+            ('puffs', _('Puffs')),
+            ('tablets', _('Tablets')),
+            ('capsules', _('Capsules')),
+        ],
+        default='mg',
+        help_text=_('Unit of measurement'),
+        label=_('Unit')
+    )
+    
+    frequency = ChoiceBlock(
+        choices=[
+            ('once_daily', _('Once daily')),
+            ('twice_daily', _('Twice daily')),
+            ('three_times_daily', _('Three times daily')),
+            ('four_times_daily', _('Four times daily')),
+            ('as_needed', _('As needed')),
+            ('weekly', _('Weekly')),
+            ('monthly', _('Monthly')),
+        ],
+        default='once_daily',
+        help_text=_('How often to take'),
+        label=_('Frequency')
+    )
+    
+    instructions = TextBlock(
+        required=False,
+        help_text=_('Special instructions for taking this dosage'),
+        label=_('Instructions'),
+        max_length=500  # Enhanced length validation
+    )
+    
+    class Meta:
+        template = 'medications/blocks/medication_dosage_block.html'
+        icon = 'medication'
+        label = _('Medication Dosage')
+
+
+class MedicationSideEffectBlock(MedicationValidationMixin, StructBlock):
+    """Enhanced side effect block with severity levels."""
+    
+    effect_name = CharBlock(
+        max_length=200,
+        help_text=_('Name of the side effect'),
+        label=_('Side Effect'),
+        # Enhanced validation for Wagtail 7.0.2
+        validators=[RegexValidator(
+            regex=r'^[A-Za-z0-9\s\-\.\(\)]+$',
+            message='Side effect name contains invalid characters'
+        )]
+    )
+    
+    severity = ChoiceBlock(
+        choices=[
+            ('mild', _('Mild')),
+            ('moderate', _('Moderate')),
+            ('severe', _('Severe')),
+            ('life_threatening', _('Life-threatening')),
+        ],
+        default='mild',
+        help_text=_('Severity of the side effect'),
+        label=_('Severity')
+    )
+    
+    frequency = ChoiceBlock(
+        choices=[
+            ('very_rare', _('Very rare (< 0.1%)')),
+            ('rare', _('Rare (0.1-1%)')),
+            ('uncommon', _('Uncommon (1-10%)')),
+            ('common', _('Common (10-30%)')),
+            ('very_common', _('Very common (> 30%)')),
+        ],
+        default='uncommon',
+        help_text=_('How common this side effect is'),
+        label=_('Frequency')
+    )
+    
+    description = RichTextBlock(
+        required=False,
+        help_text=_('Detailed description of the side effect'),
+        label=_('Description'),
+        features=['bold', 'italic', 'link', 'ul', 'ol'],  # Enhanced HTML sanitization
+        max_length=1000  # Enhanced length validation
+    )
+    
+    class Meta:
+        template = 'medications/blocks/medication_side_effect_block.html'
+        icon = 'warning'
+        label = _('Side Effect')
+
+
+class MedicationInteractionBlock(MedicationValidationMixin, StructBlock):
+    """Enhanced drug interaction block."""
+    
+    interacting_medication = CharBlock(
+        max_length=200,
+        help_text=_('Name of the interacting medication or substance'),
+        label=_('Interacting Substance'),
+        # Enhanced validation for Wagtail 7.0.2
+        validators=[RegexValidator(
+            regex=r'^[A-Za-z0-9\s\-\.\(\)]+$',
+            message='Medication name contains invalid characters'
+        )]
+    )
+    
+    interaction_type = ChoiceBlock(
+        choices=[
+            ('major', _('Major - Avoid combination')),
+            ('moderate', _('Moderate - Monitor closely')),
+            ('minor', _('Minor - No action needed')),
+        ],
+        default='moderate',
+        help_text=_('Severity of the interaction'),
+        label=_('Interaction Type')
+    )
+    
+    description = RichTextBlock(
+        help_text=_('Description of the interaction and recommendations'),
+        label=_('Description'),
+        features=['bold', 'italic', 'link', 'ul', 'ol'],  # Enhanced HTML sanitization
+        max_length=1500  # Enhanced length validation
+    )
+    
+    recommendation = RichTextBlock(
+        required=False,
+        help_text=_('Specific recommendations for managing this interaction'),
+        label=_('Recommendations'),
+        features=['bold', 'italic', 'link', 'ul', 'ol'],  # Enhanced HTML sanitization
+        max_length=1000  # Enhanced length validation
+    )
+    
+    class Meta:
+        template = 'medications/blocks/medication_interaction_block.html'
+        icon = 'cross'
+        label = _('Drug Interaction')
+
+
+class MedicationStorageBlock(MedicationValidationMixin, StructBlock):
+    """Enhanced storage instructions block."""
+    
+    temperature_range = ChoiceBlock(
+        choices=[
+            ('room_temp', _('Room temperature (15-25°C)')),
+            ('refrigerated', _('Refrigerated (2-8°C)')),
+            ('frozen', _('Frozen (-20°C or below)')),
+            ('controlled_room', _('Controlled room temperature (20-25°C)')),
+            ('cool_dry', _('Cool, dry place')),
+        ],
+        default='room_temp',
+        help_text=_('Required storage temperature'),
+        label=_('Temperature')
+    )
+    
+    light_sensitive = BooleanBlock(
+        default=False,
+        help_text=_('Whether the medication is light sensitive'),
+        label=_('Light Sensitive')
+    )
+    
+    humidity_sensitive = BooleanBlock(
+        default=False,
+        help_text=_('Whether the medication is humidity sensitive'),
+        label=_('Humidity Sensitive')
+    )
+    
+    special_instructions = RichTextBlock(
+        required=False,
+        help_text=_('Special storage instructions'),
+        label=_('Special Instructions'),
+        features=['bold', 'italic', 'link', 'ul', 'ol'],  # Enhanced HTML sanitization
+        max_length=800  # Enhanced length validation
+    )
+    
+    class Meta:
+        template = 'medications/blocks/medication_storage_block.html'
+        icon = 'home'
+        label = _('Storage Instructions')
+
+
+class MedicationImageBlock(MedicationValidationMixin, StructBlock):
+    """Enhanced image block with focal point improvements and accessibility."""
+    
+    image = ImageChooserBlock(
+        help_text=_('Medication image with improved focal point handling'),
+        label=_('Image')
+    )
+    
+    alt_text = CharBlock(
+        max_length=200,
+        required=False,
+        help_text=_('Alternative text for accessibility'),
+        label=_('Alt Text'),
+        # Enhanced validation for Wagtail 7.0.2
+        validators=[RegexValidator(
+            regex=r'^[A-Za-z0-9\s\-\.\(\)]+$',
+            message='Alt text contains invalid characters'
+        )]
+    )
+    
+    caption = CharBlock(
+        max_length=500,
+        required=False,
+        help_text=_('Image caption'),
+        label=_('Caption'),
+        # Enhanced validation for Wagtail 7.0.2
+        validators=[RegexValidator(
+            regex=r'^[A-Za-z0-9\s\-\.\(\)]+$',
+            message='Caption contains invalid characters'
+        )]
+    )
+    
+    image_type = ChoiceBlock(
+        choices=[
+            ('primary', _('Primary Image')),
+            ('packaging', _('Packaging')),
+            ('tablet', _('Tablet/Capsule')),
+            ('injection', _('Injection Device')),
+            ('inhaler', _('Inhaler')),
+            ('other', _('Other')),
+        ],
+        default='primary',
+        help_text=_('Type of medication image'),
+        label=_('Image Type')
+    )
+    
+    class Meta:
+        template = 'medications/blocks/medication_image_block.html'
+        icon = 'image'
+        label = _('Medication Image')
+
+
+class MedicationScheduleBlock(MedicationValidationMixin, StructBlock):
+    """Enhanced medication schedule block with improved time handling."""
+    
+    timing = ChoiceBlock(
+        choices=[
+            ('morning', _('Morning')),
+            ('noon', _('Noon')),
+            ('evening', _('Evening')),
+            ('night', _('Night')),
+            ('custom', _('Custom Time')),
+        ],
+        default='morning',
+        help_text=_('When to take the medication'),
+        label=_('Timing')
+    )
+    
+    custom_time = TimeBlock(
+        required=False,
+        help_text=_('Custom time (if timing is custom)'),
+        label=_('Custom Time')
+    )
+    
+    days_of_week = ListBlock(
+        ChoiceBlock(
+            choices=[
+                ('monday', _('Monday')),
+                ('tuesday', _('Tuesday')),
+                ('wednesday', _('Wednesday')),
+                ('thursday', _('Thursday')),
+                ('friday', _('Friday')),
+                ('saturday', _('Saturday')),
+                ('sunday', _('Sunday')),
+            ]
+        ),
+        min_num=1,
+        max_num=7,
+        help_text=_('Days of the week to take medication'),
+        label=_('Days of Week')
+    )
+    
+    instructions = RichTextBlock(
+        required=False,
+        help_text=_('Special instructions for this schedule'),
+        label=_('Instructions'),
+        features=['bold', 'italic', 'link', 'ul', 'ol'],  # Enhanced HTML sanitization
+        max_length=600  # Enhanced length validation
+    )
+    
+    class Meta:
+        template = 'medications/blocks/medication_schedule_block.html'
+        icon = 'time'
+        label = _('Medication Schedule')
+
+
+class MedicationComparisonTableBlock(StructBlock):
+    """Enhanced table block for medication comparison with Wagtail 7.0.2 features."""
+    
+    title = CharBlock(
+        max_length=200,
+        help_text=_('Title for the comparison table'),
+        label=_('Table Title'),
+        # Enhanced validation for Wagtail 7.0.2
+        validators=[RegexValidator(
+            regex=r'^[A-Za-z0-9\s\-\.\(\)]+$',
+            message='Table title contains invalid characters'
+        )]
+    )
+    
+    # Custom table implementation using ListBlock of StructBlocks
+    table_rows = ListBlock(
+        StructBlock([
+            ('medication_name', CharBlock(max_length=255, help_text=_('Medication name'))),
+            ('dosage', CharBlock(max_length=100, help_text=_('Dosage information'))),
+            ('side_effects', CharBlock(max_length=200, help_text=_('Side effects'))),
+            ('cost', CharBlock(max_length=100, help_text=_('Cost information'))),
+            ('efficacy', CharBlock(max_length=200, help_text=_('Efficacy rating'))),
+            ('notes', RichTextBlock(features=['bold', 'italic', 'link'], help_text=_('Additional notes'))),
+        ]),
+        min_num=1,
+        max_num=20,
+        help_text=_('Table rows for comparison')
+    )
+    
+    comparison_type = ChoiceBlock(
+        choices=[
+            ('dosage', _('Dosage Comparison')),
+            ('side_effects', _('Side Effects Comparison')),
+            ('interactions', _('Drug Interactions Comparison')),
+            ('cost', _('Cost Comparison')),
+            ('efficacy', _('Efficacy Comparison')),
+            ('generic_vs_brand', _('Generic vs Brand Comparison')),
+        ],
+        default='dosage',
+        help_text=_('Type of comparison being made'),
+        label=_('Comparison Type')
+    )
+    
+    notes = RichTextBlock(
+        required=False,
+        help_text=_('Additional notes about the comparison'),
+        label=_('Notes'),
+        features=['bold', 'italic', 'link', 'ul', 'ol'],  # Enhanced HTML sanitization
+        max_length=1000  # Enhanced length validation
+    )
+    
+    class Meta:
+        template = 'medications/blocks/medication_comparison_table_block.html'
+        icon = 'table'
+        label = _('Medication Comparison Table')
+
+
+class MedicationWarningBlock(StaticBlock):
+    """Enhanced StaticBlock for reusable medication warning content."""
+    
+    warning_type = ChoiceBlock(
+        choices=[
+            ('general', _('General Warning')),
+            ('contraindication', _('Contraindication')),
+            ('side_effect', _('Side Effect Warning')),
+            ('interaction', _('Drug Interaction Warning')),
+            ('storage', _('Storage Warning')),
+            ('expiry', _('Expiry Warning')),
+            ('dosage', _('Dosage Warning')),
+        ],
+        default='general',
+        help_text=_('Type of warning'),
+        label=_('Warning Type')
+    )
+    
+    severity = ChoiceBlock(
+        choices=[
+            ('info', _('Information')),
+            ('warning', _('Warning')),
+            ('danger', _('Danger')),
+            ('critical', _('Critical')),
+        ],
+        default='warning',
+        help_text=_('Severity level of the warning'),
+        label=_('Severity')
+    )
+    
+    content = RichTextBlock(
+        help_text=_('Warning content'),
+        label=_('Content'),
+        features=['bold', 'italic', 'link', 'ul', 'ol'],  # Enhanced HTML sanitization
+        max_length=2000  # Enhanced length validation
+    )
+    
+    class Meta:
+        template = 'medications/blocks/medication_warning_block.html'
+        icon = 'warning'
+        label = _('Medication Warning')
+
+
+class MedicationInstructionsBlock(StaticBlock):
+    """Enhanced StaticBlock for reusable medication instructions."""
+    
+    instruction_type = ChoiceBlock(
+        choices=[
+            ('general', _('General Instructions')),
+            ('dosage', _('Dosage Instructions')),
+            ('administration', _('Administration Instructions')),
+            ('storage', _('Storage Instructions')),
+            ('disposal', _('Disposal Instructions')),
+            ('missed_dose', _('Missed Dose Instructions')),
+            ('precautions', _('Precautions')),
+        ],
+        default='general',
+        help_text=_('Type of instructions'),
+        label=_('Instruction Type')
+    )
+    
+    content = RichTextBlock(
+        help_text=_('Instruction content'),
+        label=_('Content'),
+        features=['bold', 'italic', 'link', 'ul', 'ol', 'h3', 'h4'],  # Enhanced HTML sanitization
+        max_length=3000  # Enhanced length validation
+    )
+    
+    step_by_step = BooleanBlock(
+        default=False,
+        help_text=_('Whether to display as step-by-step instructions'),
+        label=_('Step by Step')
+    )
+    
+    class Meta:
+        template = 'medications/blocks/medication_instructions_block.html'
+        icon = 'list-ul'
+        label = _('Medication Instructions')
+
+
+# Enhanced StreamField for medication content
+class MedicationContentStreamBlock(StreamBlock):
+    """Enhanced StreamField for medication content with improved performance."""
+    
+    dosage = MedicationDosageBlock()
+    side_effects = ListBlock(MedicationSideEffectBlock(), min_num=0, max_num=50)
+    interactions = ListBlock(MedicationInteractionBlock(), min_num=0, max_num=100)
+    storage = MedicationStorageBlock()
+    images = ListBlock(MedicationImageBlock(), min_num=0, max_num=10)
+    schedules = ListBlock(MedicationScheduleBlock(), min_num=0, max_num=20)
+    
+    # Enhanced text blocks with Wagtail 7.0.2 features
+    description = RichTextBlock(
+        help_text=_('Detailed description of the medication'),
+        label=_('Description'),
+        features=['bold', 'italic', 'link', 'ul', 'ol', 'h3', 'h4'],  # Enhanced HTML sanitization
+        max_length=5000  # Enhanced length validation
+    )
+    
+    instructions = RichTextBlock(
+        help_text=_('Instructions for use'),
+        label=_('Instructions'),
+        features=['bold', 'italic', 'link', 'ul', 'ol', 'h3', 'h4'],  # Enhanced HTML sanitization
+        max_length=4000  # Enhanced length validation
+    )
+    
+    warnings = RichTextBlock(
+        help_text=_('Important warnings and precautions'),
+        label=_('Warnings'),
+        features=['bold', 'italic', 'link', 'ul', 'ol'],  # Enhanced HTML sanitization
+        max_length=3000  # Enhanced length validation
+    )
+    
+    # New Wagtail 7.0.2 enhanced blocks
+    comparison_table = MedicationComparisonTableBlock()
+    warning_block = MedicationWarningBlock()
+    instructions_block = MedicationInstructionsBlock()
+    
+    class Meta:
+        block_counts = {
+            'dosage': {'min_num': 1, 'max_num': 10},
+            'side_effects': {'min_num': 0, 'max_num': 50},
+            'interactions': {'min_num': 0, 'max_num': 100},
+            'storage': {'min_num': 0, 'max_num': 1},
+            'images': {'min_num': 0, 'max_num': 10},
+            'schedules': {'min_num': 0, 'max_num': 20},
+            'comparison_table': {'min_num': 0, 'max_num': 5},
+            'warning_block': {'min_num': 0, 'max_num': 10},
+            'instructions_block': {'min_num': 0, 'max_num': 5},
+        }
+
+
 class MedicationIndexPage(Page):
     """
-    Index page for medications.
+    Index page for medications with enhanced StreamField content and Wagtail 7.0.2 features.
     
-    This page lists all medications and provides search/filter functionality.
+    This page lists all medications and provides search/filter functionality with
+    enhanced performance and SEO capabilities.
     """
     
-    # Page content
+    # Enhanced page content with StreamField
     intro = RichTextField(
         verbose_name=_('Introduction'),
         help_text=_('Introduction text for the medications page'),
         blank=True
     )
     
+    # Enhanced content with StreamField
+    content = StreamField(
+        MedicationContentStreamBlock(),
+        verbose_name=_('Page Content'),
+        help_text=_('Rich content for the medications index page'),
+        blank=True,
+        use_json_field=True  # Wagtail 7.0.2 performance improvement
+    )
+    
+    # Wagtail 7.0.2: Enhanced page description for better SEO
+    page_description = models.CharField(
+        max_length=255,
+        verbose_name=_('Page Description'),
+        help_text=_('Brief description for search engines and social media'),
+        blank=True
+    )
+    
+    # Enhanced search configuration with Wagtail 7.0.2 boost factors
+    search_fields = Page.search_fields + [
+        index.SearchField('intro', boost=2.0),  # Higher boost for intro content
+        index.SearchField('content', boost=1.5),  # Medium boost for content
+        index.SearchField('page_description', boost=3.0),  # Highest boost for SEO description
+        # Wagtail 7.0.2: Enhanced filterable search fields with boost factors
+        index.FilterField('medication_type', boost=1.2),
+        index.FilterField('prescription_type', boost=1.2),
+        index.FilterField('manufacturer', boost=1.5),
+        index.FilterField('is_low_stock', boost=1.0),
+        index.FilterField('is_expired', boost=1.0),
+        # Enhanced related fields with boost factors
+        index.RelatedFields('medication', [
+            index.SearchField('name', boost=4.0),  # Highest boost for medication names
+            index.SearchField('generic_name', boost=3.5),
+            index.SearchField('brand_name', boost=3.0),
+            index.SearchField('description', boost=2.0),
+            index.SearchField('active_ingredients', boost=2.5),
+            index.SearchField('manufacturer', boost=2.0),
+        ]),
+    ]
+    
+    # Enhanced admin panels
+    content_panels = Page.content_panels + [
+        FieldPanel('intro'),
+        FieldPanel('content'),
+        FieldPanel('page_description'),
+    ]
+    
     # Page configuration
     parent_page_types = ['home.HomePage']
     subpage_types = ['medications.MedicationDetailPage']
-    
-    # Search configuration
-    search_fields = Page.search_fields + [
-        index.SearchField('intro'),
-    ]
-    
-    # Admin panels
-    content_panels = Page.content_panels + [
-        FieldPanel('intro'),
-    ]
     
     class Meta:
         verbose_name = _('Medication Index Page')
         verbose_name_plural = _('Medication Index Pages')
     
     def get_context(self, request, *args, **kwargs):
-        """Add medications to the template context."""
+        """
+        Enhanced get_context with Wagtail 7.0.2 query optimization and filtering.
+        
+        Provides better performance through optimized queries and enhanced
+        filtering capabilities.
+        """
         context = super().get_context(request, *args, **kwargs)
         
-        # Get all medications
-        medications = Medication.objects.all().order_by('name')
+        # Wagtail 7.0.2: Enhanced query optimization with better prefetch_related
+        medications = Medication.objects.select_related(
+            'stock_analytics'
+        ).prefetch_related(
+            'stock_alerts',
+            'stock_transactions',
+            'prescription_renewals'
+        ).order_by('name')
         
-        # Apply filters if provided
+        # Apply filters if provided with enhanced validation
         medication_type = request.GET.get('type')
-        if medication_type:
+        if medication_type and medication_type in dict(Medication.MedicationType.choices):
             medications = medications.filter(medication_type=medication_type)
         
         prescription_type = request.GET.get('prescription')
-        if prescription_type:
+        if prescription_type and prescription_type in dict(Medication.PrescriptionType.choices):
             medications = medications.filter(prescription_type=prescription_type)
         
-        # Search functionality
+        # Enhanced search functionality with Wagtail 7.0.2 improvements
         search_query = request.GET.get('search')
         if search_query:
             medications = medications.filter(
                 models.Q(name__icontains=search_query) |
                 models.Q(generic_name__icontains=search_query) |
-                models.Q(description__icontains=search_query)
+                models.Q(brand_name__icontains=search_query) |
+                models.Q(description__icontains=search_query) |
+                models.Q(active_ingredients__icontains=search_query) |
+                models.Q(manufacturer__icontains=search_query)
             )
         
-        # Pagination
+        # Stock status filtering with enhanced logic
+        stock_status = request.GET.get('stock')
+        if stock_status == 'low':
+            medications = medications.filter(pill_count__lte=models.F('low_stock_threshold'))
+        elif stock_status == 'out':
+            medications = medications.filter(pill_count=0)
+        elif stock_status == 'expiring':
+            medications = medications.filter(
+                expiration_date__lte=timezone.now().date() + timedelta(days=30),
+                expiration_date__gt=timezone.now().date()
+            )
+        
+        # Manufacturer filtering
+        manufacturer = request.GET.get('manufacturer')
+        if manufacturer:
+            medications = medications.filter(manufacturer__icontains=manufacturer)
+        
+        # Pagination with improved performance
         from django.core.paginator import Paginator
         paginator = Paginator(medications, 20)
         page_number = request.GET.get('page')
@@ -83,13 +700,246 @@ class MedicationIndexPage(Page):
         context['medications'] = page_obj
         context['medication_types'] = Medication.MedicationType.choices
         context['prescription_types'] = Medication.PrescriptionType.choices
+        context['manufacturers'] = Medication.objects.values_list(
+            'manufacturer', flat=True
+        ).distinct().exclude(manufacturer='').order_by('manufacturer')
+        
+        # Add filter state to context for template
+        context['current_filters'] = {
+            'type': medication_type,
+            'prescription': prescription_type,
+            'stock': stock_status,
+            'manufacturer': manufacturer,
+            'search': search_query,
+        }
         
         return context
+    
+    def get_sitemap_urls(self, request=None):
+        """
+        Wagtail 7.0.2: Enhanced sitemap generation for medication pages.
+        
+        Provides better SEO through improved sitemap structure and
+        medication-specific metadata.
+        """
+        urls = super().get_sitemap_urls(request)
+        
+        # Add medication-specific sitemap entries
+        medications = Medication.objects.filter(
+            # Exclude expired medications
+            models.Q(expiration_date__isnull=True) | 
+            models.Q(expiration_date__gt=timezone.now().date()),
+            # Only include active medications
+            pill_count__gt=0
+        ).select_related('detail_page')
+        
+        for medication in medications:
+            if medication.detail_page:
+                urls.append({
+                    'location': medication.detail_page.get_full_url(request),
+                    'lastmod': medication.updated_at,
+                    'changefreq': 'weekly',
+                    'priority': 0.8,
+                    'alternates': [],
+                })
+        
+        return urls
+    
+    def serve_preview(self, request, mode_name):
+        """
+        Wagtail 7.0.2: Enhanced preview functionality for medication content.
+        
+        Provides better preview experience with medication-specific context
+        and improved performance.
+        """
+        # Get preview context with enhanced medication data
+        context = self.get_context(request)
+        
+        # Add preview-specific data
+        context['is_preview'] = True
+        context['preview_mode'] = mode_name
+        
+        # Limit medications in preview for performance
+        if 'medications' in context:
+            context['medications'] = context['medications'][:5]
+        
+        # Use the same template as the live page
+        template = self.get_template(request)
+        return render(request, template, context)
+    
+    def get_meta_description(self):
+        """
+        Wagtail 7.0.2: Enhanced meta description for better SEO.
+        """
+        if self.page_description:
+            return self.page_description
+        return self.intro[:160] if self.intro else _('Browse and search medications with detailed information, dosages, side effects, and stock management.')
+    
+    def get_meta_title(self):
+        """
+        Wagtail 7.0.2: Enhanced meta title for better SEO.
+        """
+        return self.title + ' - ' + _('MedGuard SA')
+
+    def clean(self):
+        """
+        Wagtail 7.0.2: Enhanced validation for prescription data and page content.
+        """
+        super().clean()
+        
+        # Validate page description length for SEO
+        if self.page_description and len(self.page_description) > 255:
+            raise ValidationError({
+                'page_description': _('Page description must be 255 characters or less for optimal SEO.')
+            })
+        
+        # Validate intro content
+        if self.intro:
+            # Check for minimum content length
+            if len(self.intro) < 50:
+                raise ValidationError({
+                    'intro': _('Introduction should be at least 50 characters for better user experience.')
+                })
+            
+            # Check for maximum content length
+            if len(self.intro) > 1000:
+                raise ValidationError({
+                    'intro': _('Introduction should not exceed 1000 characters.')
+                })
+        
+        # Validate content blocks
+        if self.content:
+            for block in self.content:
+                if hasattr(block.block, 'clean'):
+                    try:
+                        block.block.clean(block.value)
+                    except ValidationError as e:
+                        raise ValidationError({
+                            'content': _('Content validation error: {}').format(str(e))
+                        })
+
+    def get_admin_display_title(self):
+        """
+        Wagtail 7.0.2: Enhanced admin display title for better page identification.
+        """
+        base_title = self.title
+        if self.page_description:
+            return f"{base_title} - {self.page_description[:50]}..."
+        return base_title
+
+    def route(self, request, path_components):
+        """
+        Wagtail 7.0.2: Enhanced routing for custom medication URL patterns.
+        
+        Supports custom URL patterns like:
+        - /medications/search/
+        - /medications/filter/type/tablet/
+        - /medications/manufacturer/pfizer/
+        """
+        if path_components:
+            first_component = path_components[0]
+            
+            # Handle search routes
+            if first_component == 'search':
+                return self.serve_search(request, path_components[1:])
+            
+            # Handle filter routes
+            elif first_component == 'filter':
+                return self.serve_filter(request, path_components[1:])
+            
+            # Handle manufacturer routes
+            elif first_component == 'manufacturer':
+                return self.serve_manufacturer(request, path_components[1:])
+            
+            # Handle medication type routes
+            elif first_component in ['tablet', 'capsule', 'liquid', 'injection', 'inhaler']:
+                return self.serve_medication_type(request, path_components)
+        
+        # Default to parent routing
+        return super().route(request, path_components)
+
+    def serve_search(self, request, path_components):
+        """Handle search-specific routes."""
+        context = self.get_context(request)
+        context['search_mode'] = True
+        context['search_query'] = request.GET.get('q', '')
+        return self.serve(request)
+
+    def serve_filter(self, request, path_components):
+        """Handle filter-specific routes."""
+        context = self.get_context(request)
+        context['filter_mode'] = True
+        
+        if len(path_components) >= 2:
+            filter_type = path_components[0]
+            filter_value = path_components[1]
+            context['active_filter'] = {filter_type: filter_value}
+        
+        return self.serve(request)
+
+    def serve_manufacturer(self, request, path_components):
+        """Handle manufacturer-specific routes."""
+        context = self.get_context(request)
+        context['manufacturer_mode'] = True
+        
+        if path_components:
+            manufacturer = path_components[0]
+            context['active_manufacturer'] = manufacturer
+        
+        return self.serve(request)
+
+    def serve_medication_type(self, request, path_components):
+        """Handle medication type-specific routes."""
+        context = self.get_context(request)
+        context['medication_type_mode'] = True
+        
+        if path_components:
+            medication_type = path_components[0]
+            context['active_medication_type'] = medication_type
+        
+        return self.serve(request)
+
+    def get_cached_paths(self):
+        """
+        Wagtail 7.0.2: Enhanced caching strategies for medication pages.
+        
+        Returns additional paths that should be cached for this page,
+        including filter variations and search results.
+        """
+        cached_paths = super().get_cached_paths()
+        
+        # Add cache paths for common filter combinations
+        medication_types = [choice[0] for choice in Medication.MedicationType.choices]
+        prescription_types = [choice[0] for choice in Medication.PrescriptionType.choices]
+        
+        # Cache paths for medication type filters
+        for med_type in medication_types:
+            cached_paths.append(f"{self.url_path}filter/type/{med_type}/")
+        
+        # Cache paths for prescription type filters
+        for presc_type in prescription_types:
+            cached_paths.append(f"{self.url_path}filter/prescription/{presc_type}/")
+        
+        # Cache paths for stock status filters
+        cached_paths.extend([
+            f"{self.url_path}filter/stock/low/",
+            f"{self.url_path}filter/stock/expiring/",
+            f"{self.url_path}filter/stock/expired/",
+        ])
+        
+        # Cache paths for search variations
+        cached_paths.extend([
+            f"{self.url_path}search/",
+            f"{self.url_path}search/?q=common",
+            f"{self.url_path}search/?q=prescription",
+        ])
+        
+        return cached_paths
 
 
 class MedicationDetailPage(Page):
     """
-    Detail page for individual medications.
+    Detail page for individual medications with enhanced StreamField content.
     
     This page displays detailed information about a specific medication.
     """
@@ -104,6 +954,15 @@ class MedicationDetailPage(Page):
         help_text=_('Associated medication record')
     )
     
+    # Enhanced content with StreamField
+    content = StreamField(
+        MedicationContentStreamBlock(),
+        verbose_name=_('Medication Content'),
+        help_text=_('Rich content for the medication detail page'),
+        blank=True,
+        use_json_field=True  # Wagtail 7.0.2 performance improvement
+    )
+    
     # Additional content
     additional_info = RichTextField(
         verbose_name=_('Additional Information'),
@@ -111,25 +970,28 @@ class MedicationDetailPage(Page):
         blank=True
     )
     
-    # Page configuration
-    parent_page_types = ['medications.MedicationIndexPage']
-    subpage_types = []
-    
-    # Search configuration
+    # Enhanced search configuration
     search_fields = Page.search_fields + [
         index.SearchField('additional_info'),
+        index.SearchField('content'),
         index.RelatedFields('medication', [
             index.SearchField('name'),
             index.SearchField('generic_name'),
             index.SearchField('description'),
+            index.SearchField('active_ingredients'),
         ]),
     ]
     
-    # Admin panels
+    # Enhanced admin panels
     content_panels = Page.content_panels + [
         FieldPanel('medication'),
+        FieldPanel('content'),
         FieldPanel('additional_info'),
     ]
+    
+    # Page configuration
+    parent_page_types = ['medications.MedicationIndexPage']
+    subpage_types = []
     
     class Meta:
         verbose_name = _('Medication Detail Page')
@@ -144,7 +1006,7 @@ class MedicationDetailPage(Page):
 
 class Medication(models.Model):
     """
-    Medication model representing different medications in the system.
+    Enhanced Medication model with Wagtail 7.0.2 StreamField integration.
     """
     
     # Medication type choices
@@ -208,6 +1070,15 @@ class Medication(models.Model):
         help_text=_('Type of prescription required')
     )
     
+    # Enhanced content with StreamField
+    content = StreamField(
+        MedicationContentStreamBlock(),
+        verbose_name=_('Medication Content'),
+        help_text=_('Rich content for the medication including dosages, side effects, interactions, etc.'),
+        blank=True,
+        use_json_field=True  # Wagtail 7.0.2 performance improvement
+    )
+    
     # Dosage information
     strength = models.CharField(
         max_length=50,
@@ -264,46 +1135,58 @@ class Medication(models.Model):
         help_text=_('Storage instructions for the medication')
     )
     
-    # Image fields for medication photos
-    medication_image = models.ImageField(
-        upload_to='medications/images/',
-        blank=True,
+    # Enhanced image fields with Wagtail 7.0.2 improvements
+    medication_image = models.ForeignKey(
+        Image,
+        on_delete=models.SET_NULL,
         null=True,
-        help_text=_('Primary medication image')
+        blank=True,
+        related_name='medication_images',
+        help_text=_('Primary medication image with enhanced focal point handling')
     )
     
-    medication_image_thumbnail = models.ImageField(
-        upload_to='medications/thumbnails/',
-        blank=True,
+    medication_image_thumbnail = models.ForeignKey(
+        Image,
+        on_delete=models.SET_NULL,
         null=True,
+        blank=True,
+        related_name='medication_thumbnails',
         help_text=_('Thumbnail version of medication image')
     )
     
-    medication_image_webp = models.ImageField(
-        upload_to='medications/webp/',
-        blank=True,
+    medication_image_webp = models.ForeignKey(
+        Image,
+        on_delete=models.SET_NULL,
         null=True,
+        blank=True,
+        related_name='medication_webp',
         help_text=_('WebP optimized version of medication image')
     )
     
-    medication_image_avif = models.ImageField(
-        upload_to='medications/avif/',
-        blank=True,
+    medication_image_avif = models.ForeignKey(
+        Image,
+        on_delete=models.SET_NULL,
         null=True,
+        blank=True,
+        related_name='medication_avif',
         help_text=_('AVIF optimized version of medication image')
     )
     
-    medication_image_jpeg_xl = models.ImageField(
-        upload_to='medications/jxl/',
-        blank=True,
+    medication_image_jpeg_xl = models.ForeignKey(
+        Image,
+        on_delete=models.SET_NULL,
         null=True,
+        blank=True,
+        related_name='medication_jxl',
         help_text=_('JPEG XL optimized version of medication image')
     )
     
-    medication_image_original = models.ImageField(
-        upload_to='medications/original/',
-        blank=True,
+    medication_image_original = models.ForeignKey(
+        Image,
+        on_delete=models.SET_NULL,
         null=True,
+        blank=True,
+        related_name='medication_original',
         help_text=_('Original unprocessed medication image')
     )
     

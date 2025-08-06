@@ -99,6 +99,7 @@ if DEBUG:
         'SHOW_TOOLBAR_CALLBACK': lambda request: True,
         'SHOW_COLLAPSED': True,
         'SHOW_TEMPLATE_CONTEXT': True,
+        'IS_RUNNING_TESTS': False,
     }
     
     # Debug toolbar panels

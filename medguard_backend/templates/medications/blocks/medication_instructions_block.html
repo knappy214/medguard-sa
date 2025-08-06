@@ -1,0 +1,304 @@
+{% load wagtailcore_tags %}
+
+<div class="medication-instructions-block">
+    <div class="instructions-header">
+        <div class="instructions-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 11H1l8-8v6a4 4 0 0 0 4 4h6l-8 8v-6a4 4 0 0 0-4-4z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        
+        <div class="instructions-type">
+            {% if value.instruction_type %}
+                <span class="instruction-type-badge">{{ value.get_instruction_type_display }}</span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="instructions-content {% if value.step_by_step %}step-by-step{% endif %}">
+        {% if value.content %}
+            {% if value.step_by_step %}
+                <ol class="step-instructions">
+                    {% for block in value.content %}
+                        <li class="step-item">
+                            {% include_block block %}
+                        </li>
+                    {% endfor %}
+                </ol>
+            {% else %}
+                {% include_block value.content %}
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.medication-instructions-block {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background-color: #f8fafc;
+    position: relative;
+}
+
+.instructions-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.instructions-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: #3b82f6;
+    color: white;
+    flex-shrink: 0;
+}
+
+.instruction-type-badge {
+    display: inline-block;
+    padding: 0.375rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: 9999px;
+    background-color: #3b82f6;
+    color: white;
+}
+
+.instructions-content {
+    margin-left: 3.5rem;
+}
+
+.instructions-content h1,
+.instructions-content h2,
+.instructions-content h3,
+.instructions-content h4,
+.instructions-content h5,
+.instructions-content h6 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.instructions-content h3 {
+    font-size: 1.25rem;
+    color: #3b82f6;
+}
+
+.instructions-content h4 {
+    font-size: 1.125rem;
+    color: #64748b;
+}
+
+.instructions-content p {
+    margin-bottom: 1rem;
+    line-height: 1.7;
+    color: #334155;
+}
+
+.instructions-content ul,
+.instructions-content ol {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.instructions-content li {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}
+
+.instructions-content a {
+    color: #3b82f6;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.instructions-content a:hover {
+    color: #1e40af;
+    text-decoration: none;
+}
+
+/* Step-by-step styling */
+.step-instructions {
+    counter-reset: step-counter;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.step-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: white;
+    border-radius: 0.375rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.step-item::before {
+    counter-increment: step-counter;
+    content: counter(step-counter);
+    position: absolute;
+    top: -0.75rem;
+    left: 1rem;
+    width: 2rem;
+    height: 2rem;
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.step-item:last-child {
+    margin-bottom: 0;
+}
+
+.step-item h1,
+.step-item h2,
+.step-item h3,
+.step-item h4,
+.step-item h5,
+.step-item h6 {
+    margin-top: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.step-item p {
+    margin-bottom: 0.75rem;
+}
+
+.step-item ul,
+.step-item ol {
+    margin-bottom: 0.75rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .medication-instructions-block {
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .instructions-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .instructions-content {
+        margin-left: 0;
+        margin-top: 0.75rem;
+    }
+    
+    .instructions-icon {
+        width: 2rem;
+        height: 2rem;
+    }
+    
+    .step-item {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .step-item::before {
+        width: 1.75rem;
+        height: 1.75rem;
+        font-size: 0.75rem;
+        top: -0.5rem;
+        left: 0.75rem;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .medication-instructions-block {
+        border-width: 2px;
+    }
+    
+    .step-item {
+        border-width: 2px;
+    }
+    
+    .instructions-icon,
+    .step-item::before {
+        border: 2px solid currentColor;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .medication-instructions-block {
+        background-color: #1e293b;
+        border-color: #334155;
+    }
+    
+    .instructions-content h1,
+    .instructions-content h2,
+    .instructions-content h3,
+    .instructions-content h4,
+    .instructions-content h5,
+    .instructions-content h6 {
+        color: #f1f5f9;
+    }
+    
+    .instructions-content p {
+        color: #cbd5e1;
+    }
+    
+    .step-item {
+        background-color: #334155;
+        border-color: #475569;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .medication-instructions-block,
+    .step-item {
+        transition: none;
+    }
+}
+
+/* Print styles */
+@media print {
+    .medication-instructions-block {
+        border: 1px solid #000;
+        background-color: white;
+        color: black;
+    }
+    
+    .instructions-icon {
+        background-color: #000;
+        color: white;
+    }
+    
+    .step-item {
+        background-color: white;
+        border: 1px solid #000;
+        box-shadow: none;
+    }
+    
+    .step-item::before {
+        background-color: #000;
+        color: white;
+        box-shadow: none;
+    }
+}
+</style> 

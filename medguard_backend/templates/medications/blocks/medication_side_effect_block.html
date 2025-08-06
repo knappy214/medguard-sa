@@ -1,0 +1,50 @@
+{% load wagtailcore_tags %}
+
+{% if value.severity == 'life_threatening' %}
+    {% set severity_color = 'red' %}
+    {% set severity_bg = 'bg-red-50' %}
+    {% set severity_border = 'border-red-500' %}
+    {% set severity_text = 'text-red-900' %}
+{% elif value.severity == 'severe' %}
+    {% set severity_color = 'orange' %}
+    {% set severity_bg = 'bg-orange-50' %}
+    {% set severity_border = 'border-orange-500' %}
+    {% set severity_text = 'text-orange-900' %}
+{% elif value.severity == 'moderate' %}
+    {% set severity_color = 'yellow' %}
+    {% set severity_bg = 'bg-yellow-50' %}
+    {% set severity_border = 'border-yellow-500' %}
+    {% set severity_text = 'text-yellow-900' %}
+{% else %}
+    {% set severity_color = 'green' %}
+    {% set severity_bg = 'bg-green-50' %}
+    {% set severity_border = 'border-green-500' %}
+    {% set severity_text = 'text-green-900' %}
+{% endif %}
+
+<div class="medication-side-effect-block bg-white rounded-lg shadow-md p-4 border-l-4 {{ severity_border }}">
+    <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 text-{{ severity_color }}-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+            <h4 class="text-md font-semibold text-gray-900">{{ value.effect_name }}</h4>
+        </div>
+        <span class="px-2 py-1 text-xs font-medium rounded-full bg-{{ severity_color }}-100 text-{{ severity_color }}-800">
+            {{ value.severity|title }}
+        </span>
+    </div>
+    
+    <div class="space-y-2">
+        <div class="flex items-center">
+            <span class="text-sm font-medium text-gray-700 w-20">Frequency:</span>
+            <span class="text-sm text-gray-900">{{ value.frequency|title }}</span>
+        </div>
+        
+        {% if value.description %}
+        <div class="mt-3 p-3 {{ severity_bg }} rounded-md">
+            <p class="text-sm {{ severity_text }}">{{ value.description }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div> 

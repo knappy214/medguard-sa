@@ -1,0 +1,45 @@
+{% load wagtailcore_tags %}
+
+<div class="medication-storage-block bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+    <div class="flex items-center mb-4">
+        <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path>
+        </svg>
+        <h3 class="text-lg font-semibold text-gray-900">Storage Instructions</h3>
+    </div>
+    
+    <div class="space-y-4">
+        <div class="flex items-center">
+            <span class="text-sm font-medium text-gray-700 w-32">Temperature:</span>
+            <span class="text-sm text-gray-900">{{ value.temperature_range|title }}</span>
+        </div>
+        
+        <div class="flex items-center space-x-6">
+            {% if value.light_sensitive %}
+            <div class="flex items-center">
+                <svg class="w-4 h-4 text-yellow-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+                <span class="text-sm text-yellow-700">Light Sensitive</span>
+            </div>
+            {% endif %}
+            
+            {% if value.humidity_sensitive %}
+            <div class="flex items-center">
+                <svg class="w-4 h-4 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                </svg>
+                <span class="text-sm text-blue-700">Humidity Sensitive</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if value.special_instructions %}
+        <div class="mt-4 p-3 bg-green-50 rounded-md">
+            <h4 class="text-sm font-medium text-green-900 mb-2">Special Instructions:</h4>
+            <p class="text-sm text-green-800">{{ value.special_instructions }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div> 

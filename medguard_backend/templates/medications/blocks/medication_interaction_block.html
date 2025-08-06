@@ -1,0 +1,46 @@
+{% load wagtailcore_tags %}
+
+{% if value.interaction_type == 'major' %}
+    {% set interaction_color = 'red' %}
+    {% set interaction_bg = 'bg-red-50' %}
+    {% set interaction_border = 'border-red-500' %}
+    {% set interaction_text = 'text-red-900' %}
+{% elif value.interaction_type == 'moderate' %}
+    {% set interaction_color = 'orange' %}
+    {% set interaction_bg = 'bg-orange-50' %}
+    {% set interaction_border = 'border-orange-500' %}
+    {% set interaction_text = 'text-orange-900' %}
+{% else %}
+    {% set interaction_color = 'yellow' %}
+    {% set interaction_bg = 'bg-yellow-50' %}
+    {% set interaction_border = 'border-yellow-500' %}
+    {% set interaction_text = 'text-yellow-900' %}
+{% endif %}
+
+<div class="medication-interaction-block bg-white rounded-lg shadow-md p-4 border-l-4 {{ interaction_border }}">
+    <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 text-{{ interaction_color }}-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            <h4 class="text-md font-semibold text-gray-900">{{ value.interacting_medication }}</h4>
+        </div>
+        <span class="px-2 py-1 text-xs font-medium rounded-full bg-{{ interaction_color }}-100 text-{{ interaction_color }}-800">
+            {{ value.interaction_type|title }}
+        </span>
+    </div>
+    
+    <div class="space-y-3">
+        <div class="p-3 {{ interaction_bg }} rounded-md">
+            <h5 class="text-sm font-medium {{ interaction_text }} mb-2">Description:</h5>
+            <p class="text-sm {{ interaction_text }}">{{ value.description }}</p>
+        </div>
+        
+        {% if value.recommendation %}
+        <div class="p-3 bg-blue-50 rounded-md">
+            <h5 class="text-sm font-medium text-blue-900 mb-2">Recommendations:</h5>
+            <p class="text-sm text-blue-800">{{ value.recommendation }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div> 
