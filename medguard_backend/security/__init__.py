@@ -8,6 +8,12 @@ This app provides comprehensive security features including:
 - Access control
 - Breach detection
 - Compliance monitoring
+- Wagtail 7.0.2 enhanced permissions
+- Secure document management
+- Enhanced form security
+- Improved admin access controls
+- Patient data encryption
+- Compliance reporting
 """
 
 default_app_config = 'security.apps.SecurityConfig' 

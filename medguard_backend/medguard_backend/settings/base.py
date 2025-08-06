@@ -19,6 +19,64 @@ load_dotenv()
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-in-production')
 
+# Medical session management settings
+MEDICAL_SESSION_TIMEOUT = int(os.getenv('MEDICAL_SESSION_TIMEOUT', '8'))  # Hours
+MEDICAL_SESSION_MAX_ACTIVE = int(os.getenv('MEDICAL_SESSION_MAX_ACTIVE', '3'))  # Max active sessions per user
+
+# Healthcare Security Settings - Wagtail 7.0.2
+HEALTHCARE_ENCRYPTION_KEY = os.getenv('HEALTHCARE_ENCRYPTION_KEY', '')
+HEALTHCARE_ENCRYPTION_SALT = os.getenv('HEALTHCARE_ENCRYPTION_SALT', b'medguard_salt_2024')
+
+# Patient Data Encryption Settings
+PATIENT_DATA_ENCRYPTION = {
+    'ALGORITHM': 'AES-256-GCM',
+    'KEY_ROTATION_DAYS': int(os.getenv('KEY_ROTATION_DAYS', '90')),
+    'BACKUP_KEYS_COUNT': int(os.getenv('BACKUP_KEYS_COUNT', '3')),
+    'ENCRYPTION_REQUIRED_FIELDS': [
+        'ssn', 'social_security_number', 'credit_card', 'card_number',
+        'medical_record_number', 'diagnosis', 'treatment_plan',
+        'medication_list', 'allergies', 'family_history', 'genetic_info'
+    ]
+}
+
+# Form Security Settings
+FORM_SECURITY = {
+    'RATE_LIMITS': {
+        'default': int(os.getenv('FORM_RATE_LIMIT_DEFAULT', '10')),  # per minute
+        'prescription': int(os.getenv('FORM_RATE_LIMIT_PRESCRIPTION', '5')),
+        'critical': int(os.getenv('FORM_RATE_LIMIT_CRITICAL', '2')),
+    },
+    'VALIDATION': {
+        'max_field_length': int(os.getenv('MAX_FIELD_LENGTH', '10000')),
+        'suspicious_patterns_enabled': True,
+        'injection_detection_enabled': True,
+    }
+}
+
+# Admin Access Control Settings
+ADMIN_ACCESS_CONTROL = {
+    'SESSION_TIMEOUT_MINUTES': int(os.getenv('ADMIN_SESSION_TIMEOUT', '30')),
+    'MAX_FAILED_ATTEMPTS': int(os.getenv('ADMIN_MAX_FAILED_ATTEMPTS', '5')),
+    'LOCKOUT_DURATION_MINUTES': int(os.getenv('ADMIN_LOCKOUT_DURATION', '15')),
+    'REQUIRE_2FA_FOR_ADMIN': os.getenv('REQUIRE_2FA_FOR_ADMIN', 'True').lower() == 'true',
+}
+
+# Document Privacy Settings
+DOCUMENT_PRIVACY = {
+    'DEFAULT_PRIVACY_LEVEL': os.getenv('DEFAULT_PRIVACY_LEVEL', 'internal'),
+    'ENCRYPTION_FOR_CONFIDENTIAL': True,
+    'AUDIT_ALL_ACCESS': True,
+    'PATIENT_CONSENT_REQUIRED': ['confidential', 'restricted'],
+}
+
+# Compliance Reporting Settings
+COMPLIANCE_REPORTING = {
+    'AUTO_GENERATE_REPORTS': True,
+    'REPORT_RETENTION_DAYS': int(os.getenv('REPORT_RETENTION_DAYS', '2555')),  # 7 years
+    'HIPAA_COMPLIANCE_THRESHOLD': float(os.getenv('HIPAA_COMPLIANCE_THRESHOLD', '0.9')),
+    'ALERT_ON_NON_COMPLIANCE': True,
+}
+
 # Application definition
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -81,6 +139,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'wagtail.contrib.redirects.middleware.RedirectMiddleware',
     'security.audit.AuditMiddleware',  # HIPAA audit logging
+    # New Wagtail 7.0.2 Security Middleware
+    'security.form_security.FormSecurityMiddleware',  # Enhanced form security
+    'security.admin_access_controls.SecureAdminAccessMiddleware',  # Admin access controls
+    'security.patient_encryption.PatientDataEncryptionMiddleware',  # Patient data encryption
 ]
 
 ROOT_URLCONF = 'medguard_backend.urls'
@@ -138,10 +200,16 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {
-            'min_length': 12,  # Increased for HIPAA compliance
-        }
+        'NAME': 'security.password_validators.HealthcarePasswordValidator',
+    },
+    {
+        'NAME': 'security.password_validators.HIPAACompliantPasswordValidator',
+    },
+    {
+        'NAME': 'security.password_validators.MedicalDataPasswordValidator',
+    },
+    {
+        'NAME': 'security.password_validators.TwoFactorPasswordValidator',
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
