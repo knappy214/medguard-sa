@@ -603,21 +603,6 @@ class MedicationIndexPage(Page):
         index.SearchField('intro', boost=2.0),  # Higher boost for intro content
         index.SearchField('content', boost=1.5),  # Medium boost for content
         index.SearchField('page_description', boost=3.0),  # Highest boost for SEO description
-        # Wagtail 7.0.2: Enhanced filterable search fields with boost factors
-        index.FilterField('medication_type', boost=1.2),
-        index.FilterField('prescription_type', boost=1.2),
-        index.FilterField('manufacturer', boost=1.5),
-        index.FilterField('is_low_stock', boost=1.0),
-        index.FilterField('is_expired', boost=1.0),
-        # Enhanced related fields with boost factors
-        index.RelatedFields('medication', [
-            index.SearchField('name', boost=4.0),  # Highest boost for medication names
-            index.SearchField('generic_name', boost=3.5),
-            index.SearchField('brand_name', boost=3.0),
-            index.SearchField('description', boost=2.0),
-            index.SearchField('active_ingredients', boost=2.5),
-            index.SearchField('manufacturer', boost=2.0),
-        ]),
     ]
     
     # Enhanced admin panels
