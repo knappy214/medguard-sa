@@ -1,0 +1,122 @@
+{% load i18n %}
+{% with lang_code=LANGUAGE_CODE|default:"en-ZA" %}
+
+<!DOCTYPE html>
+<html lang="{{ lang_code }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% trans 'Medication reminder notification from MedGuard SA' %}">
+    <meta name="keywords" content="medication, reminder, health, MedGuard">
+    <title>{% trans "Medication Reminder" %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #10B981; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+        .reminder-details { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #10B981; }
+        .medication-info { background: #f0f9ff; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .button { display: inline-block; padding: 10px 20px; background: #10B981; color: white; text-decoration: none; border-radius: 5px; }
+        .urgent { background: #EF4444; }
+        .important { background: #F59E0B; }
+        .warning-box { background: #fef2f2; padding: 10px; border-left: 4px solid #EF4444; margin: 10px 0; }
+        .medication-tips { background: #f0fdf4; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .appointment-info { background: #f0f9ff; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .refill-info { background: #fef3c7; padding: 15px; border-radius: 5px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{% trans "MedGuard SA" %}</h1>
+            <h2>{% trans "Medication Reminder" %}</h2>
+        </div>
+        
+        <div class="content">
+            {% if is_test_notification %}
+                <h3>{% trans "Test Reminder Notification" %}</h3>
+                <p>{% trans "This is a test notification to verify your reminder settings are working correctly." %}</p>
+            {% else %}
+                <h3>{% trans "Time for Your Medication" %}</h3>
+                <p>{% trans "It's time to take your medication. Please review the details below." %}</p>
+            {% endif %}
+            
+            <div class="reminder-details">
+                <h4>{% trans "Reminder Details" %}</h4>
+                <p><strong>{% trans "Reminder Type" %}:</strong> {{ reminder.reminder_type|title }}</p>
+                <p><strong>{% trans "Scheduled Time" %}:</strong> {{ reminder.scheduled_time|date:"d/m/Y H:i" }}</p>
+                <p><strong>{% trans "Frequency" %}:</strong> {{ reminder.frequency }}</p>
+                {% if reminder.priority %}
+                    <p><strong>{% trans "Priority" %}:</strong> 
+                        <span class="{% if reminder.priority == 'urgent' %}urgent{% elif reminder.priority == 'important' %}important{% endif %}">
+                            {{ reminder.priority|title }}
+                        </span>
+                    </p>
+                {% endif %}
+            </div>
+            
+            <div class="medication-info">
+                <h4>{% trans "Medication Information" %}</h4>
+                <p><strong>{% trans "Medication" %}:</strong> {{ medication.name }}</p>
+                <p><strong>{% trans "Dosage" %}:</strong> {{ medication.dosage }}</p>
+                <p><strong>{% trans "Instructions" %}:</strong> {{ medication.instructions }}</p>
+                
+                {% if medication.special_instructions %}
+                    <p><strong>{% trans "Special Instructions" %}:</strong> {{ medication.special_instructions }}</p>
+                {% endif %}
+                
+                {% if medication.warnings %}
+                    <div class="warning-box">
+                        <strong>{% trans "Warnings" %}:</strong> {{ medication.warnings }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            {% if reminder.reminder_type == 'medication' %}
+                <div class="medication-tips">
+                    <h4>{% trans "Before Taking This Medication" %}</h4>
+                    <ul>
+                        <li>{% trans "Check the medication name and dosage" %}</li>
+                        <li>{% trans "Take with or without food as prescribed" %}</li>
+                        <li>{% trans "Store medication properly" %}</li>
+                        <li>{% trans "Contact your healthcare provider if you experience side effects" %}</li>
+                    </ul>
+                </div>
+            {% endif %}
+            
+            {% if reminder.reminder_type == 'appointment' %}
+                <div class="appointment-info">
+                    <h4>{% trans "Appointment Reminder" %}</h4>
+                    <p><strong>{% trans "Date" %}:</strong> {{ appointment.date|date:"d/m/Y" }}</p>
+                    <p><strong>{% trans "Time" %}:</strong> {{ appointment.time|time:"H:i" }}</p>
+                    <p><strong>{% trans "Location" %}:</strong> {{ appointment.location }}</p>
+                    <p><strong>{% trans "Provider" %}:</strong> {{ appointment.provider }}</p>
+                </div>
+            {% endif %}
+            
+            {% if reminder.reminder_type == 'refill' %}
+                <div class="refill-info">
+                    <h4>{% trans "Refill Reminder" %}</h4>
+                    <p>{% trans "Your medication is running low and needs to be refilled soon." %}</p>
+                    <p><strong>{% trans "Current Supply" %}:</strong> {{ refill_info.current_supply }}</p>
+                    <p><strong>{% trans "Refill Date" %}:</strong> {{ refill_info.refill_date|date:"d/m/Y" }}</p>
+                </div>
+            {% endif %}
+            
+            <p><a href="{{ reminder_portal_url }}" class="button">{% trans "Manage Reminders" %}</a></p>
+            
+            {% if reminder.reminder_type == 'medication' %}
+                <p><a href="{{ medication_portal_url }}" class="button">{% trans "View Medication Details" %}</a></p>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>{% trans "This is an automated reminder from MedGuard SA. Please do not reply to this email." %}</p>
+            <p>{% trans "To update your reminder preferences, visit your account settings." %}</p>
+            <p>{% trans "For support, contact us at support@medguard-sa.co.za" %}</p>
+        </div>
+    </div>
+</body>
+</html>
+{% endwith %} 

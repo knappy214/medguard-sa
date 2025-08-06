@@ -1,0 +1,114 @@
+{% load i18n %}
+
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en-ZA' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% trans 'Patient registration confirmation from MedGuard SA' %}">
+    <meta name="keywords" content="patient, registration, health, MedGuard">
+    <title>{% trans "Patient Registration" %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #8B5CF6; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+        .registration-details { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #8B5CF6; }
+        .verification-section { background: #f3e8ff; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .button { display: inline-block; padding: 10px 20px; background: #8B5CF6; color: white; text-decoration: none; border-radius: 5px; }
+        .welcome-section { background: #ecfdf5; padding: 15px; margin: 15px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{% trans "MedGuard SA" %}</h1>
+            <h2>{% trans "Welcome to MedGuard SA" %}</h2>
+        </div>
+        
+        <div class="content">
+            {% if is_verification_email %}
+                <h3>{% trans "Email Verification Required" %}</h3>
+                <p>{% trans "Thank you for registering with MedGuard SA. Please verify your email address to complete your registration." %}</p>
+                
+                <div class="verification-section">
+                    <h4>{% trans "Verify Your Email" %}</h4>
+                    <p>{% trans "Click the button below to verify your email address and activate your account:" %}</p>
+                    <p><a href="{{ verification_url }}" class="button">{% trans "Verify Email Address" %}</a></p>
+                    <p><small>{% trans "If the button doesn't work, copy and paste this link into your browser:" %}</small></p>
+                    <p><small>{{ verification_url }}</small></p>
+                    <p><small>{% trans "This link will expire in 24 hours." %}</small></p>
+                </div>
+                
+            {% else %}
+                <h3>{% trans "Registration Successful" %}</h3>
+                <p>{% trans "Welcome to MedGuard SA! Your account has been successfully created." %}</p>
+                
+                <div class="welcome-section">
+                    <h4>{% trans "Welcome to MedGuard SA" %}</h4>
+                    <p>{% trans "We're excited to have you as part of our healthcare community. Here's what you can do with your new account:" %}</p>
+                    <ul>
+                        <li>{% trans "Submit and manage prescriptions" %}</li>
+                        <li>{% trans "Set up medication reminders" %}</li>
+                        <li>{% trans "Track your medication history" %}</li>
+                        <li>{% trans "Receive important health notifications" %}</li>
+                        <li>{% trans "Access your medical records" %}</li>
+                    </ul>
+                </div>
+                
+                <div class="registration-details">
+                    <h4>{% trans "Account Information" %}</h4>
+                    <p><strong>{% trans "Name" %}:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+                    <p><strong>{% trans "Email" %}:</strong> {{ user.email }}</p>
+                    <p><strong>{% trans "Account ID" %}:</strong> {{ user.id }}</p>
+                    <p><strong>{% trans "Registration Date" %}:</strong> {{ user.date_joined|date:"d/m/Y" }}</p>
+                    
+                    {% if user.phone_number %}
+                        <p><strong>{% trans "Phone" %}:</strong> {{ user.phone_number }}</p>
+                    {% endif %}
+                    
+                    {% if user.date_of_birth %}
+                        <p><strong>{% trans "Date of Birth" %}:</strong> {{ user.date_of_birth|date:"d/m/Y" }}</p>
+                    {% endif %}
+                </div>
+                
+                {% if medical_history %}
+                    <div class="registration-details">
+                        <h4>{% trans "Medical Information" %}</h4>
+                        {% if medical_history.conditions %}
+                            <p><strong>{% trans "Medical Conditions" %}:</strong> {{ medical_history.conditions }}</p>
+                        {% endif %}
+                        {% if medical_history.allergies %}
+                            <p><strong>{% trans "Allergies" %}:</strong> {{ medical_history.allergies }}</p>
+                        {% endif %}
+                        {% if medical_history.current_medications %}
+                            <p><strong>{% trans "Current Medications" %}:</strong> {{ medical_history.current_medications }}</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                {% if emergency_contact %}
+                    <div class="registration-details">
+                        <h4>{% trans "Emergency Contact" %}</h4>
+                        <p><strong>{% trans "Name" %}:</strong> {{ emergency_contact.name }}</p>
+                        <p><strong>{% trans "Relationship" %}:</strong> {{ emergency_contact.relationship }}</p>
+                        <p><strong>{% trans "Phone" %}:</strong> {{ emergency_contact.phone }}</p>
+                        {% if emergency_contact.email %}
+                            <p><strong>{% trans "Email" %}:</strong> {{ emergency_contact.email }}</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                <p><a href="{{ login_url }}" class="button">{% trans "Access Your Account" %}</a></p>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>{% trans "This is an automated message from MedGuard SA. Please do not reply to this email." %}</p>
+            <p>{% trans "For support, contact us at support@medguard-sa.co.za" %}</p>
+            <p>{% trans "Your privacy and security are our top priorities." %}</p>
+        </div>
+    </div>
+</body>
+</html> 

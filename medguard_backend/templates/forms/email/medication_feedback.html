@@ -1,0 +1,136 @@
+{% load i18n %}
+
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en-ZA' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% trans 'Medication feedback notification from MedGuard SA' %}">
+    <meta name="keywords" content="medication, feedback, health, MedGuard">
+    <title>{% trans "Medication Feedback" %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #06B6D4; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+        .feedback-details { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #06B6D4; }
+        .rating-section { background: #f0fdf4; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .negative-feedback { background: #fef2f2; border-left-color: #EF4444; }
+        .button { display: inline-block; padding: 10px 20px; background: #06B6D4; color: white; text-decoration: none; border-radius: 5px; }
+        .star-rating { color: #F59E0B; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{% trans "MedGuard SA" %}</h1>
+            <h2>{% trans "Medication Feedback" %}</h2>
+        </div>
+        
+        <div class="content">
+            {% if is_admin_notification %}
+                <h3>{% trans "New Medication Feedback Received" %}</h3>
+                <p>{% trans "A new medication feedback submission has been received." %}</p>
+                
+                <div class="feedback-details {% if feedback.is_negative %}negative-feedback{% endif %}">
+                    <h4>{% trans "Feedback Details" %}</h4>
+                    <p><strong>{% trans "Submission ID" %}:</strong> {{ feedback.id }}</p>
+                    <p><strong>{% trans "Submission Date" %}:</strong> {{ feedback.created_at|date:"d/m/Y H:i" }}</p>
+                    <p><strong>{% trans "Feedback Type" %}:</strong> {{ feedback.feedback_type|title }}</p>
+                    <p><strong>{% trans "Sentiment" %}:</strong> {{ feedback.sentiment|title }}</p>
+                    
+                    <h4>{% trans "Patient Information" %}</h4>
+                    <p><strong>{% trans "Name" %}:</strong> {{ feedback.patient_name }}</p>
+                    <p><strong>{% trans "Email" %}:</strong> {{ feedback.email }}</p>
+                    <p><strong>{% trans "Phone" %}:</strong> {{ feedback.phone_number }}</p>
+                    
+                    <h4>{% trans "Medication Information" %}</h4>
+                    <p><strong>{% trans "Medication" %}:</strong> {{ feedback.medication_name }}</p>
+                    <p><strong>{% trans "Dosage" %}:</strong> {{ feedback.dosage }}</p>
+                    <p><strong>{% trans "Duration of Use" %}:</strong> {{ feedback.duration_of_use }}</p>
+                    
+                    <h4>{% trans "Ratings" %}</h4>
+                    <div class="rating-section">
+                        <p><strong>{% trans "Effectiveness" %}:</strong> 
+                            <span class="star-rating">{% for i in "12345" %}{% if forloop.counter <= feedback.effectiveness_rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                            ({{ feedback.effectiveness_rating }}/5)
+                        </p>
+                        <p><strong>{% trans "Side Effects" %}:</strong> 
+                            <span class="star-rating">{% for i in "12345" %}{% if forloop.counter <= feedback.side_effects_rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                            ({{ feedback.side_effects_rating }}/5)
+                        </p>
+                        <p><strong>{% trans "Ease of Use" %}:</strong> 
+                            <span class="star-rating">{% for i in "12345" %}{% if forloop.counter <= feedback.ease_of_use_rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                            ({{ feedback.ease_of_use_rating }}/5)
+                        </p>
+                        <p><strong>{% trans "Overall Rating" %}:</strong> 
+                            <span class="star-rating">{% for i in "12345" %}{% if forloop.counter <= feedback.overall_rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                            ({{ feedback.overall_rating }}/5)
+                        </p>
+                    </div>
+                    
+                    <h4>{% trans "Feedback Details" %}</h4>
+                    <p><strong>{% trans "Experience" %}:</strong></p>
+                    <div style="background: #f8f9fa; padding: 10px; border-radius: 3px; margin: 10px 0;">
+                        {{ feedback.experience|linebreaks }}
+                    </div>
+                    
+                    {% if feedback.side_effects_experienced %}
+                        <p><strong>{% trans "Side Effects Experienced" %}:</strong></p>
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 3px; margin: 10px 0;">
+                            {{ feedback.side_effects_experienced|linebreaks }}
+                        </div>
+                    {% endif %}
+                    
+                    {% if feedback.improvement_suggestions %}
+                        <p><strong>{% trans "Improvement Suggestions" %}:</strong></p>
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 3px; margin: 10px 0;">
+                            {{ feedback.improvement_suggestions|linebreaks }}
+                        </div>
+                    {% endif %}
+                    
+                    {% if feedback.would_recommend %}
+                        <p><strong>{% trans "Would Recommend" %}:</strong> 
+                            {% if feedback.would_recommend %}Yes{% else %}No{% endif %}
+                        </p>
+                    {% endif %}
+                </div>
+                
+                {% if feedback.is_negative %}
+                    <div style="background: #fef2f2; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #EF4444;">
+                        <h4>{% trans "Negative Feedback Alert" %}</h4>
+                        <p>{% trans "This feedback has been classified as negative and may require immediate attention." %}</p>
+                        <p>{% trans "Please review and consider reaching out to the patient." %}</p>
+                    </div>
+                {% endif %}
+                
+                <p><a href="{{ admin_url }}" class="button">{% trans "Review Feedback" %}</a></p>
+                
+            {% else %}
+                <h3>{% trans "Thank You for Your Feedback" %}</h3>
+                <p>{% trans "We have received your medication feedback and appreciate you taking the time to share your experience." %}</p>
+                
+                <div class="feedback-details">
+                    <h4>{% trans "Feedback Summary" %}</h4>
+                    <p><strong>{% trans "Medication" %}:</strong> {{ feedback.medication_name }}</p>
+                    <p><strong>{% trans "Overall Rating" %}:</strong> 
+                        <span class="star-rating">{% for i in "12345" %}{% if forloop.counter <= feedback.overall_rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                        ({{ feedback.overall_rating }}/5)
+                    </p>
+                    <p><strong>{% trans "Submission Date" %}:</strong> {{ feedback.created_at|date:"d/m/Y H:i" }}</p>
+                </div>
+                
+                <p>{% trans "Your feedback helps us improve our services and medication recommendations for all our patients." %}</p>
+                
+                <p><a href="{{ feedback_portal_url }}" class="button">{% trans "View Your Feedback" %}</a></p>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>{% trans "This is an automated message from MedGuard SA. Please do not reply to this email." %}</p>
+            <p>{% trans "For support, contact us at support@medguard-sa.co.za" %}</p>
+        </div>
+    </div>
+</body>
+</html> 

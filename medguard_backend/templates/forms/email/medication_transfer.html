@@ -1,0 +1,130 @@
+{% load i18n %}
+
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en-ZA' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% trans 'Medication transfer notification from MedGuard SA' %}">
+    <meta name="keywords" content="medication, transfer, health, MedGuard">
+    <title>{% trans "Medication Transfer" %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #EC4899; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+        .transfer-details { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #EC4899; }
+        .file-list { background: #f0f9ff; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .button { display: inline-block; padding: 10px 20px; background: #EC4899; color: white; text-decoration: none; border-radius: 5px; }
+        .status-pending { background: #fef3c7; border-left-color: #F59E0B; }
+        .status-approved { background: #f0fdf4; border-left-color: #10B981; }
+        .status-rejected { background: #fef2f2; border-left-color: #EF4444; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{% trans "MedGuard SA" %}</h1>
+            <h2>{% trans "Medication Transfer" %}</h2>
+        </div>
+        
+        <div class="content">
+            {% if is_admin_notification %}
+                <h3>{% trans "New Medication Transfer Request" %}</h3>
+                <p>{% trans "A new medication transfer request has been submitted with supporting documents." %}</p>
+                
+                <div class="transfer-details">
+                    <h4>{% trans "Transfer Details" %}</h4>
+                    <p><strong>{% trans "Transfer ID" %}:</strong> {{ transfer.id }}</p>
+                    <p><strong>{% trans "Submission Date" %}:</strong> {{ transfer.created_at|date:"d/m/Y H:i" }}</p>
+                    <p><strong>{% trans "Status" %}:</strong> {{ transfer.status|title }}</p>
+                    
+                    <h4>{% trans "Patient Information" %}</h4>
+                    <p><strong>{% trans "Name" %}:</strong> {{ transfer.patient_name }}</p>
+                    <p><strong>{% trans "Email" %}:</strong> {{ transfer.email }}</p>
+                    <p><strong>{% trans "Phone" %}:</strong> {{ transfer.phone_number }}</p>
+                    <p><strong>{% trans "ID Number" %}:</strong> {{ transfer.id_number }}</p>
+                    
+                    <h4>{% trans "Transfer Information" %}</h4>
+                    <p><strong>{% trans "From Pharmacy" %}:</strong> {{ transfer.from_pharmacy_name }}</p>
+                    <p><strong>{% trans "To Pharmacy" %}:</strong> {{ transfer.to_pharmacy_name }}</p>
+                    <p><strong>{% trans "Transfer Reason" %}:</strong> {{ transfer.transfer_reason }}</p>
+                    <p><strong>{% trans "Urgency Level" %}:</strong> {{ transfer.urgency_level|title }}</p>
+                    
+                    {% if transfer.special_instructions %}
+                        <p><strong>{% trans "Special Instructions" %}:</strong></p>
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 3px; margin: 10px 0;">
+                            {{ transfer.special_instructions|linebreaks }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {% if transfer.documents.all %}
+                    <div class="file-list">
+                        <h4>{% trans "Supporting Documents" %}</h4>
+                        <ul>
+                            {% for document in transfer.documents.all %}
+                                <li>
+                                    <strong>{{ document.document_type|title }}</strong> - 
+                                    {{ document.file.name|slice:"document.name|length:" }}
+                                    ({{ document.file.size|filesizeformat }})
+                                    {% if document.security_verified %}
+                                        <span style="color: #10B981;">✓ Verified</span>
+                                    {% else %}
+                                        <span style="color: #EF4444;">⚠ Pending Verification</span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+                
+                <p><a href="{{ admin_url }}" class="button">{% trans "Review Transfer" %}</a></p>
+                
+            {% else %}
+                <h3>{% trans "Medication Transfer Update" %}</h3>
+                
+                {% if transfer.status == 'approved' %}
+                    <p>{% trans "Your medication transfer request has been approved and is being processed." %}</p>
+                {% elif transfer.status == 'pending' %}
+                    <p>{% trans "Your medication transfer request is currently under review." %}</p>
+                {% elif transfer.status == 'rejected' %}
+                    <p>{% trans "Unfortunately, your medication transfer request could not be approved." %}</p>
+                {% endif %}
+                
+                <div class="transfer-details status-{{ transfer.status }}">
+                    <h4>{% trans "Transfer Summary" %}</h4>
+                    <p><strong>{% trans "Transfer ID" %}:</strong> {{ transfer.id }}</p>
+                    <p><strong>{% trans "From Pharmacy" %}:</strong> {{ transfer.from_pharmacy_name }}</p>
+                    <p><strong>{% trans "To Pharmacy" %}:</strong> {{ transfer.to_pharmacy_name }}</p>
+                    <p><strong>{% trans "Status" %}:</strong> {{ transfer.status|title }}</p>
+                    <p><strong>{% trans "Submission Date" %}:</strong> {{ transfer.created_at|date:"d/m/Y H:i" }}</p>
+                    
+                    {% if transfer.status == 'approved' %}
+                        <p><strong>{% trans "Approval Date" %}:</strong> {{ transfer.approved_at|date:"d/m/Y H:i" }}</p>
+                        <p><strong>{% trans "Estimated Completion" %}:</strong> {{ transfer.estimated_completion|date:"d/m/Y" }}</p>
+                    {% elif transfer.status == 'rejected' %}
+                        <p><strong>{% trans "Reason for Rejection" %}:</strong> {{ transfer.rejection_reason }}</p>
+                    {% endif %}
+                </div>
+                
+                {% if transfer.status == 'approved' %}
+                    <p>{% trans "Your transfer is being processed. You will be notified when it's ready for collection at the new pharmacy." %}</p>
+                {% elif transfer.status == 'pending' %}
+                    <p>{% trans "We will review your request and contact you within 24-48 hours with an update." %}</p>
+                {% elif transfer.status == 'rejected' %}
+                    <p>{% trans "Please contact your healthcare provider for more information about alternative options." %}</p>
+                {% endif %}
+                
+                <p><a href="{{ transfer_portal_url }}" class="button">{% trans "View Transfer Status" %}</a></p>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>{% trans "This is an automated message from MedGuard SA. Please do not reply to this email." %}</p>
+            <p>{% trans "For support, contact us at support@medguard-sa.co.za" %}</p>
+        </div>
+    </div>
+</body>
+</html> 

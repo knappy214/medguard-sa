@@ -1,0 +1,122 @@
+{% load i18n %}
+
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en-ZA' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% trans 'Prescription renewal notification from MedGuard SA' %}">
+    <meta name="keywords" content="prescription, renewal, health, MedGuard">
+    <title>{% trans "Prescription Renewal" %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #84CC16; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+        .renewal-details { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #84CC16; }
+        .approved { background: #f0fdf4; border-left-color: #10B981; }
+        .pending { background: #fef3c7; border-left-color: #F59E0B; }
+        .rejected { background: #fef2f2; border-left-color: #EF4444; }
+        .button { display: inline-block; padding: 10px 20px; background: #84CC16; color: white; text-decoration: none; border-radius: 5px; }
+        .compliance-history { background: #f0f9ff; padding: 15px; margin: 15px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{% trans "MedGuard SA" %}</h1>
+            <h2>{% trans "Prescription Renewal" %}</h2>
+        </div>
+        
+        <div class="content">
+            {% if is_admin_notification %}
+                <h3>{% trans "New Prescription Renewal Request" %}</h3>
+                <p>{% trans "A new prescription renewal request has been submitted." %}</p>
+                
+                <div class="renewal-details">
+                    <h4>{% trans "Renewal Details" %}</h4>
+                    <p><strong>{% trans "Request ID" %}:</strong> {{ renewal.id }}</p>
+                    <p><strong>{% trans "Submission Date" %}:</strong> {{ renewal.created_at|date:"d/m/Y H:i" }}</p>
+                    <p><strong>{% trans "Status" %}:</strong> {{ renewal.status|title }}</p>
+                    <p><strong>{% trans "Auto-Approved" %}:</strong> {% if renewal.auto_approved %}Yes{% else %}No{% endif %}</p>
+                    
+                    <h4>{% trans "Patient Information" %}</h4>
+                    <p><strong>{% trans "Name" %}:</strong> {{ renewal.patient_name }}</p>
+                    <p><strong>{% trans "Email" %}:</strong> {{ renewal.email }}</p>
+                    <p><strong>{% trans "Phone" %}:</strong> {{ renewal.phone_number }}</p>
+                    
+                    <h4>{% trans "Original Prescription" %}</h4>
+                    <p><strong>{% trans "Medication" %}:</strong> {{ renewal.original_prescription.medication_name }}</p>
+                    <p><strong>{% trans "Original Dosage" %}:</strong> {{ renewal.original_prescription.dosage }}</p>
+                    <p><strong>{% trans "Original Duration" %}:</strong> {{ renewal.original_prescription.duration }}</p>
+                    <p><strong>{% trans "Prescribing Doctor" %}:</strong> {{ renewal.original_prescription.prescribing_doctor }}</p>
+                    <p><strong>{% trans "Original Issue Date" %}:</strong> {{ renewal.original_prescription.issue_date|date:"d/m/Y" }}</p>
+                    
+                    <h4>{% trans "Renewal Request" %}</h4>
+                    <p><strong>{% trans "Requested Dosage" %}:</strong> {{ renewal.requested_dosage }}</p>
+                    <p><strong>{% trans "Requested Duration" %}:</strong> {{ renewal.requested_duration }}</p>
+                    <p><strong>{% trans "Reason for Renewal" %}:</strong> {{ renewal.reason_for_renewal }}</p>
+                    
+                    {% if renewal.additional_notes %}
+                        <p><strong>{% trans "Additional Notes" %}:</strong></p>
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 3px; margin: 10px 0;">
+                            {{ renewal.additional_notes|linebreaks }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="compliance-history">
+                    <h4>{% trans "Compliance History" %}</h4>
+                    <p><strong>{% trans "Compliance Score" %}:</strong> {{ compliance_score }}%</p>
+                    <p><strong>{% trans "Previous Renewals" %}:</strong> {{ previous_renewals_count }}</p>
+                    <p><strong>{% trans "Last Renewal Date" %}:</strong> {{ last_renewal_date|date:"d/m/Y"|default:"N/A" }}</p>
+                </div>
+                
+                <p><a href="{{ admin_url }}" class="button">{% trans "Review Renewal" %}</a></p>
+                
+            {% else %}
+                <h3>{% trans "Prescription Renewal Update" %}</h3>
+                
+                {% if renewal.status == 'approved' %}
+                    <p>{% trans "Great news! Your prescription renewal has been approved." %}</p>
+                {% elif renewal.status == 'pending' %}
+                    <p>{% trans "Your prescription renewal request is currently under review." %}</p>
+                {% elif renewal.status == 'rejected' %}
+                    <p>{% trans "Unfortunately, your prescription renewal request could not be approved." %}</p>
+                {% endif %}
+                
+                <div class="renewal-details {{ renewal.status }}">
+                    <h4>{% trans "Renewal Summary" %}</h4>
+                    <p><strong>{% trans "Request ID" %}:</strong> {{ renewal.id }}</p>
+                    <p><strong>{% trans "Medication" %}:</strong> {{ renewal.original_prescription.medication_name }}</p>
+                    <p><strong>{% trans "Status" %}:</strong> {{ renewal.status|title }}</p>
+                    <p><strong>{% trans "Submission Date" %}:</strong> {{ renewal.created_at|date:"d/m/Y H:i" }}</p>
+                    
+                    {% if renewal.status == 'approved' %}
+                        <p><strong>{% trans "Approval Date" %}:</strong> {{ renewal.approved_at|date:"d/m/Y H:i" }}</p>
+                        <p><strong>{% trans "New Expiry Date" %}:</strong> {{ renewal.new_expiry_date|date:"d/m/Y" }}</p>
+                    {% elif renewal.status == 'rejected' %}
+                        <p><strong>{% trans "Reason for Rejection" %}:</strong> {{ renewal.rejection_reason }}</p>
+                    {% endif %}
+                </div>
+                
+                {% if renewal.status == 'approved' %}
+                    <p>{% trans "Your renewed prescription is now available for collection at your selected pharmacy." %}</p>
+                {% elif renewal.status == 'pending' %}
+                    <p>{% trans "We will review your request and contact you within 24-48 hours with an update." %}</p>
+                {% elif renewal.status == 'rejected' %}
+                    <p>{% trans "Please contact your healthcare provider for more information about alternative options." %}</p>
+                {% endif %}
+                
+                <p><a href="{{ renewal_portal_url }}" class="button">{% trans "View Renewal Status" %}</a></p>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>{% trans "This is an automated message from MedGuard SA. Please do not reply to this email." %}</p>
+            <p>{% trans "For support, contact us at support@medguard-sa.co.za" %}</p>
+        </div>
+    </div>
+</body>
+</html> 

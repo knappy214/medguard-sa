@@ -1,0 +1,114 @@
+{% load i18n %}
+
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en-ZA' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Prescription Submission" %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #2563EB; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+        .prescription-details { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #2563EB; }
+        .status-approved { color: #10B981; font-weight: bold; }
+        .status-pending { color: #F59E0B; font-weight: bold; }
+        .status-rejected { color: #EF4444; font-weight: bold; }
+        .button { display: inline-block; padding: 10px 20px; background: #2563EB; color: white; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{% trans "MedGuard SA" %}</h1>
+            <h2>{% trans "Prescription Submission" %}</h2>
+        </div>
+        
+        <div class="content">
+            {% if is_admin_notification %}
+                <!-- Admin Notification -->
+                <h3>{% trans "New Prescription Submission" %}</h3>
+                <p>{% trans "A new prescription has been submitted and requires review." %}</p>
+                
+                <div class="prescription-details">
+                    <h4>{% trans "Patient Information" %}</h4>
+                    <p><strong>{% trans "Name" %}:</strong> {{ form_data.patient_name }}</p>
+                    <p><strong>{% trans "ID Number" %}:</strong> {{ form_data.id_number }}</p>
+                    <p><strong>{% trans "Contact" %}:</strong> {{ form_data.contact_number }}</p>
+                    <p><strong>{% trans "Email" %}:</strong> {{ form_data.email }}</p>
+                    
+                    <h4>{% trans "Prescription Details" %}</h4>
+                    <p><strong>{% trans "Medication Name" %}:</strong> {{ form_data.medication_name }}</p>
+                    <p><strong>{% trans "Dosage" %}:</strong> {{ form_data.dosage }}</p>
+                    <p><strong>{% trans "Frequency" %}:</strong> {{ form_data.frequency }}</p>
+                    <p><strong>{% trans "Duration" %}:</strong> {{ form_data.duration }}</p>
+                    <p><strong>{% trans "Prescribing Doctor" %}:</strong> {{ form_data.prescribing_doctor }}</p>
+                    <p><strong>{% trans "Pharmacy" %}:</strong> {{ form_data.pharmacy_name }}</p>
+                    
+                    {% if form_data.medical_conditions %}
+                        <h4>{% trans "Medical Conditions" %}</h4>
+                        <p>{{ form_data.medical_conditions }}</p>
+                    {% endif %}
+                    
+                    {% if form_data.allergies %}
+                        <h4>{% trans "Allergies" %}</h4>
+                        <p>{{ form_data.allergies }}</p>
+                    {% endif %}
+                    
+                    {% if form_data.additional_notes %}
+                        <h4>{% trans "Additional Notes" %}</h4>
+                        <p>{{ form_data.additional_notes }}</p>
+                    {% endif %}
+                </div>
+                
+                <p><a href="{{ admin_url }}" class="button">{% trans "Review Prescription" %}</a></p>
+                
+            {% else %}
+                <!-- Patient Notification -->
+                <h3>{% trans "Prescription Submission Received" %}</h3>
+                <p>{% trans "Thank you for submitting your prescription. We have received your request and will process it shortly." %}</p>
+                
+                <div class="prescription-details">
+                    <h4>{% trans "Submission Details" %}</h4>
+                    <p><strong>{% trans "Submission ID" %}:</strong> {{ submission.id }}</p>
+                    <p><strong>{% trans "Submission Date" %}:</strong> {{ submission.submit_time|date:"d/m/Y H:i" }}</p>
+                    <p><strong>{% trans "Status" %}:</strong> 
+                        <span class="status-{{ submission.status|lower }}">
+                            {% if submission.status == 'approved' %}
+                                {% trans "Approved" %}
+                            {% elif submission.status == 'pending' %}
+                                {% trans "Under Review" %}
+                            {% elif submission.status == 'rejected' %}
+                                {% trans "Rejected" %}
+                            {% else %}
+                                {{ submission.status|title }}
+                            {% endif %}
+                        </span>
+                    </p>
+                    
+                    <h4>{% trans "Medication" %}</h4>
+                    <p><strong>{{ form_data.medication_name }}</strong></p>
+                    <p>{{ form_data.dosage }} - {{ form_data.frequency }}</p>
+                </div>
+                
+                {% if submission.status == 'approved' %}
+                    <p>{% trans "Your prescription has been approved and is ready for collection at your selected pharmacy." %}</p>
+                {% elif submission.status == 'pending' %}
+                    <p>{% trans "We will review your prescription and contact you within 24-48 hours with an update." %}</p>
+                {% elif submission.status == 'rejected' %}
+                    <p>{% trans "Unfortunately, your prescription could not be approved. Please contact us for more information." %}</p>
+                {% endif %}
+                
+                <p><a href="{{ patient_portal_url }}" class="button">{% trans "View Submission Status" %}</a></p>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>{% trans "This is an automated message from MedGuard SA. Please do not reply to this email." %}</p>
+            <p>{% trans "For support, contact us at support@medguard-sa.co.za" %}</p>
+        </div>
+    </div>
+</body>
+</html> 

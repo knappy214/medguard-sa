@@ -1,0 +1,295 @@
+{% extends "forms/base_form.html" %}
+{% load i18n wagtailcore_tags %}
+
+{% block form_content %}
+    {% if form_submission %}
+        <div class="alert alert-success">
+            <h4><i class="fas fa-check-circle"></i> {% trans "Submission Successful" %}</h4>
+            <p>{% trans "Thank you for submitting your prescription. We have received your request and will process it shortly." %}</p>
+            <p><strong>{% trans "Submission ID" %}:</strong> {{ form_submission.id }}</p>
+            <p><strong>{% trans "Submission Date" %}:</strong> {{ form_submission.submit_time|date:"d/m/Y H:i" }}</p>
+        </div>
+        
+        <div class="text-center">
+            <a href="{% pageurl page %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> {% trans "Submit Another Prescription" %}
+            </a>
+        </div>
+    {% else %}
+        <form method="post" id="prescription-form" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    <h4><i class="fas fa-exclamation-triangle"></i> {% trans "Please correct the following errors" %}:</h4>
+                    <ul>
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            
+            <!-- Patient Information Section -->
+            <div class="form-section">
+                <h3><i class="fas fa-user"></i> {% trans "Patient Information" %}</h3>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.patient_name.id_for_label }}" class="form-label required-field">
+                                {% trans "Full Name" %}
+                            </label>
+                            {{ form.patient_name }}
+                            {% if form.patient_name.help_text %}
+                                <div class="help-text">{{ form.patient_name.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.id_number.id_for_label }}" class="form-label required-field">
+                                {% trans "ID Number" %}
+                            </label>
+                            {{ form.id_number }}
+                            {% if form.id_number.help_text %}
+                                <div class="help-text">{{ form.id_number.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.contact_number.id_for_label }}" class="form-label required-field">
+                                {% trans "Contact Number" %}
+                            </label>
+                            {{ form.contact_number }}
+                            {% if form.contact_number.help_text %}
+                                <div class="help-text">{{ form.contact_number.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.email.id_for_label }}" class="form-label required-field">
+                                {% trans "Email Address" %}
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.help_text %}
+                                <div class="help-text">{{ form.email.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Prescription Details Section -->
+            <div class="form-section">
+                <h3><i class="fas fa-pills"></i> {% trans "Prescription Details" %}</h3>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.medication_name.id_for_label }}" class="form-label required-field">
+                                {% trans "Medication Name" %}
+                            </label>
+                            {{ form.medication_name }}
+                            {% if form.medication_name.help_text %}
+                                <div class="help-text">{{ form.medication_name.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.dosage.id_for_label }}" class="form-label required-field">
+                                {% trans "Dosage" %}
+                            </label>
+                            {{ form.dosage }}
+                            {% if form.dosage.help_text %}
+                                <div class="help-text">{{ form.dosage.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.frequency.id_for_label }}" class="form-label required-field">
+                                {% trans "Frequency" %}
+                            </label>
+                            {{ form.frequency }}
+                            {% if form.frequency.help_text %}
+                                <div class="help-text">{{ form.frequency.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.duration.id_for_label }}" class="form-label required-field">
+                                {% trans "Duration" %}
+                            </label>
+                            {{ form.duration }}
+                            {% if form.duration.help_text %}
+                                <div class="help-text">{{ form.duration.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.prescribing_doctor.id_for_label }}" class="form-label required-field">
+                                {% trans "Prescribing Doctor" %}
+                            </label>
+                            {{ form.prescribing_doctor }}
+                            {% if form.prescribing_doctor.help_text %}
+                                <div class="help-text">{{ form.prescribing_doctor.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.pharmacy_name.id_for_label }}" class="form-label required-field">
+                                {% trans "Preferred Pharmacy" %}
+                            </label>
+                            {{ form.pharmacy_name }}
+                            {% if form.pharmacy_name.help_text %}
+                                <div class="help-text">{{ form.pharmacy_name.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Medical Information Section -->
+            <div class="form-section">
+                <h3><i class="fas fa-heartbeat"></i> {% trans "Medical Information" %}</h3>
+                
+                <div class="form-group">
+                    <label for="{{ form.medical_conditions.id_for_label }}" class="form-label">
+                        {% trans "Medical Conditions" %}
+                    </label>
+                    {{ form.medical_conditions }}
+                    {% if form.medical_conditions.help_text %}
+                        <div class="help-text">{{ form.medical_conditions.help_text }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.allergies.id_for_label }}" class="form-label">
+                        {% trans "Allergies" %}
+                    </label>
+                    {{ form.allergies }}
+                    {% if form.allergies.help_text %}
+                        <div class="help-text">{{ form.allergies.help_text }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.additional_notes.id_for_label }}" class="form-label">
+                        {% trans "Additional Notes" %}
+                    </label>
+                    {{ form.additional_notes }}
+                    {% if form.additional_notes.help_text %}
+                        <div class="help-text">{{ form.additional_notes.help_text }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Terms and Conditions -->
+            <div class="form-section">
+                <h3><i class="fas fa-shield-alt"></i> {% trans "Terms and Conditions" %}</h3>
+                
+                <div class="form-group">
+                    <div class="form-check">
+                        {{ form.terms_accepted }}
+                        <label class="form-check-label" for="{{ form.terms_accepted.id_for_label }}">
+                            {% trans "I agree to the terms and conditions and privacy policy" %}
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-check">
+                        {{ form.consent_given }}
+                        <label class="form-check-label" for="{{ form.consent_given.id_for_label }}">
+                            {% trans "I consent to the processing of my personal and medical information" %}
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <span class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </span>
+                    <span class="btn-text">
+                        <i class="fas fa-paper-plane"></i> {% trans "Submit Prescription" %}
+                    </span>
+                </button>
+            </div>
+        </form>
+    {% endif %}
+{% endblock form_content %}
+
+{% block extra_js %}
+<script>
+    // Prescription form specific validation
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('prescription-form');
+        if (form) {
+            // ID Number validation (South African ID format)
+            const idNumberInput = form.querySelector('#{{ form.id_number.id_for_label }}');
+            if (idNumberInput) {
+                idNumberInput.addEventListener('blur', function() {
+                    const idNumber = this.value.replace(/\s/g, '');
+                    if (idNumber && !/^\d{13}$/.test(idNumber)) {
+                        this.setCustomValidity('{% trans "Please enter a valid 13-digit South African ID number" %}');
+                    } else {
+                        this.setCustomValidity('');
+                    }
+                });
+            }
+            
+            // Phone number validation
+            const phoneInput = form.querySelector('#{{ form.contact_number.id_for_label }}');
+            if (phoneInput) {
+                phoneInput.addEventListener('blur', function() {
+                    const phone = this.value.replace(/\s/g, '');
+                    if (phone && !/^(\+27|0)[6-8][0-9]{8}$/.test(phone)) {
+                        this.setCustomValidity('{% trans "Please enter a valid South African phone number" %}');
+                    } else {
+                        this.setCustomValidity('');
+                    }
+                });
+            }
+            
+            // Email validation
+            const emailInput = form.querySelector('#{{ form.email.id_for_label }}');
+            if (emailInput) {
+                emailInput.addEventListener('blur', function() {
+                    const email = this.value;
+                    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                        this.setCustomValidity('{% trans "Please enter a valid email address" %}');
+                    } else {
+                        this.setCustomValidity('');
+                    }
+                });
+            }
+        }
+    });
+</script>
+{% endblock extra_js %} 

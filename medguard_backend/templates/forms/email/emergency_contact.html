@@ -1,0 +1,139 @@
+{% load i18n %}
+
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en-ZA' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% trans 'Emergency contact notification from MedGuard SA' %}">
+    <meta name="keywords" content="emergency, contact, health, MedGuard">
+    <title>{% trans "Emergency Contact" %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #EF4444; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+        .emergency-details { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #EF4444; }
+        .priority-critical { background: #fef2f2; border-left-color: #DC2626; }
+        .priority-high { background: #fef3c7; border-left-color: #F59E0B; }
+        .priority-medium { background: #f0fdf4; border-left-color: #10B981; }
+        .button { display: inline-block; padding: 10px 20px; background: #EF4444; color: white; text-decoration: none; border-radius: 5px; }
+        .escalation-alert { background: #fef2f2; padding: 15px; margin: 15px 0; border-radius: 5px; border-left: 4px solid #DC2626; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{% trans "MedGuard SA" %}</h1>
+            <h2>{% trans "Emergency Contact" %}</h2>
+        </div>
+        
+        <div class="content">
+            {% if is_admin_notification %}
+                <h3>{% trans "EMERGENCY CONTACT ALERT" %}</h3>
+                <p>{% trans "A new emergency contact has been submitted and requires immediate attention." %}</p>
+                
+                <div class="emergency-details priority-{{ emergency.priority_level }}">
+                    <h4>{% trans "Emergency Details" %}</h4>
+                    <p><strong>{% trans "Emergency ID" %}:</strong> {{ emergency.id }}</p>
+                    <p><strong>{% trans "Submission Date" %}:</strong> {{ emergency.created_at|date:"d/m/Y H:i" }}</p>
+                    <p><strong>{% trans "Priority Level" %}:</strong> {{ emergency.priority_level|title }}</p>
+                    <p><strong>{% trans "Escalated" %}:</strong> {% if emergency.escalated %}Yes{% else %}No{% endif %}</p>
+                    
+                    <h4>{% trans "Contact Information" %}</h4>
+                    <p><strong>{% trans "Name" %}:</strong> {{ emergency.contact_name }}</p>
+                    <p><strong>{% trans "Email" %}:</strong> {{ emergency.email }}</p>
+                    <p><strong>{% trans "Phone" %}:</strong> {{ emergency.phone_number }}</p>
+                    <p><strong>{% trans "Relationship to Patient" %}:</strong> {{ emergency.relationship_to_patient }}</p>
+                    
+                    <h4>{% trans "Patient Information" %}</h4>
+                    <p><strong>{% trans "Patient Name" %}:</strong> {{ emergency.patient_name }}</p>
+                    <p><strong>{% trans "Patient ID Number" %}:</strong> {{ emergency.patient_id_number }}</p>
+                    <p><strong>{% trans "Patient Date of Birth" %}:</strong> {{ emergency.patient_date_of_birth|date:"d/m/Y" }}</p>
+                    
+                    <h4>{% trans "Emergency Information" %}</h4>
+                    <p><strong>{% trans "Emergency Type" %}:</strong> {{ emergency.emergency_type|title }}</p>
+                    <p><strong>{% trans "Urgency Level" %}:</strong> {{ emergency.urgency_level|title }}</p>
+                    <p><strong>{% trans "Location" %}:</strong> {{ emergency.location }}</p>
+                    
+                    {% if emergency.emergency_description %}
+                        <p><strong>{% trans "Emergency Description" %}:</strong></p>
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 3px; margin: 10px 0;">
+                            {{ emergency.emergency_description|linebreaks }}
+                        </div>
+                    {% endif %}
+                    
+                    {% if emergency.medical_conditions %}
+                        <p><strong>{% trans "Relevant Medical Conditions" %}:</strong></p>
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 3px; margin: 10px 0;">
+                            {{ emergency.medical_conditions|linebreaks }}
+                        </div>
+                    {% endif %}
+                    
+                    {% if emergency.current_medications %}
+                        <p><strong>{% trans "Current Medications" %}:</strong></p>
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 3px; margin: 10px 0;">
+                            {{ emergency.current_medications|linebreaks }}
+                        </div>
+                    {% endif %}
+                    
+                    {% if emergency.allergies %}
+                        <p><strong>{% trans "Allergies" %}:</strong></p>
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 3px; margin: 10px 0;">
+                            {{ emergency.allergies|linebreaks }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {% if emergency.priority_level == 'critical' %}
+                    <div class="escalation-alert">
+                        <h4>{% trans "CRITICAL PRIORITY ALERT" %}</h4>
+                        <p>{% trans "This emergency has been classified as CRITICAL and requires immediate response." %}</p>
+                        <p>{% trans "Emergency services have been automatically notified." %}</p>
+                        <p>{% trans "Please respond within 5 minutes." %}</p>
+                    </div>
+                {% elif emergency.priority_level == 'high' %}
+                    <div class="escalation-alert">
+                        <h4>{% trans "HIGH PRIORITY ALERT" %}</h4>
+                        <p>{% trans "This emergency has been classified as HIGH priority and requires urgent attention." %}</p>
+                        <p>{% trans "Please respond within 15 minutes." %}</p>
+                    </div>
+                {% endif %}
+                
+                <p><a href="{{ admin_url }}" class="button">{% trans "Respond to Emergency" %}</a></p>
+                
+            {% else %}
+                <h3>{% trans "Emergency Contact Received" %}</h3>
+                <p>{% trans "We have received your emergency contact and are responding immediately." %}</p>
+                
+                <div class="emergency-details">
+                    <h4>{% trans "Emergency Summary" %}</h4>
+                    <p><strong>{% trans "Emergency ID" %}:</strong> {{ emergency.id }}</p>
+                    <p><strong>{% trans "Priority Level" %}:</strong> {{ emergency.priority_level|title }}</p>
+                    <p><strong>{% trans "Submission Date" %}:</strong> {{ emergency.created_at|date:"d/m/Y H:i" }}</p>
+                    <p><strong>{% trans "Patient" %}:</strong> {{ emergency.patient_name }}</p>
+                </div>
+                
+                {% if emergency.priority_level == 'critical' %}
+                    <p>{% trans "Your emergency has been classified as CRITICAL. Emergency services have been notified and will respond immediately." %}</p>
+                {% elif emergency.priority_level == 'high' %}
+                    <p>{% trans "Your emergency has been classified as HIGH priority. A healthcare professional will contact you within 15 minutes." %}</p>
+                {% else %}
+                    <p>{% trans "A healthcare professional will review your emergency contact and respond as soon as possible." %}</p>
+                {% endif %}
+                
+                <p>{% trans "Please remain available for contact and follow any instructions provided by emergency responders." %}</p>
+                
+                <p><a href="{{ emergency_portal_url }}" class="button">{% trans "Emergency Portal" %}</a></p>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>{% trans "This is an automated emergency notification from MedGuard SA." %}</p>
+            <p>{% trans "For immediate emergency assistance, call 112 or your local emergency number." %}</p>
+            <p>{% trans "For support, contact us at emergency@medguard-sa.co.za" %}</p>
+        </div>
+    </div>
+</body>
+</html> 

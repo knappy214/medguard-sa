@@ -1,0 +1,109 @@
+{% load i18n %}
+
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en-ZA' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% trans 'Pharmacy contact form notification from MedGuard SA' %}">
+    <meta name="keywords" content="pharmacy, contact, inquiry, MedGuard">
+    <title>{% trans "Pharmacy Contact" %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #F59E0B; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+        .contact-details { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #F59E0B; }
+        .priority-high { background: #fef2f2; border-left-color: #EF4444; }
+        .priority-medium { background: #fef3c7; border-left-color: #F59E0B; }
+        .priority-low { background: #f0fdf4; border-left-color: #10B981; }
+        .button { display: inline-block; padding: 10px 20px; background: #F59E0B; color: white; text-decoration: none; border-radius: 5px; }
+        .auto-reply { background: #f0f9ff; padding: 15px; margin: 15px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{% trans "MedGuard SA" %}</h1>
+            <h2>{% trans "Pharmacy Contact Inquiry" %}</h2>
+        </div>
+        
+        <div class="content">
+            {% if is_auto_reply %}
+                <h3>{% trans "Thank You for Contacting Us" %}</h3>
+                <p>{% trans "We have received your inquiry and will respond to you as soon as possible." %}</p>
+                
+                <div class="auto-reply">
+                    <h4>{% trans "What Happens Next?" %}</h4>
+                    <p><strong>{% trans "Estimated Response Time" %}:</strong> {{ estimated_response_time }}</p>
+                    <p><strong>{% trans "Reference Number" %}:</strong> {{ inquiry.reference_number }}</p>
+                    <p><strong>{% trans "Department" %}:</strong> {{ inquiry.department|title }}</p>
+                    
+                    {% if inquiry.priority == 'high' %}
+                        <p><strong>{% trans "Priority" %}:</strong> <span style="color: #EF4444; font-weight: bold;">{% trans "High Priority" %}</span></p>
+                        <p>{% trans "Your inquiry has been marked as high priority and will be addressed urgently." %}</p>
+                    {% elif inquiry.priority == 'medium' %}
+                        <p><strong>{% trans "Priority" %}:</strong> <span style="color: #F59E0B; font-weight: bold;">{% trans "Medium Priority" %}</span></p>
+                    {% else %}
+                        <p><strong>{% trans "Priority" %}:</strong> <span style="color: #10B981; font-weight: bold;">{% trans "Standard Priority" %}</span></p>
+                    {% endif %}
+                </div>
+                
+            {% else %}
+                <h3>{% trans "New Pharmacy Contact Inquiry" %}</h3>
+                <p>{% trans "A new contact inquiry has been submitted from the pharmacy contact form." %}</p>
+                
+                <div class="contact-details priority-{{ inquiry.priority }}">
+                    <h4>{% trans "Inquiry Details" %}</h4>
+                    <p><strong>{% trans "Reference Number" %}:</strong> {{ inquiry.reference_number }}</p>
+                    <p><strong>{% trans "Submission Date" %}:</strong> {{ inquiry.created_at|date:"d/m/Y H:i" }}</p>
+                    <p><strong>{% trans "Priority" %}:</strong> {{ inquiry.priority|title }}</p>
+                    <p><strong>{% trans "Department" %}:</strong> {{ inquiry.department|title }}</p>
+                    <p><strong>{% trans "Contact Method" %}:</strong> {{ inquiry.preferred_contact_method|title }}</p>
+                    
+                    <h4>{% trans "Contact Information" %}</h4>
+                    <p><strong>{% trans "Name" %}:</strong> {{ inquiry.contact_name }}</p>
+                    <p><strong>{% trans "Email" %}:</strong> {{ inquiry.email }}</p>
+                    <p><strong>{% trans "Phone" %}:</strong> {{ inquiry.phone_number }}</p>
+                    <p><strong>{% trans "Pharmacy Name" %}:</strong> {{ inquiry.pharmacy_name }}</p>
+                    
+                    {% if inquiry.pharmacy_registration_number %}
+                        <p><strong>{% trans "Pharmacy Registration Number" %}:</strong> {{ inquiry.pharmacy_registration_number }}</p>
+                    {% endif %}
+                    
+                    <h4>{% trans "Inquiry Information" %}</h4>
+                    <p><strong>{% trans "Subject" %}:</strong> {{ inquiry.subject }}</p>
+                    <p><strong>{% trans "Message" %}:</strong></p>
+                    <div style="background: #f8f9fa; padding: 10px; border-radius: 3px; margin: 10px 0;">
+                        {{ inquiry.message|linebreaks }}
+                    </div>
+                    
+                    {% if inquiry.urgency_level %}
+                        <p><strong>{% trans "Urgency Level" %}:</strong> {{ inquiry.urgency_level|title }}</p>
+                    {% endif %}
+                    
+                    {% if inquiry.preferred_response_time %}
+                        <p><strong>{% trans "Preferred Response Time" %}:</strong> {{ inquiry.preferred_response_time }}</p>
+                    {% endif %}
+                </div>
+                
+                {% if inquiry.priority == 'high' %}
+                    <div style="background: #fef2f2; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #EF4444;">
+                        <h4>{% trans "High Priority Alert" %}</h4>
+                        <p>{% trans "This inquiry has been marked as high priority and requires immediate attention." %}</p>
+                        <p>{% trans "Please respond within 2 hours." %}</p>
+                    </div>
+                {% endif %}
+                
+                <p><a href="{{ admin_url }}" class="button">{% trans "Respond to Inquiry" %}</a></p>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>{% trans "This is an automated message from MedGuard SA. Please do not reply to this email." %}</p>
+            <p>{% trans "For support, contact us at support@medguard-sa.co.za" %}</p>
+        </div>
+    </div>
+</body>
+</html> 
