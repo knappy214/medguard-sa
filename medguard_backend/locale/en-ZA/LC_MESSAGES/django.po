@@ -15,7 +15,1289 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: wagtail_hooks/wagtail_hooks.py:84
+# =============================================================================
+# EMERGENCY CONTACT AND MEDICAL ALERT TRANSLATIONS
+# =============================================================================
+
+# Emergency Contact Information
+msgid "Emergency Contact"
+msgstr "Emergency Contact"
+
+msgid "Primary Emergency Contact"
+msgstr "Primary Emergency Contact"
+
+msgid "Secondary Emergency Contact"
+msgstr "Secondary Emergency Contact"
+
+msgid "Emergency Contact Name"
+msgstr "Emergency Contact Name"
+
+msgid "Emergency Contact Relationship"
+msgstr "Emergency Contact Relationship"
+
+msgid "Emergency Contact Phone"
+msgstr "Emergency Contact Phone"
+
+msgid "Emergency Contact Email"
+msgstr "Emergency Contact Email"
+
+msgid "Emergency Contact Address"
+msgstr "Emergency Contact Address"
+
+msgid "Emergency Contact Instructions"
+msgstr "Emergency Contact Instructions"
+
+msgid "Emergency Contact Notes"
+msgstr "Emergency Contact Notes"
+
+# Medical Alert Information
+msgid "Medical Alert"
+msgstr "Medical Alert"
+
+msgid "Medical Alert Type"
+msgstr "Medical Alert Type"
+
+msgid "Medical Alert Severity"
+msgstr "Medical Alert Severity"
+
+msgid "Medical Alert Description"
+msgstr "Medical Alert Description"
+
+msgid "Medical Alert Instructions"
+msgstr "Medical Alert Instructions"
+
+msgid "Medical Alert Expiry Date"
+msgstr "Medical Alert Expiry Date"
+
+msgid "Medical Alert Active"
+msgstr "Medical Alert Active"
+
+msgid "Medical Alert Priority"
+msgstr "Medical Alert Priority"
+
+# Medical Alert Types
+msgid "Allergy Alert"
+msgstr "Allergy Alert"
+
+msgid "Drug Interaction Alert"
+msgstr "Drug Interaction Alert"
+
+msgid "Contraindication Alert"
+msgstr "Contraindication Alert"
+
+msgid "Dosage Alert"
+msgstr "Dosage Alert"
+
+msgid "Side Effect Alert"
+msgstr "Side Effect Alert"
+
+msgid "Monitoring Alert"
+msgstr "Monitoring Alert"
+
+msgid "Lab Test Alert"
+msgstr "Lab Test Alert"
+
+msgid "Follow-up Alert"
+msgstr "Follow-up Alert"
+
+msgid "Refill Alert"
+msgstr "Refill Alert"
+
+msgid "Expiry Alert"
+msgstr "Expiry Alert"
+
+msgid "Storage Alert"
+msgstr "Storage Alert"
+
+msgid "Administration Alert"
+msgstr "Administration Alert"
+
+msgid "Pregnancy Alert"
+msgstr "Pregnancy Alert"
+
+msgid "Breastfeeding Alert"
+msgstr "Breastfeeding Alert"
+
+msgid "Pediatric Alert"
+msgstr "Pediatric Alert"
+
+msgid "Geriatric Alert"
+msgstr "Geriatric Alert"
+
+msgid "Renal Alert"
+msgstr "Renal Alert"
+
+msgid "Hepatic Alert"
+msgstr "Hepatic Alert"
+
+msgid "Cardiac Alert"
+msgstr "Cardiac Alert"
+
+# Alert Severity Levels
+msgid "Critical"
+msgstr "Critical"
+
+msgid "High"
+msgstr "High"
+
+msgid "Medium"
+msgstr "Medium"
+
+msgid "Low"
+msgstr "Low"
+
+msgid "Informational"
+msgstr "Informational"
+
+# Emergency Instructions
+msgid "Call emergency services immediately"
+msgstr "Call emergency services immediately"
+
+msgid "Call 911 immediately"
+msgstr "Call 911 immediately"
+
+msgid "Call 112 immediately"
+msgstr "Call 112 immediately"
+
+msgid "Call 10111 immediately"
+msgstr "Call 10111 immediately"
+
+msgid "Seek emergency medical attention"
+msgstr "Seek emergency medical attention"
+
+msgid "Go to nearest emergency room"
+msgstr "Go to nearest emergency room"
+
+msgid "Contact healthcare provider immediately"
+msgstr "Contact healthcare provider immediately"
+
+msgid "Contact pharmacist immediately"
+msgstr "Contact pharmacist immediately"
+
+msgid "Stop medication immediately"
+msgstr "Stop medication immediately"
+
+msgid "Do not take next dose"
+msgstr "Do not take next dose"
+
+msgid "Take with caution"
+msgstr "Take with caution"
+
+msgid "Monitor closely"
+msgstr "Monitor closely"
+
+msgid "Check with healthcare provider"
+msgstr "Check with healthcare provider"
+
+# Emergency Contact Relationships
+msgid "Spouse"
+msgstr "Spouse"
+
+msgid "Parent"
+msgstr "Parent"
+
+msgid "Child"
+msgstr "Child"
+
+msgid "Sibling"
+msgstr "Sibling"
+
+msgid "Friend"
+msgstr "Friend"
+
+msgid "Neighbor"
+msgstr "Neighbor"
+
+msgid "Caregiver"
+msgstr "Caregiver"
+
+msgid "Guardian"
+msgstr "Guardian"
+
+msgid "Power of Attorney"
+msgstr "Power of Attorney"
+
+msgid "Healthcare Proxy"
+msgstr "Healthcare Proxy"
+
+msgid "Case Manager"
+msgstr "Case Manager"
+
+msgid "Social Worker"
+msgstr "Social Worker"
+
+msgid "Home Health Nurse"
+msgstr "Home Health Nurse"
+
+msgid "Family Member"
+msgstr "Family Member"
+
+msgid "Other"
+msgstr "Other"
+
+# Emergency Contact Instructions
+msgid "Contact in case of emergency"
+msgstr "Contact in case of emergency"
+
+msgid "Contact if patient is unresponsive"
+msgstr "Contact if patient is unresponsive"
+
+msgid "Contact if severe side effects occur"
+msgstr "Contact if severe side effects occur"
+
+msgid "Contact if allergic reaction occurs"
+msgstr "Contact if allergic reaction occurs"
+
+msgid "Contact if overdose is suspected"
+msgstr "Contact if overdose is suspected"
+
+msgid "Contact if medication is missed"
+msgstr "Contact if medication is missed"
+
+msgid "Contact if symptoms worsen"
+msgstr "Contact if symptoms worsen"
+
+msgid "Contact for medication questions"
+msgstr "Contact for medication questions"
+
+msgid "Contact for appointment scheduling"
+msgstr "Contact for appointment scheduling"
+
+msgid "Contact for refill requests"
+msgstr "Contact for refill requests"
+
+# Medical Alert Messages
+msgid "ALERT: Patient has severe allergy to this medication"
+msgstr "ALERT: Patient has severe allergy to this medication"
+
+msgid "ALERT: Patient has moderate allergy to this medication"
+msgstr "ALERT: Patient has moderate allergy to this medication"
+
+msgid "ALERT: Patient has mild allergy to this medication"
+msgstr "ALERT: Patient has mild allergy to this medication"
+
+msgid "ALERT: Potential drug interaction detected"
+msgstr "ALERT: Potential drug interaction detected"
+
+msgid "ALERT: Contraindication detected"
+msgstr "ALERT: Contraindication detected"
+
+msgid "ALERT: Dosage adjustment required"
+msgstr "ALERT: Dosage adjustment required"
+
+msgid "ALERT: Monitoring required"
+msgstr "ALERT: Monitoring required"
+
+msgid "ALERT: Lab tests required"
+msgstr "ALERT: Lab tests required"
+
+msgid "ALERT: Follow-up appointment required"
+msgstr "ALERT: Follow-up appointment required"
+
+msgid "ALERT: Refill due soon"
+msgstr "ALERT: Refill due soon"
+
+msgid "ALERT: Medication expiring soon"
+msgstr "ALERT: Medication expiring soon"
+
+msgid "ALERT: Special storage requirements"
+msgstr "ALERT: Special storage requirements"
+
+msgid "ALERT: Special administration instructions"
+msgstr "ALERT: Special administration instructions"
+
+msgid "ALERT: Pregnancy precautions required"
+msgstr "ALERT: Pregnancy precautions required"
+
+msgid "ALERT: Breastfeeding precautions required"
+msgstr "ALERT: Breastfeeding precautions required"
+
+msgid "ALERT: Pediatric dosing required"
+msgstr "ALERT: Pediatric dosing required"
+
+msgid "ALERT: Geriatric dosing required"
+msgstr "ALERT: Geriatric dosing required"
+
+msgid "ALERT: Renal dosing required"
+msgstr "ALERT: Renal dosing required"
+
+msgid "ALERT: Hepatic dosing required"
+msgstr "ALERT: Hepatic dosing required"
+
+msgid "ALERT: Cardiac monitoring required"
+msgstr "ALERT: Cardiac monitoring required"
+
+# =============================================================================
+# MEDICATION INTERACTION WARNINGS
+# =============================================================================
+
+# Drug Interaction Severity Levels
+msgid "Severe Interaction"
+msgstr "Severe Interaction"
+
+msgid "Major Interaction"
+msgstr "Major Interaction"
+
+msgid "Moderate Interaction"
+msgstr "Moderate Interaction"
+
+msgid "Minor Interaction"
+msgstr "Minor Interaction"
+
+msgid "No Known Interaction"
+msgstr "No Known Interaction"
+
+# Common Drug Interactions
+msgid "WARNING: Do not take with blood thinners"
+msgstr "WARNING: Do not take with blood thinners"
+
+msgid "WARNING: May interact with diabetes medications"
+msgstr "WARNING: May interact with diabetes medications"
+
+msgid "WARNING: May interact with blood pressure medications"
+msgstr "WARNING: May interact with blood pressure medications"
+
+msgid "WARNING: May interact with heart medications"
+msgstr "WARNING: May interact with heart medications"
+
+msgid "WARNING: May interact with antidepressants"
+msgstr "WARNING: May interact with antidepressants"
+
+msgid "WARNING: May interact with pain medications"
+msgstr "WARNING: May interact with pain medications"
+
+msgid "WARNING: May interact with antibiotics"
+msgstr "WARNING: May interact with antibiotics"
+
+msgid "WARNING: May interact with antifungal medications"
+msgstr "WARNING: May interact with antifungal medications"
+
+msgid "WARNING: May interact with antiviral medications"
+msgstr "WARNING: May interact with antiviral medications"
+
+msgid "WARNING: May interact with immunosuppressants"
+msgstr "WARNING: May interact with immunosuppressants"
+
+msgid "WARNING: May interact with hormone medications"
+msgstr "WARNING: May interact with hormone medications"
+
+msgid "WARNING: May interact with thyroid medications"
+msgstr "WARNING: May interact with thyroid medications"
+
+msgid "WARNING: May interact with seizure medications"
+msgstr "WARNING: May interact with seizure medications"
+
+msgid "WARNING: May interact with asthma medications"
+msgstr "WARNING: May interact with asthma medications"
+
+msgid "WARNING: May interact with acid reflux medications"
+msgstr "WARNING: May interact with acid reflux medications"
+
+# Specific Interaction Warnings
+msgid "WARNING: May increase bleeding risk when taken with aspirin"
+msgstr "WARNING: May increase bleeding risk when taken with aspirin"
+
+msgid "WARNING: May increase bleeding risk when taken with warfarin"
+msgstr "WARNING: May increase bleeding risk when taken with warfarin"
+
+msgid "WARNING: May increase bleeding risk when taken with clopidogrel"
+msgstr "WARNING: May increase bleeding risk when taken with clopidogrel"
+
+msgid "WARNING: May cause low blood sugar when taken with insulin"
+msgstr "WARNING: May cause low blood sugar when taken with insulin"
+
+msgid "WARNING: May cause low blood sugar when taken with metformin"
+msgstr "WARNING: May cause low blood sugar when taken with metformin"
+
+msgid "WARNING: May cause low blood pressure when taken with ACE inhibitors"
+msgstr "WARNING: May cause low blood pressure when taken with ACE inhibitors"
+
+msgid "WARNING: May cause low blood pressure when taken with beta blockers"
+msgstr "WARNING: May cause low blood pressure when taken with beta blockers"
+
+msgid "WARNING: May cause irregular heartbeat when taken with digoxin"
+msgstr "WARNING: May cause irregular heartbeat when taken with digoxin"
+
+msgid "WARNING: May cause serotonin syndrome when taken with SSRIs"
+msgstr "WARNING: May cause serotonin syndrome when taken with SSRIs"
+
+msgid "WARNING: May cause serotonin syndrome when taken with SNRIs"
+msgstr "WARNING: May cause serotonin syndrome when taken with SNRIs"
+
+msgid "WARNING: May increase risk of liver damage when taken with paracetamol"
+msgstr "WARNING: May increase risk of liver damage when taken with paracetamol"
+
+msgid "WARNING: May increase risk of kidney damage when taken with NSAIDs"
+msgstr "WARNING: May increase risk of kidney damage when taken with NSAIDs"
+
+msgid "WARNING: May reduce effectiveness of birth control pills"
+msgstr "WARNING: May reduce effectiveness of birth control pills"
+
+msgid "WARNING: May reduce effectiveness of hormone replacement therapy"
+msgstr "WARNING: May reduce effectiveness of hormone replacement therapy"
+
+# Food and Beverage Interactions
+msgid "WARNING: Do not take with grapefruit juice"
+msgstr "WARNING: Do not take with grapefruit juice"
+
+msgid "WARNING: Do not take with alcohol"
+msgstr "WARNING: Do not take with alcohol"
+
+msgid "WARNING: Take on empty stomach - avoid dairy products"
+msgstr "WARNING: Take on empty stomach - avoid dairy products"
+
+msgid "WARNING: Avoid high-fat meals when taking this medication"
+msgstr "WARNING: Avoid high-fat meals when taking this medication"
+
+msgid "WARNING: Avoid caffeine when taking this medication"
+msgstr "WARNING: Avoid caffeine when taking this medication"
+
+msgid "WARNING: Avoid salt substitutes containing potassium"
+msgstr "WARNING: Avoid salt substitutes containing potassium"
+
+msgid "WARNING: Limit foods high in vitamin K"
+msgstr "WARNING: Limit foods high in vitamin K"
+
+msgid "WARNING: Avoid foods high in tyramine"
+msgstr "WARNING: Avoid foods high in tyramine"
+
+# Herbal and Supplement Interactions
+msgid "WARNING: Do not take with St. John's Wort"
+msgstr "WARNING: Do not take with St. John's Wort"
+
+msgid "WARNING: Do not take with ginkgo biloba"
+msgstr "WARNING: Do not take with ginkgo biloba"
+
+msgid "WARNING: Do not take with ginseng"
+msgstr "WARNING: Do not take with ginseng"
+
+msgid "WARNING: Do not take with garlic supplements"
+msgstr "WARNING: Do not take with garlic supplements"
+
+msgid "WARNING: Do not take with fish oil supplements"
+msgstr "WARNING: Do not take with fish oil supplements"
+
+msgid "WARNING: Do not take with vitamin E supplements"
+msgstr "WARNING: Do not take with vitamin E supplements"
+
+msgid "WARNING: Do not take with iron supplements"
+msgstr "WARNING: Do not take with iron supplements"
+
+msgid "WARNING: Do not take with calcium supplements"
+msgstr "WARNING: Do not take with calcium supplements"
+
+msgid "WARNING: Do not take with magnesium supplements"
+msgstr "WARNING: Do not take with magnesium supplements"
+
+msgid "WARNING: Do not take with zinc supplements"
+msgstr "WARNING: Do not take with zinc supplements"
+
+# Timing Interactions
+msgid "WARNING: Take at least 2 hours before or after antacids"
+msgstr "WARNING: Take at least 2 hours before or after antacids"
+
+msgid "WARNING: Take at least 4 hours before or after iron supplements"
+msgstr "WARNING: Take at least 4 hours before or after iron supplements"
+
+msgid "WARNING: Take at least 6 hours before or after other medications"
+msgstr "WARNING: Take at least 6 hours before or after other medications"
+
+msgid "WARNING: Do not take within 24 hours of other medications"
+msgstr "WARNING: Do not take within 24 hours of other medications"
+
+# Interaction Management Instructions
+msgid "Monitor blood pressure closely"
+msgstr "Monitor blood pressure closely"
+
+msgid "Monitor blood sugar closely"
+msgstr "Monitor blood sugar closely"
+
+msgid "Monitor heart rate closely"
+msgstr "Monitor heart rate closely"
+
+msgid "Monitor for signs of bleeding"
+msgstr "Monitor for signs of bleeding"
+
+msgid "Monitor for signs of liver problems"
+msgstr "Monitor for signs of liver problems"
+
+msgid "Monitor for signs of kidney problems"
+msgstr "Monitor for signs of kidney problems"
+
+msgid "Monitor for signs of serotonin syndrome"
+msgstr "Monitor for signs of serotonin syndrome"
+
+msgid "Contact healthcare provider if symptoms worsen"
+msgstr "Contact healthcare provider if symptoms worsen"
+
+msgid "Contact healthcare provider immediately if side effects occur"
+msgstr "Contact healthcare provider immediately if side effects occur"
+
+msgid "Seek emergency medical attention if severe symptoms occur"
+msgstr "Seek emergency medical attention if severe symptoms occur"
+
+# =============================================================================
+# PHARMACY AND HEALTHCARE PROVIDER INFORMATION TRANSLATIONS
+# =============================================================================
+
+# Pharmacy Information
+msgid "Pharmacy Name"
+msgstr "Pharmacy Name"
+
+msgid "Pharmacy Address"
+msgstr "Pharmacy Address"
+
+msgid "Pharmacy Phone Number"
+msgstr "Pharmacy Phone Number"
+
+msgid "Pharmacy Email"
+msgstr "Pharmacy Email"
+
+msgid "Pharmacy Operating Hours"
+msgstr "Pharmacy Operating Hours"
+
+msgid "Pharmacy License Number"
+msgstr "Pharmacy License Number"
+
+msgid "Pharmacy Manager"
+msgstr "Pharmacy Manager"
+
+msgid "Dispensing Pharmacist"
+msgstr "Dispensing Pharmacist"
+
+msgid "Pharmacy Services"
+msgstr "Pharmacy Services"
+
+msgid "Prescription Dispensing"
+msgstr "Prescription Dispensing"
+
+msgid "Medication Counseling"
+msgstr "Medication Counseling"
+
+msgid "Medication Review"
+msgstr "Medication Review"
+
+msgid "Health Screening"
+msgstr "Health Screening"
+
+msgid "Vaccination Services"
+msgstr "Vaccination Services"
+
+msgid "Emergency Services"
+msgstr "Emergency Services"
+
+msgid "Home Delivery"
+msgstr "Home Delivery"
+
+msgid "Medication Synchronization"
+msgstr "Medication Synchronization"
+
+msgid "Medication Therapy Management"
+msgstr "Medication Therapy Management"
+
+# Healthcare Provider Information
+msgid "Provider Name"
+msgstr "Provider Name"
+
+msgid "Provider Title"
+msgstr "Provider Title"
+
+msgid "Provider License Number"
+msgstr "Provider License Number"
+
+msgid "Provider Practice Address"
+msgstr "Provider Practice Address"
+
+msgid "Provider Phone Number"
+msgstr "Provider Phone Number"
+
+msgid "Provider Email"
+msgstr "Provider Email"
+
+msgid "Provider Specialization"
+msgstr "Provider Specialization"
+
+msgid "Provider Practice Hours"
+msgstr "Provider Practice Hours"
+
+msgid "Provider Emergency Contact"
+msgstr "Provider Emergency Contact"
+
+msgid "Provider Practice Name"
+msgstr "Provider Practice Name"
+
+msgid "Provider Practice Number"
+msgstr "Provider Practice Number"
+
+msgid "Provider Practice Email"
+msgstr "Provider Practice Email"
+
+msgid "Provider Practice Website"
+msgstr "Provider Practice Website"
+
+# Provider Titles
+msgid "Dr."
+msgstr "Dr."
+
+msgid "Prof."
+msgstr "Prof."
+
+msgid "Sr."
+msgstr "Sr."
+
+msgid "Sister"
+msgstr "Sister"
+
+msgid "Nurse"
+msgstr "Nurse"
+
+msgid "Nurse Practitioner"
+msgstr "Nurse Practitioner"
+
+msgid "Clinical Nurse Specialist"
+msgstr "Clinical Nurse Specialist"
+
+msgid "Physician Assistant"
+msgstr "Physician Assistant"
+
+msgid "Clinical Pharmacist"
+msgstr "Clinical Pharmacist"
+
+msgid "Hospital Pharmacist"
+msgstr "Hospital Pharmacist"
+
+msgid "Community Pharmacist"
+msgstr "Community Pharmacist"
+
+# Provider Specializations
+msgid "General Practice"
+msgstr "General Practice"
+
+msgid "Internal Medicine"
+msgstr "Internal Medicine"
+
+msgid "Cardiology"
+msgstr "Cardiology"
+
+msgid "Endocrinology"
+msgstr "Endocrinology"
+
+msgid "Oncology"
+msgstr "Oncology"
+
+msgid "Pediatrics"
+msgstr "Pediatrics"
+
+msgid "Geriatrics"
+msgstr "Geriatrics"
+
+msgid "Psychiatry"
+msgstr "Psychiatry"
+
+msgid "Neurology"
+msgstr "Neurology"
+
+msgid "Dermatology"
+msgstr "Dermatology"
+
+msgid "Orthopedics"
+msgstr "Orthopedics"
+
+msgid "Emergency Medicine"
+msgstr "Emergency Medicine"
+
+msgid "Family Medicine"
+msgstr "Family Medicine"
+
+msgid "Obstetrics and Gynecology"
+msgstr "Obstetrics and Gynecology"
+
+msgid "Urology"
+msgstr "Urology"
+
+msgid "Ophthalmology"
+msgstr "Ophthalmology"
+
+msgid "ENT (Ear, Nose, Throat)"
+msgstr "ENT (Ear, Nose, Throat)"
+
+msgid "Rheumatology"
+msgstr "Rheumatology"
+
+msgid "Infectious Diseases"
+msgstr "Infectious Diseases"
+
+msgid "Pulmonology"
+msgstr "Pulmonology"
+
+msgid "Gastroenterology"
+msgstr "Gastroenterology"
+
+# Practice Information
+msgid "Practice Type"
+msgstr "Practice Type"
+
+msgid "Private Practice"
+msgstr "Private Practice"
+
+msgid "Hospital Practice"
+msgstr "Hospital Practice"
+
+msgid "Clinic Practice"
+msgstr "Clinic Practice"
+
+msgid "Academic Practice"
+msgstr "Academic Practice"
+
+msgid "Research Practice"
+msgstr "Research Practice"
+
+msgid "Government Practice"
+msgstr "Government Practice"
+
+msgid "Corporate Practice"
+msgstr "Corporate Practice"
+
+msgid "Group Practice"
+msgstr "Group Practice"
+
+msgid "Solo Practice"
+msgstr "Solo Practice"
+
+msgid "Multi-Specialty Practice"
+msgstr "Multi-Specialty Practice"
+
+# Contact Information
+msgid "Primary Contact"
+msgstr "Primary Contact"
+
+msgid "Secondary Contact"
+msgstr "Secondary Contact"
+
+msgid "After Hours Contact"
+msgstr "After Hours Contact"
+
+msgid "Weekend Contact"
+msgstr "Weekend Contact"
+
+msgid "Holiday Contact"
+msgstr "Holiday Contact"
+
+msgid "On-Call Provider"
+msgstr "On-Call Provider"
+
+msgid "Covering Provider"
+msgstr "Covering Provider"
+
+msgid "Locum Provider"
+msgstr "Locum Provider"
+
+# =============================================================================
+# LOCALIZED MEDICATION DOSAGE INSTRUCTIONS AND SAFETY WARNINGS
+# =============================================================================
+
+# Dosage Instructions - Detailed
+msgid "Take 1 tablet by mouth once daily"
+msgstr "Take 1 tablet by mouth once daily"
+
+msgid "Take 2 tablets by mouth twice daily"
+msgstr "Take 2 tablets by mouth twice daily"
+
+msgid "Take 1 capsule by mouth three times daily"
+msgstr "Take 1 capsule by mouth three times daily"
+
+msgid "Take 1 tablet by mouth every 8 hours"
+msgstr "Take 1 tablet by mouth every 8 hours"
+
+msgid "Take 1 tablet by mouth every 12 hours"
+msgstr "Take 1 tablet by mouth every 12 hours"
+
+msgid "Take 1 tablet by mouth every 6 hours as needed"
+msgstr "Take 1 tablet by mouth every 6 hours as needed"
+
+msgid "Take 1 tablet by mouth every 4 hours for pain"
+msgstr "Take 1 tablet by mouth every 4 hours for pain"
+
+msgid "Take 1 tablet by mouth 30 minutes before meals"
+msgstr "Take 1 tablet by mouth 30 minutes before meals"
+
+msgid "Take 1 tablet by mouth 1 hour after meals"
+msgstr "Take 1 tablet by mouth 1 hour after meals"
+
+msgid "Take 1 tablet by mouth at bedtime"
+msgstr "Take 1 tablet by mouth at bedtime"
+
+msgid "Take 1 tablet by mouth in the morning"
+msgstr "Take 1 tablet by mouth in the morning"
+
+msgid "Take 1 tablet by mouth with breakfast"
+msgstr "Take 1 tablet by mouth with breakfast"
+
+msgid "Take 1 tablet by mouth with lunch"
+msgstr "Take 1 tablet by mouth with lunch"
+
+msgid "Take 1 tablet by mouth with dinner"
+msgstr "Take 1 tablet by mouth with dinner"
+
+# Safety Warnings - Critical
+msgid "WARNING: Do not take if allergic to this medication"
+msgstr "WARNING: Do not take if allergic to this medication"
+
+msgid "WARNING: May cause drowsiness - do not drive or operate machinery"
+msgstr "WARNING: May cause drowsiness - do not drive or operate machinery"
+
+msgid "WARNING: May cause dizziness - rise slowly from sitting or lying position"
+msgstr "WARNING: May cause dizziness - rise slowly from sitting or lying position"
+
+msgid "WARNING: May cause photosensitivity - avoid prolonged sun exposure"
+msgstr "WARNING: May cause photosensitivity - avoid prolonged sun exposure"
+
+msgid "WARNING: May cause stomach upset - take with food"
+msgstr "WARNING: May cause stomach upset - take with food"
+
+msgid "WARNING: May cause dry mouth - drink plenty of fluids"
+msgstr "WARNING: May cause dry mouth - drink plenty of fluids"
+
+msgid "WARNING: May cause constipation - increase fiber intake"
+msgstr "WARNING: May cause constipation - increase fiber intake"
+
+msgid "WARNING: May cause diarrhea - stay hydrated"
+msgstr "WARNING: May cause diarrhea - stay hydrated"
+
+msgid "WARNING: May cause headache - rest in a quiet, dark room"
+msgstr "WARNING: May cause headache - rest in a quiet, dark room"
+
+msgid "WARNING: May cause nausea - take with food or milk"
+msgstr "WARNING: May cause nausea - take with food or milk"
+
+msgid "WARNING: May cause vomiting - contact healthcare provider if severe"
+msgstr "WARNING: May cause vomiting - contact healthcare provider if severe"
+
+msgid "WARNING: May cause rash - stop medication and contact healthcare provider"
+msgstr "WARNING: May cause rash - stop medication and contact healthcare provider"
+
+msgid "WARNING: May cause difficulty breathing - seek emergency medical attention"
+msgstr "WARNING: May cause difficulty breathing - seek emergency medical attention"
+
+msgid "WARNING: May cause chest pain - seek emergency medical attention"
+msgstr "WARNING: May cause chest pain - seek emergency medical attention"
+
+msgid "WARNING: May cause irregular heartbeat - contact healthcare provider"
+msgstr "WARNING: May cause irregular heartbeat - contact healthcare provider"
+
+# Special Instructions
+msgid "Do not crush, break, or chew tablets"
+msgstr "Do not crush, break, or chew tablets"
+
+msgid "Swallow tablets whole with water"
+msgstr "Swallow tablets whole with water"
+
+msgid "Shake liquid medication well before use"
+msgstr "Shake liquid medication well before use"
+
+msgid "Use the measuring device provided"
+msgstr "Use the measuring device provided"
+
+msgid "Do not use household spoons for measurement"
+msgstr "Do not use household spoons for measurement"
+
+msgid "Store in refrigerator - do not freeze"
+msgstr "Store in refrigerator - do not freeze"
+
+msgid "Store at room temperature - avoid heat and moisture"
+msgstr "Store at room temperature - avoid heat and moisture"
+
+msgid "Keep out of reach of children"
+msgstr "Keep out of reach of children"
+
+msgid "Do not share this medication with others"
+msgstr "Do not share this medication with others"
+
+msgid "Complete the full course of treatment"
+msgstr "Complete the full course of treatment"
+
+msgid "Do not stop taking without consulting your healthcare provider"
+msgstr "Do not stop taking without consulting your healthcare provider"
+
+# Emergency Instructions
+msgid "If overdose is suspected, contact Poison Control immediately"
+msgstr "If overdose is suspected, contact Poison Control immediately"
+
+msgid "In case of severe allergic reaction, use epinephrine auto-injector if prescribed"
+msgstr "In case of severe allergic reaction, use epinephrine auto-injector if prescribed"
+
+msgid "If you miss a dose, take it as soon as you remember"
+msgstr "If you miss a dose, take it as soon as you remember"
+
+msgid "If it is almost time for your next dose, skip the missed dose"
+msgstr "If it is almost time for your next dose, skip the missed dose"
+
+msgid "Do not take double doses to make up for missed doses"
+msgstr "Do not take double doses to make up for missed doses"
+
+msgid "Contact your healthcare provider if you miss multiple doses"
+msgstr "Contact your healthcare provider if you miss multiple doses"
+
+# =============================================================================
+# PRESCRIPTION FORM TRANSLATIONS WITH HEALTHCARE-SPECIFIC LANGUAGE
+# =============================================================================
+
+# Prescription Form Fields
+msgid "Prescription Details"
+msgstr "Prescription Details"
+
+msgid "Patient Information"
+msgstr "Patient Information"
+
+msgid "Prescriber Information"
+msgstr "Prescriber Information"
+
+msgid "Medication Details"
+msgstr "Medication Details"
+
+msgid "Dosage Instructions"
+msgstr "Dosage Instructions"
+
+msgid "Duration of Treatment"
+msgstr "Duration of Treatment"
+
+msgid "Quantity Prescribed"
+msgstr "Quantity Prescribed"
+
+msgid "Refill Information"
+msgstr "Refill Information"
+
+msgid "Special Instructions"
+msgstr "Special Instructions"
+
+msgid "Prescription Date"
+msgstr "Prescription Date"
+
+msgid "Expiry Date"
+msgstr "Expiry Date"
+
+msgid "Prescription Number"
+msgstr "Prescription Number"
+
+msgid "Prescriber License Number"
+msgstr "Prescriber License Number"
+
+msgid "Pharmacy Information"
+msgstr "Pharmacy Information"
+
+msgid "Dispensing Instructions"
+msgstr "Dispensing Instructions"
+
+msgid "Patient Allergies"
+msgstr "Patient Allergies"
+
+msgid "Current Medications"
+msgstr "Current Medications"
+
+msgid "Medical Conditions"
+msgstr "Medical Conditions"
+
+msgid "Pregnancy Status"
+msgstr "Pregnancy Status"
+
+msgid "Breastfeeding Status"
+msgstr "Breastfeeding Status"
+
+msgid "Liver Function"
+msgstr "Liver Function"
+
+msgid "Kidney Function"
+msgstr "Kidney Function"
+
+msgid "Blood Pressure"
+msgstr "Blood Pressure"
+
+msgid "Blood Sugar"
+msgstr "Blood Sugar"
+
+msgid "Weight"
+msgstr "Weight"
+
+msgid "Height"
+msgstr "Height"
+
+msgid "Age"
+msgstr "Age"
+
+msgid "Gender"
+msgstr "Gender"
+
+# Prescription Form Validation Messages
+msgid "Please enter a valid prescription number"
+msgstr "Please enter a valid prescription number"
+
+msgid "Prescription date cannot be in the future"
+msgstr "Prescription date cannot be in the future"
+
+msgid "Expiry date must be after prescription date"
+msgstr "Expiry date must be after prescription date"
+
+msgid "Quantity must be greater than zero"
+msgstr "Quantity must be greater than zero"
+
+msgid "Dosage instructions are required"
+msgstr "Dosage instructions are required"
+
+msgid "Patient information is required"
+msgstr "Patient information is required"
+
+msgid "Prescriber information is required"
+msgstr "Prescriber information is required"
+
+msgid "Medication selection is required"
+msgstr "Medication selection is required"
+
+msgid "Duration of treatment is required"
+msgstr "Duration of treatment is required"
+
+msgid "Please specify any allergies"
+msgstr "Please specify any allergies"
+
+msgid "Please list current medications"
+msgstr "Please list current medications"
+
+msgid "Please specify medical conditions"
+msgstr "Please specify medical conditions"
+
+# Prescription Workflow Messages
+msgid "Prescription submitted successfully"
+msgstr "Prescription submitted successfully"
+
+msgid "Prescription is pending approval"
+msgstr "Prescription is pending approval"
+
+msgid "Prescription has been approved"
+msgstr "Prescription has been approved"
+
+msgid "Prescription has been rejected"
+msgstr "Prescription has been rejected"
+
+msgid "Prescription requires clarification"
+msgstr "Prescription requires clarification"
+
+msgid "Prescription is ready for dispensing"
+msgstr "Prescription is ready for dispensing"
+
+msgid "Prescription has been dispensed"
+msgstr "Prescription has been dispensed"
+
+msgid "Prescription is overdue for refill"
+msgstr "Prescription is overdue for refill"
+
+msgid "Prescription has expired"
+msgstr "Prescription has expired"
+
+msgid "Prescription has been discontinued"
+msgstr "Prescription has been discontinued"
+
+# Healthcare Form Labels
+msgid "Primary Diagnosis"
+msgstr "Primary Diagnosis"
+
+msgid "Secondary Diagnosis"
+msgstr "Secondary Diagnosis"
+
+msgid "ICD-10 Code"
+msgstr "ICD-10 Code"
+
+msgid "Treatment Plan"
+msgstr "Treatment Plan"
+
+msgid "Follow-up Schedule"
+msgstr "Follow-up Schedule"
+
+msgid "Laboratory Tests Required"
+msgstr "Laboratory Tests Required"
+
+msgid "Monitoring Parameters"
+msgstr "Monitoring Parameters"
+
+msgid "Adverse Event Reporting"
+msgstr "Adverse Event Reporting"
+
+msgid "Patient Education Required"
+msgstr "Patient Education Required"
+
+msgid "Caregiver Instructions"
+msgstr "Caregiver Instructions"
+
+msgid "Emergency Contact Information"
+msgstr "Emergency Contact Information"
+
+# =============================================================================
+# MEDICATION-SPECIFIC TRANSLATIONS WITH MEDICAL TERMINOLOGY
+# =============================================================================
+
+# Medication Categories
+msgid "Analgesics"
+msgstr "Analgesics"
+
+msgid "Antibiotics"
+msgstr "Antibiotics"
+
+msgid "Antihypertensives"
+msgstr "Antihypertensives"
+
+msgid "Antidiabetic Medications"
+msgstr "Antidiabetic Medications"
+
+msgid "Cardiovascular Medications"
+msgstr "Cardiovascular Medications"
+
+msgid "Respiratory Medications"
+msgstr "Respiratory Medications"
+
+msgid "Psychiatric Medications"
+msgstr "Psychiatric Medications"
+
+msgid "Oncology Medications"
+msgstr "Oncology Medications"
+
+msgid "Immunosuppressants"
+msgstr "Immunosuppressants"
+
+msgid "Hormone Replacement Therapy"
+msgstr "Hormone Replacement Therapy"
+
+# Dosage Forms
+msgid "Tablet"
+msgstr "Tablet"
+
+msgid "Capsule"
+msgstr "Capsule"
+
+msgid "Liquid Suspension"
+msgstr "Liquid Suspension"
+
+msgid "Injection"
+msgstr "Injection"
+
+msgid "Inhaler"
+msgstr "Inhaler"
+
+msgid "Topical Cream"
+msgstr "Topical Cream"
+
+msgid "Transdermal Patch"
+msgstr "Transdermal Patch"
+
+msgid "Eye Drops"
+msgstr "Eye Drops"
+
+msgid "Ear Drops"
+msgstr "Ear Drops"
+
+msgid "Nasal Spray"
+msgstr "Nasal Spray"
+
+# Dosage Instructions
+msgid "Take with food"
+msgstr "Take with food"
+
+msgid "Take on empty stomach"
+msgstr "Take on empty stomach"
+
+msgid "Take with plenty of water"
+msgstr "Take with plenty of water"
+
+msgid "Do not crush or chew"
+msgstr "Do not crush or chew"
+
+msgid "Swallow whole"
+msgstr "Swallow whole"
+
+msgid "Take at bedtime"
+msgstr "Take at bedtime"
+
+msgid "Take in the morning"
+msgstr "Take in the morning"
+
+msgid "Take with meals"
+msgstr "Take with meals"
+
+msgid "Take 30 minutes before meals"
+msgstr "Take 30 minutes before meals"
+
+msgid "Take 1 hour after meals"
+msgstr "Take 1 hour after meals"
+
+# Medical Terminology
+msgid "Contraindications"
+msgstr "Contraindications"
+
+msgid "Drug Interactions"
+msgstr "Drug Interactions"
+
+msgid "Side Effects"
+msgstr "Side Effects"
+
+msgid "Adverse Reactions"
+msgstr "Adverse Reactions"
+
+msgid "Pharmacokinetics"
+msgstr "Pharmacokinetics"
+
+msgid "Bioavailability"
+msgstr "Bioavailability"
+
+msgid "Half-life"
+msgstr "Half-life"
+
+msgid "Therapeutic Index"
+msgstr "Therapeutic Index"
+
+msgid "Loading Dose"
+msgstr "Loading Dose"
+
+msgid "Maintenance Dose"
+msgstr "Maintenance Dose"
+
+msgid "Titration"
+msgstr "Titration"
+
+# Prescription Status
+msgid "Active"
+msgstr "Active"
+
+msgid "Discontinued"
+msgstr "Discontinued"
+
+msgid "On Hold"
+msgstr "On Hold"
+
+msgid "Completed"
+msgstr "Completed"
+
+msgid "Refill Required"
+msgstr "Refill Required"
+
+msgid "Expired"
+msgstr "Expired"
+
+msgid "Pending Approval"
+msgstr "Pending Approval"
+
+msgid "Approved"
+msgstr "Approved"
+
+msgid "Rejected"
+msgstr "Rejected"
+
+# Healthcare Provider Types
+msgid "General Practitioner"
+msgstr "General Practitioner"
+
+msgid "Specialist"
+msgstr "Specialist"
+
+msgid "Pharmacist"
+msgstr "Pharmacist"
+
 msgid "Medications"
 msgstr "Medications"
 
@@ -128,10 +1410,6 @@ msgid "Expiration Status"
 msgstr "Expiration Status"
 
 #: wagtail_hooks/wagtail_hooks.py:112
-msgid "Expired"
-msgstr "Expired"
-
-#: wagtail_hooks/wagtail_hooks.py:113
 msgid "Expiring Soon"
 msgstr "Expiring Soon"
 
@@ -144,10 +1422,6 @@ msgid "Active Status"
 msgstr "Active Status"
 
 #: wagtail_hooks/wagtail_hooks.py:116
-msgid "Active"
-msgstr "Active"
-
-#: wagtail_hooks/wagtail_hooks.py:117
 msgid "Inactive"
 msgstr "Inactive"
 
@@ -301,22 +1575,6 @@ msgid "General Announcement"
 msgstr "General Announcement"
 
 #: notifications/models.py:154
-msgid "Low"
-msgstr "Low"
-
-#: notifications/models.py:155
-msgid "Medium"
-msgstr "Medium"
-
-#: notifications/models.py:156
-msgid "High"
-msgstr "High"
-
-#: notifications/models.py:157
-msgid "Critical"
-msgstr "Critical"
-
-#: notifications/tasks.py:49
 msgid "Medication Reminder"
 msgstr "Medication Reminder"
 

@@ -161,23 +161,58 @@ PASSWORD_HASHERS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
-LANGUAGE_CODE = 'en'
+LANGUAGE_CODE = 'en-ZA'
 TIME_ZONE = 'Africa/Johannesburg'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# Supported languages for Django frontend
+# Supported languages for Django frontend (Wagtail 7.0.2 enhanced)
 LANGUAGES = [
-    ('en', _('English')),
-    ('af', _('Afrikaans')),
+    ('en-ZA', _('English (South Africa)')),
+    ('af-ZA', _('Afrikaans (South Africa)')),
 ]
 
-# Wagtail content languages (can be same as LANGUAGES or subset)
+# Wagtail 7.0.2 enhanced content languages configuration
 WAGTAIL_CONTENT_LANGUAGES = LANGUAGES
 
-# Enable Wagtail internationalization
+# Enable Wagtail 7.0.2 enhanced internationalization
 WAGTAIL_I18N_ENABLED = True
+
+# Wagtail 7.0.2 enhanced translation settings
+WAGTAIL_I18N_CONFIG = {
+    'default_language': 'en-ZA',
+    'fallback_language': 'en-ZA',
+    'translation_workflow_enabled': True,
+    'content_synchronization': True,
+    'professional_translation_tools': True,
+    'translation_memory': True,
+    'quality_assurance': True,
+    'page_translation': {
+        'enabled': True,
+        'synchronization': True,
+        'auto_translate': False,
+        'translation_memory_enabled': True,
+        'content_validation': True,
+        'workflow_approval': True,
+    },
+    'content_sync': {
+        'enabled': True,
+        'auto_sync_structure': True,
+        'sync_metadata': True,
+        'sync_images': True,
+        'sync_documents': True,
+        'sync_forms': True,
+        'conflict_resolution': 'source_wins',
+    },
+    'translation_workflow': {
+        'enabled': True,
+        'stages': ['draft', 'review', 'approved', 'published'],
+        'approvers': ['translators', 'editors', 'managers'],
+        'auto_approval': False,
+        'quality_checks': True,
+    },
+}
 
 # Locale paths for translation files
 LOCALE_PATHS = [

@@ -858,3 +858,838 @@ msgstr "As jy enige vrae het, kontak asseblief ons ondersteuningspan."
 #: templates/notifications/email/default_notification.html:90
 msgid "All rights reserved."
 msgstr "Alle regte voorbehou." 
+# Medication Categories
+msgid "Analgesics"
+msgstr "Pynstillers"
+# Medication Categories
+msgid "Antibiotics"
+msgstr "Antibiotika"
+
+msgid "Antihypertensives"
+msgstr "Antihipertensiewe"
+
+msgid "Antidiabetics"
+msgstr "Antidiabetika"
+
+msgid "Anticoagulants"
+msgstr "Antikoagulante"
+
+msgid "Bronchodilators"
+msgstr "Brongodilatators"
+
+msgid "Corticosteroids"
+msgstr "Kortikosteroïede"
+
+msgid "Diuretics"
+msgstr "Diuretika"
+
+msgid "Antiemetics"
+msgstr "Antiemetika"
+
+msgid "Laxatives"
+msgstr "Laksatiewe"
+
+# Dosage Forms
+msgid "Suppository"
+msgstr "Suppositorium"
+
+msgid "Suspension"
+msgstr "Suspensie"
+
+msgid "Syrup"
+msgstr "Stroop"
+
+# General Dosage Instructions
+msgid "Take with food"
+msgstr "Neem met kos"
+
+msgid "Take on empty stomach"
+msgstr "Neem op leë maag"
+
+msgid "Take with plenty of water"
+msgstr "Neem met baie water"
+
+msgid "Do not crush or chew"
+msgstr "Moenie fynmaak of kou nie"
+
+msgid "Swallow whole"
+msgstr "Sluk heel in"
+
+msgid "Dissolve in water"
+msgstr "Los op in water"
+
+msgid "Shake well before use"
+msgstr "Skuif goed voor gebruik"
+
+msgid "Store in refrigerator"
+msgstr "Berg in yskas"
+
+msgid "Keep at room temperature"
+msgstr "Hou by kamertemperatuur"
+
+msgid "Protect from light"
+msgstr "Beskerm teen lig"
+
+# Medical Terminology
+msgid "Contraindications"
+msgstr "Kontra-indikasies"
+
+msgid "Side Effects"
+msgstr "Newe-effekte"
+
+msgid "Drug Interactions"
+msgstr "Geneesmiddel Interaksies"
+
+msgid "Precautions"
+msgstr "Voorsorgmaatreëls"
+
+msgid "Warnings"
+msgstr "Waarskuwings"
+
+msgid "Overdose"
+msgstr "Oordosis"
+
+msgid "Allergic Reaction"
+msgstr "Allergiese Reaksie"
+
+msgid "Tolerance"
+msgstr "Verdraagsaamheid"
+
+msgid "Dependency"
+msgstr "Afhanklikheid"
+
+msgid "Withdrawal"
+msgstr "Onttrekking"
+
+# Prescription Status
+msgid "Discontinued"
+msgstr "Gestop"
+
+msgid "Suspended"
+msgstr "Geskors"
+
+msgid "Refill Required"
+msgstr "Hernuwing Benodig"
+
+msgid "No Refills Left"
+msgstr "Geen Hernuwings Oor"
+
+msgid "Prior Authorization Required"
+msgstr "Voorafgoedkeuring Benodig"
+
+# Healthcare Provider Types
+msgid "General Practitioner"
+msgstr "Algemene Praktisyn"
+
+msgid "Specialist"
+msgstr "Spesialis"
+
+msgid "Pharmacist"
+msgstr "Apteeker"
+
+msgid "Nurse"
+msgstr "Verpleegkundige"
+
+msgid "Dentist"
+msgstr "Tandarts"
+
+msgid "Psychiatrist"
+msgstr "Psigiater"
+
+msgid "Cardiologist"
+msgstr "Kardioloog"
+
+msgid "Oncologist"
+msgstr "Onkoloog"
+
+msgid "Pediatrician"
+msgstr "Pediater"
+
+msgid "Geriatrician"
+msgstr "Geriater"
+
+# Prescription Form Fields
+msgid "Prescription Details"
+msgstr "Voorskrif Besonderhede"
+
+msgid "Patient Information"
+msgstr "Pasiënt Inligting"
+
+msgid "Medication Information"
+msgstr "Medikasie Inligting"
+
+msgid "Dosage Instructions"
+msgstr "Dosis Instruksies"
+
+msgid "Prescriber Information"
+msgstr "Voorskrywer Inligting"
+
+msgid "Pharmacy Information"
+msgstr "Aptek Inligting"
+
+msgid "Date Prescribed"
+msgstr "Datum Voorgeskryf"
+
+msgid "Date Dispensed"
+msgstr "Datum Uitgereik"
+
+msgid "Quantity Dispensed"
+msgstr "Hoeveelheid Uitgereik"
+
+msgid "Refills Authorized"
+msgstr "Hernuwings Gemagtig"
+
+msgid "Expiration Date"
+msgstr "Verval Datum"
+
+# Form Validation Messages
+msgid "Please enter a valid prescription number"
+msgstr "Voer asseblief 'n geldige voorskrif nommer in"
+
+msgid "Patient name is required"
+msgstr "Pasiënt naam is verpligtend"
+
+msgid "Medication name is required"
+msgstr "Medikasie naam is verpligtend"
+
+msgid "Dosage information is required"
+msgstr "Dosis inligting is verpligtend"
+
+msgid "Prescriber signature is required"
+msgstr "Voorskrywer handtekening is verpligtend"
+
+msgid "Date cannot be in the future"
+msgstr "Datum kan nie in die toekoms wees nie"
+
+msgid "Quantity must be greater than zero"
+msgstr "Hoeveelheid moet groter as nul wees"
+
+# Workflow Messages
+msgid "Prescription submitted successfully"
+msgstr "Voorskrif suksesvol ingedien"
+
+msgid "Prescription approved"
+msgstr "Voorskrif goedgekeur"
+
+msgid "Prescription rejected"
+msgstr "Voorskrif verwerp"
+
+msgid "Prescription requires review"
+msgstr "Voorskrif benodig hersiening"
+
+msgid "Prescription expired"
+msgstr "Voorskrif verval"
+
+msgid "Refill request submitted"
+msgstr "Hernuwing versoek ingedien"
+
+# Healthcare Form Labels
+msgid "Primary Diagnosis"
+msgstr "Primêre Diagnose"
+
+msgid "Secondary Diagnosis"
+msgstr "Sekondêre Diagnose"
+
+msgid "Treatment Plan"
+msgstr "Behandelingsplan"
+
+msgid "Follow-up Date"
+msgstr "Opvolg Datum"
+
+msgid "Lab Results"
+msgstr "Laboratorium Resultate"
+
+msgid "Vital Signs"
+msgstr "Lewensbelangrike Tekens"
+
+msgid "Blood Pressure"
+msgstr "Bloeddruk"
+
+msgid "Heart Rate"
+msgstr "Harttempo"
+
+msgid "Temperature"
+msgstr "Temperatuur"
+
+msgid "Weight"
+msgstr "Gewig"
+
+# Medication Dosage Instructions
+msgid "Take 1 tablet by mouth once daily"
+msgstr "Neem 1 tablet per mond een keer daagliks"
+
+msgid "Take 2 tablets by mouth twice daily"
+msgstr "Neem 2 tablette per mond twee keer daagliks"
+
+msgid "Take 1 capsule with food three times daily"
+msgstr "Neem 1 kapsule met kos drie keer daagliks"
+
+msgid "Take 5ml by mouth every 6 hours"
+msgstr "Neem 5ml per mond elke 6 uur"
+
+msgid "Apply 1 patch to clean, dry skin"
+msgstr "Pas 1 pleister toe op skoon, droë vel"
+
+msgid "Use 2 puffs from inhaler as needed"
+msgstr "Gebruik 2 teugies van inhaleerder soos benodig"
+
+msgid "Take 1 tablet 30 minutes before meals"
+msgstr "Neem 1 tablet 30 minute voor maaltye"
+
+msgid "Take 1 tablet at bedtime"
+msgstr "Neem 1 tablet voor slaaptyd"
+
+msgid "Take 1 tablet with first meal of the day"
+msgstr "Neem 1 tablet met eerste maaltyd van die dag"
+
+msgid "Take 1 tablet every 8 hours"
+msgstr "Neem 1 tablet elke 8 uur"
+
+# Critical Safety Warnings
+msgid "WARNING: May cause drowsiness"
+msgstr "WAARSKUWING: Kan slaperigheid veroorsaak"
+
+msgid "WARNING: Do not operate machinery while taking"
+msgstr "WAARSKUWING: Moenie masjinerie bedryf terwyl jy neem nie"
+
+msgid "WARNING: May cause dizziness"
+msgstr "WAARSKUWING: Kan duiseligheid veroorsaak"
+
+msgid "WARNING: Avoid alcohol while taking"
+msgstr "WAARSKUWING: Vermy alkohol terwyl jy neem"
+
+msgid "WARNING: May cause photosensitivity"
+msgstr "WAARSKUWING: Kan fotosensitiwiteit veroorsaak"
+
+msgid "WARNING: May cause stomach upset"
+msgstr "WAARSKUWING: Kan maagontsteking veroorsaak"
+
+msgid "WARNING: May cause dry mouth"
+msgstr "WAARSKUWING: Kan droë mond veroorsaak"
+
+msgid "WARNING: May cause constipation"
+msgstr "WAARSKUWING: Kan hardlywigheid veroorsaak"
+
+msgid "WARNING: May cause diarrhea"
+msgstr "WAARSKUWING: Kan diarree veroorsaak"
+
+msgid "WARNING: May cause headache"
+msgstr "WAARSKUWING: Kan hoofpyn veroorsaak"
+
+# Special Instructions
+msgid "Do not crush, break, or chew tablets"
+msgstr "Moenie tablette fynmaak, breek of kou nie"
+
+msgid "Take with a full glass of water"
+msgstr "Neem met 'n vol glas water"
+
+msgid "Store in original container"
+msgstr "Berg in oorspronklike houer"
+
+msgid "Keep out of reach of children"
+msgstr "Hou buite bereik van kinders"
+
+msgid "Do not share with others"
+msgstr "Moenie met ander deel nie"
+
+msgid "Complete the full course"
+msgstr "Voltooi die volledige kursus"
+
+msgid "Do not stop taking without consulting doctor"
+msgstr "Moenie ophou neem sonder om dokter te raadpleeg"
+
+msgid "Take at the same time each day"
+msgstr "Neem op dieselfde tyd elke dag"
+
+msgid "Take with or without food"
+msgstr "Neem met of sonder kos"
+
+msgid "Take on an empty stomach"
+msgstr "Neem op 'n leë maag"
+
+# Emergency Instructions
+msgid "If overdose is suspected, contact Poison Control immediately"
+msgstr "As oordosis vermoed word, kontak onmiddellik Gif Kontrole"
+
+msgid "Seek emergency medical attention if severe side effects occur"
+msgstr "Soek nood mediese hulp as ernstige newe-effekte voorkom"
+
+msgid "Call emergency services if allergic reaction occurs"
+msgstr "Bel nooddienste as allergiese reaksie voorkom"
+
+msgid "Stop taking and contact doctor immediately if rash develops"
+msgstr "Hou op neem en kontak dokter onmiddellik as uitslag ontwikkel"
+
+msgid "Seek immediate medical attention if chest pain occurs"
+msgstr "Soek onmiddellike mediese hulp as borspyn voorkom"
+
+# Pharmacy Information
+msgid "Pharmacy Name"
+msgstr "Aptek Naam"
+
+msgid "Pharmacy Address"
+msgstr "Aptek Adres"
+
+msgid "Pharmacy Phone"
+msgstr "Aptek Telefoon"
+
+msgid "Pharmacy Operating Hours"
+msgstr "Aptek Bedryfsure"
+
+msgid "Pharmacy Services"
+msgstr "Aptek Dienste"
+
+msgid "Prescription Filling"
+msgstr "Voorskrif Vul"
+
+msgid "Medication Counseling"
+msgstr "Medikasie Berading"
+
+msgid "Health Screening"
+msgstr "Gesondheid Sifting"
+
+msgid "Vaccination Services"
+msgstr "Inenting Dienste"
+
+msgid "Emergency Services"
+msgstr "Nooddienste"
+
+# Healthcare Provider Information
+msgid "Provider Name"
+msgstr "Verskaffer Naam"
+
+msgid "Provider Specialization"
+msgstr "Verskaffer Spesialisasie"
+
+msgid "Provider License Number"
+msgstr "Verskaffer Lisensie Nommer"
+
+msgid "Provider Contact Information"
+msgstr "Verskaffer Kontak Inligting"
+
+msgid "Provider Office Hours"
+msgstr "Verskaffer Kantoorure"
+
+msgid "Provider Emergency Contact"
+msgstr "Verskaffer Noodkontak"
+
+# Provider Titles
+msgid "Dr."
+msgstr "Dr."
+
+msgid "Prof."
+msgstr "Prof."
+
+msgid "Mr."
+msgstr "Mnr."
+
+msgid "Mrs."
+msgstr "Mev."
+
+msgid "Ms."
+msgstr "Me."
+
+# Provider Specializations
+msgid "Cardiology"
+msgstr "Kardiologie"
+
+msgid "Oncology"
+msgstr "Onkologie"
+
+msgid "Neurology"
+msgstr "Neurologie"
+
+msgid "Psychiatry"
+msgstr "Psigiatrie"
+
+msgid "Pediatrics"
+msgstr "Pediatrie"
+
+msgid "Geriatrics"
+msgstr "Geriatrie"
+
+msgid "Dermatology"
+msgstr "Dermatologie"
+
+msgid "Endocrinology"
+msgstr "Endokrinologie"
+
+msgid "Gastroenterology"
+msgstr "Gastro-enterologie"
+
+msgid "Rheumatology"
+msgstr "Reumatologie"
+
+# Practice Information
+msgid "Private Practice"
+msgstr "Privaat Praktyk"
+
+msgid "Hospital Practice"
+msgstr "Hospitaal Praktyk"
+
+msgid "Clinic Practice"
+msgstr "Kliniek Praktyk"
+
+msgid "Academic Practice"
+msgstr "Akademiese Praktyk"
+
+msgid "Group Practice"
+msgstr "Groep Praktyk"
+
+msgid "Solo Practice"
+msgstr "Solo Praktyk"
+
+# Contact Information Labels
+msgid "Office Phone"
+msgstr "Kantoor Telefoon"
+
+msgid "Office Fax"
+msgstr "Kantoor Faks"
+
+msgid "Office Email"
+msgstr "Kantoor E-pos"
+
+msgid "Office Address"
+msgstr "Kantoor Adres"
+
+msgid "Emergency Phone"
+msgstr "Nood Telefoon"
+
+msgid "After Hours Phone"
+msgstr "Na-ure Telefoon"
+
+# Drug Interaction Severity
+msgid "Severe Interaction"
+msgstr "Ernstige Interaksie"
+
+msgid "Moderate Interaction"
+msgstr "Matige Interaksie"
+
+msgid "Minor Interaction"
+msgstr "Klein Interaksie"
+
+msgid "No Known Interaction"
+msgstr "Geen Bekende Interaksie"
+
+# Common Drug Interaction Warnings
+msgid "WARNING: Do not take with blood thinners"
+msgstr "WAARSKUWING: Moenie neem met bloedverdunners nie"
+
+msgid "WARNING: May increase bleeding risk when taken with aspirin"
+msgstr "WAARSKUWING: Kan bloeding risiko verhoog wanneer geneem met aspirien"
+
+msgid "WARNING: May reduce effectiveness of birth control"
+msgstr "WAARSKUWING: Kan effektiwiteit van geboortebeperking verminder"
+
+msgid "WARNING: May cause dangerous drop in blood pressure"
+msgstr "WAARSKUWING: Kan gevaarlike daling in bloeddruk veroorsaak"
+
+msgid "WARNING: May increase risk of liver damage"
+msgstr "WAARSKUWING: Kan risiko van lewerskade verhoog"
+
+msgid "WARNING: May cause irregular heartbeat"
+msgstr "WAARSKUWING: Kan onreëlmatige hartklop veroorsaak"
+
+# Specific Interaction Warnings
+msgid "WARNING: May reduce effectiveness of birth control pills"
+msgstr "WAARSKUWING: Kan effektiwiteit van geboortebeperking pille verminder"
+
+msgid "WARNING: May cause dangerous drop in blood pressure with ACE inhibitors"
+msgstr "WAARSKUWING: Kan gevaarlike daling in bloeddruk veroorsaak met ACE inhibeerders"
+
+msgid "WARNING: May increase risk of liver damage with statins"
+msgstr "WAARSKUWING: Kan risiko van lewerskade verhoog met statiene"
+
+msgid "WARNING: May cause irregular heartbeat with beta blockers"
+msgstr "WAARSKUWING: Kan onreëlmatige hartklop veroorsaak met beta blokkeerders"
+
+# Food and Beverage Interactions
+msgid "WARNING: Do not take with grapefruit juice"
+msgstr "WAARSKUWING: Moenie neem met lemoensap nie"
+
+msgid "WARNING: Avoid alcohol while taking this medication"
+msgstr "WAARSKUWING: Vermy alkohol terwyl jy hierdie medikasie neem"
+
+msgid "WARNING: Take with food to reduce stomach upset"
+msgstr "WAARSKUWING: Neem met kos om maagontsteking te verminder"
+
+msgid "WARNING: Avoid dairy products for 2 hours before and after"
+msgstr "WAARSKUWING: Vermy suiwelprodukte vir 2 uur voor en na"
+
+msgid "WARNING: Take on empty stomach for best absorption"
+msgstr "WAARSKUWING: Neem op leë maag vir beste absorpsie"
+
+# Herbal and Supplement Interactions
+msgid "WARNING: Do not take with St. John's Wort"
+msgstr "WAARSKUWING: Moenie neem met Sint Jan se Kruid nie"
+
+msgid "WARNING: May interact with ginkgo biloba"
+msgstr "WAARSKUWING: Kan interaksie hê met ginkgo biloba"
+
+msgid "WARNING: May interact with ginseng"
+msgstr "WAARSKUWING: Kan interaksie hê met ginseng"
+
+msgid "WARNING: May interact with garlic supplements"
+msgstr "WAARSKUWING: Kan interaksie hê met knoffel aanvullings"
+
+msgid "WARNING: May interact with fish oil supplements"
+msgstr "WAARSKUWING: Kan interaksie hê met visolie aanvullings"
+
+# Timing Interactions
+msgid "Take at least 2 hours before or after antacids"
+msgstr "Neem ten minste 2 uur voor of na suurneutraliseerders"
+
+msgid "Take at least 4 hours before or after iron supplements"
+msgstr "Neem ten minste 4 uur voor of na yster aanvullings"
+
+msgid "Take at least 6 hours before or after calcium supplements"
+msgstr "Neem ten minste 6 uur voor of na kalsium aanvullings"
+
+msgid "Take at least 8 hours before or after magnesium supplements"
+msgstr "Neem ten minste 8 uur voor of na magnesium aanvullings"
+
+msgid "Take at least 12 hours before or after zinc supplements"
+msgstr "Neem ten minste 12 uur voor of na sink aanvullings"
+
+# Interaction Management Instructions
+msgid "Monitor for signs of bleeding"
+msgstr "Monitor vir tekens van bloeding"
+
+msgid "Check blood pressure regularly"
+msgstr "Kontroleer bloeddruk gereeld"
+
+msgid "Monitor liver function tests"
+msgstr "Monitor lewer funksie toetse"
+
+msgid "Watch for signs of allergic reaction"
+msgstr "Let op tekens van allergiese reaksie"
+
+msgid "Report any unusual symptoms immediately"
+msgstr "Rapporteer enige ongewone simptome onmiddellik"
+
+# Emergency Contact Information
+msgid "Emergency Contact Name"
+msgstr "Noodkontak Naam"
+
+msgid "Emergency Contact Phone"
+msgstr "Noodkontak Telefoon"
+
+msgid "Emergency Contact Relationship"
+msgstr "Noodkontak Verhouding"
+
+msgid "Emergency Contact Address"
+msgstr "Noodkontak Adres"
+
+msgid "Emergency Contact Email"
+msgstr "Noodkontak E-pos"
+
+msgid "Emergency Contact Instructions"
+msgstr "Noodkontak Instruksies"
+
+# Emergency Contact Relationships
+msgid "Spouse"
+msgstr "Gade"
+
+msgid "Parent"
+msgstr "Ouer"
+
+msgid "Child"
+msgstr "Kind"
+
+msgid "Sibling"
+msgstr "Broer/Suster"
+
+msgid "Friend"
+msgstr "Vriend"
+
+msgid "Neighbor"
+msgstr "Buurman/Buurvrou"
+
+msgid "Caregiver"
+msgstr "Versorger"
+
+msgid "Healthcare Provider"
+msgstr "Gesondheidsorg Verskaffer"
+
+# Emergency Contact Instructions
+msgid "Call immediately in case of emergency"
+msgstr "Bel onmiddellik in geval van nood"
+
+msgid "Call if patient is unconscious"
+msgstr "Bel as pasiënt bewusteloos is"
+
+msgid "Call if patient has severe allergic reaction"
+msgstr "Bel as pasiënt ernstige allergiese reaksie het"
+
+msgid "Call if patient has chest pain"
+msgstr "Bel as pasiënt borspyn het"
+
+msgid "Call if patient has difficulty breathing"
+msgstr "Bel as pasiënt probleme met asemhaling het"
+
+# Medical Alert Information
+msgid "Medical Alert Type"
+msgstr "Mediese Waarskuwing Tipe"
+
+msgid "Medical Alert Severity"
+msgstr "Mediese Waarskuwing Ernstigheid"
+
+msgid "Medical Alert Description"
+msgstr "Mediese Waarskuwing Beskrywing"
+
+msgid "Medical Alert Instructions"
+msgstr "Mediese Waarskuwing Instruksies"
+
+msgid "Medical Alert Expiration"
+msgstr "Mediese Waarskuwing Verval"
+
+# Medical Alert Types
+msgid "Allergy Alert"
+msgstr "Allergie Waarskuwing"
+
+msgid "Drug Interaction Alert"
+msgstr "Geneesmiddel Interaksie Waarskuwing"
+
+msgid "Medical Condition Alert"
+msgstr "Mediese Toestand Waarskuwing"
+
+msgid "Medication Sensitivity Alert"
+msgstr "Medikasie Sensitiwiteit Waarskuwing"
+
+msgid "Blood Type Alert"
+msgstr "Bloedtipe Waarskuwing"
+
+msgid "Organ Donor Alert"
+msgstr "Orgaan Skenker Waarskuwing"
+
+msgid "DNR Alert"
+msgstr "DNR Waarskuwing"
+
+msgid "Pregnancy Alert"
+msgstr "Swangerskap Waarskuwing"
+
+msgid "Breastfeeding Alert"
+msgstr "Borsvoeding Waarskuwing"
+
+msgid "Diabetes Alert"
+msgstr "Diabetes Waarskuwing"
+
+# Alert Severity Levels
+msgid "Call emergency services immediately"
+msgstr "Bel nooddienste onmiddellik"
+
+msgid "Do not give any medication without medical supervision"
+msgstr "Moenie enige medikasie gee sonder mediese toesig nie"
+
+msgid "Keep patient calm and comfortable"
+msgstr "Hou pasiënt kalm en gemaklik"
+
+msgid "Monitor vital signs closely"
+msgstr "Monitor lewensbelangrike tekens noukeurig"
+
+msgid "Prepare for emergency transport"
+msgstr "Berei voor vir nood vervoer"
+
+# Medical Alert Messages
+msgid "Patient has severe allergy to penicillin"
+msgstr "Pasiënt het ernstige allergie vir penisillien"
+
+msgid "Patient is allergic to sulfa drugs"
+msgstr "Pasiënt is allergies vir sulfa geneesmiddels"
+
+msgid "Patient has diabetes and takes insulin"
+msgstr "Pasiënt het diabetes en neem insulien"
+
+msgid "Patient has heart condition"
+msgstr "Pasiënt het hart toestand"
+
+msgid "Patient has pacemaker"
+msgstr "Pasiënt het pasmaker"
+
+msgid "Patient is on blood thinners"
+msgstr "Pasiënt is op bloedverdunners"
+
+msgid "Patient has kidney disease"
+msgstr "Pasiënt het niersiekte"
+
+msgid "Patient has liver disease"
+msgstr "Pasiënt het lewersiekte"
+
+msgid "Patient has asthma"
+msgstr "Pasiënt het asma"
+
+msgid "Patient has epilepsy"
+msgstr "Pasiënt het epilepsie"
+
+# Translation Workflow Terms
+msgid "Translation Status"
+msgstr "Vertaling Status"
+
+msgid "Sync Content"
+msgstr "Sinkroniseer Inhoud"
+
+msgid "Complete Translation"
+msgstr "Voltooi Vertaling"
+
+msgid "Approve Translation"
+msgstr "Keur Vertaling Goed"
+
+msgid "Translation workflow status"
+msgstr "Vertaling werkvloei status"
+
+msgid "Sync content structure to translations"
+msgstr "Sinkroniseer inhoud struktuur na vertalings"
+
+# Professional Translation Tools
+msgid "Translation Memory"
+msgstr "Vertaling Geheue"
+
+msgid "Professional Translation"
+msgstr "Professionele Vertaling"
+
+msgid "Quality Check"
+msgstr "Kwaliteit Kontrole"
+
+msgid "Translation Services"
+msgstr "Vertaling Dienste"
+
+msgid "View translation memory suggestions"
+msgstr "Bekyk vertaling geheue voorstelle"
+
+msgid "Request professional translation"
+msgstr "Versoek professionele vertaling"
+
+# Translation Workflow Stages
+msgid "Draft"
+msgstr "Konsep"
+
+msgid "Review"
+msgstr "Hersiening"
+
+msgid "Approved"
+msgstr "Goedgekeur"
+
+msgid "Published"
+msgstr "Gepubliseer"
+
+msgid "Rejected"
+msgstr "Verwerp"
+
+# Translation Quality Checks
+msgid "Spelling Check"
+msgstr "Spelling Kontrole"
+
+msgid "Grammar Check"
+msgstr "Grammatika Kontrole"
+
+msgid "Terminology Check"
+msgstr "Terminologie Kontrole"
+
+msgid "Consistency Check"
+msgstr "Konsekwentheid Kontrole"
+
+msgid "Completeness Check"
+msgstr "Volledigheid Kontrole"
+
+msgid "Medical Accuracy Check"
+msgstr "Mediese Akkuraatheid Kontrole" 
