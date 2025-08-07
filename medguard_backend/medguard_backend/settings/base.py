@@ -123,6 +123,7 @@ LOCAL_APPS = [
     'search',  # Wagtail search app
     'wagtail_hooks',  # Wagtail admin customizations
     'forms',  # Wagtail 7.0.2 form pages
+    'maintenance',  # Wagtail 7.0.2 healthcare maintenance tools
 ]
 
 INSTALLED_APPS = DJANGO_APPS + WAGTAIL_APPS + THIRD_PARTY_APPS + LOCAL_APPS
