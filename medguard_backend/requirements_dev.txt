@@ -9,7 +9,7 @@ Django==5.2.4
 
 # Development tools
 django-debug-toolbar>=6.0.0
-django-extensions>=4.1
+django-extensions>=4.0
 ipython>=8.24.0
 ipdb>=0.13.13
 

@@ -77,10 +77,6 @@ WAGTAIL_REDIRECTS_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 DATABASES['default'].update({
     'OPTIONS': {
         'client_encoding': 'UTF8',
-        'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        'options': {
-            'isolation_level': 'read committed',
-        },
     },
     'CONN_MAX_AGE': 0,  # Disable persistent connections in development
     'ATOMIC_REQUESTS': True,  # Enable atomic requests for data integrity
