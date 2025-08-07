@@ -12,6 +12,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('medications', '0023_medicationindexpage_page_description'),
         ('wagtailcore', '0094_alter_page_locale'),
+        ('wagtailsearchpromotions', '0007_searchpromotion_external_link_text_and_more'),
     ]
 
     operations = [
@@ -450,7 +451,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='MedicationSearchPromotion',
             fields=[
-                ('searchpromotion_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='wagtailcore.searchpromotion')),
+                ('searchpromotion_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='wagtailsearchpromotions.searchpromotion')),
                 ('promotion_type', models.CharField(choices=[('featured_medication', 'Featured Medication'), ('new_medication', 'New Medication'), ('popular_medication', 'Popular Medication'), ('safety_alert', 'Safety Alert'), ('drug_recall', 'Drug Recall'), ('generic_available', 'Generic Available')], default='featured_medication', help_text='Type of search promotion', max_length=30)),
                 ('priority_score', models.IntegerField(default=1, help_text='Priority score for promotion ranking (higher = more important)')),
                 ('start_date', models.DateTimeField(blank=True, help_text='When this promotion should start appearing', null=True)),
@@ -466,6 +467,6 @@ class Migration(migrations.Migration):
                 'ordering': ['-priority_score', '-start_date'],
                 'indexes': [models.Index(fields=['promotion_type'], name='medication__promoti_34f625_idx'), models.Index(fields=['priority_score'], name='medication__priorit_64c29c_idx'), models.Index(fields=['is_active'], name='medication__is_acti_1818a0_idx'), models.Index(fields=['language'], name='medication__languag_184f2a_idx'), models.Index(fields=['start_date', 'end_date'], name='medication__start_d_6d93cc_idx')],
             },
-            bases=('wagtailcore.searchpromotion',),
+            bases=('wagtailsearchpromotions.searchpromotion',),
         ),
     ]
