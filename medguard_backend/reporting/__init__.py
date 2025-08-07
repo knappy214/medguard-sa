@@ -1,0 +1,1 @@
+# MedGuard SA - Reporting Module
