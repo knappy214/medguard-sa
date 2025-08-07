@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
                 'ordering': ['-relevance_score', '-healthcare_relevance'],
                 'indexes': [models.Index(fields=['content_type', 'object_id'], name='enhanced_se_content_f2c609_idx'), models.Index(fields=['language'], name='enhanced_se_languag_525407_idx'), models.Index(fields=['is_active'], name='enhanced_se_is_acti_7be8a0_idx'), models.Index(fields=['relevance_score'], name='enhanced_se_relevan_407ee1_idx'), models.Index(fields=['healthcare_relevance'], name='enhanced_se_healthc_447be7_idx')],
             },
-            bases=(wagtail.search.index.Indexed, models.Model),
+            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='MultilingualSearchIndex',

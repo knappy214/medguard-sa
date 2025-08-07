@@ -16,7 +16,7 @@ from wagtail.contrib.search_promotions.models import SearchPromotion
 from medications.models import Medication, MedicationIndexPage, MedicationDetailPage
 
 
-class EnhancedSearchIndex(index.Indexed, models.Model):
+class EnhancedSearchIndex(models.Model):
     """
     Enhanced search index model for Wagtail 7.0.2 with improved medication content indexing.
     
@@ -49,20 +49,8 @@ class EnhancedSearchIndex(index.Indexed, models.Model):
     last_updated = models.DateTimeField(auto_now=True, help_text=_('Last update time'))
     is_active = models.BooleanField(default=True, help_text=_('Whether this index entry is active'))
     
-    # Enhanced search fields for Wagtail 7.0.2
-    search_fields = [
-        index.SearchField('title', boost=3.0),  # Highest boost for titles
-        index.SearchField('content', boost=1.5),  # Medium boost for content
-        index.SearchField('medication_name', boost=4.0),  # Very high boost for medication names
-        index.SearchField('generic_name', boost=3.5),  # High boost for generic names
-        index.SearchField('active_ingredients', boost=2.5),  # High boost for ingredients
-        index.SearchField('side_effects', boost=2.0),  # Medium-high boost for side effects
-        index.SearchField('interactions', boost=2.0),  # Medium-high boost for interactions
-        index.SearchField('dosage_info', boost=2.5),  # High boost for dosage info
-        index.FilterField('content_type'),
-        index.FilterField('language'),
-        index.FilterField('is_active'),
-    ]
+    # Note: This model is a custom search index, not a Wagtail page model
+    # It doesn't use Wagtail's search_fields mechanism
     
     class Meta:
         verbose_name = _('Enhanced Search Index')

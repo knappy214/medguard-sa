@@ -61,33 +61,39 @@ class Command(BaseCommand):
         self.stdout.write('📄 Setting up Wagtail pages...')
         
         # Get or create home page
-        try:
-            home_page = HomePage.objects.get(slug='home')
-        except HomePage.DoesNotExist:
+        home_page = HomePage.objects.first()
+        if not home_page:
+            # Check if there's already a page with slug 'medguard-home'
             root_page = Page.objects.get(id=1)
-            home_page = HomePage(
-                title="MedGuard SA",
-                slug='home',
-                intro="Your comprehensive medication management system"
-            )
-            root_page.add_child(instance=home_page)
+            if not Page.objects.filter(slug='medguard-home').exists():
+                home_page = HomePage(
+                    title="MedGuard SA Home",
+                    slug='medguard-home',
+                    hero_subtitle="Your comprehensive medication management system"
+                )
+                root_page.add_child(instance=home_page)
+            else:
+                self.stdout.write('⚠️  HomePage already exists with different slug')
+                # Use the existing root page for medication index
+                home_page = root_page
         
         # Create medication index page if it doesn't exist
-        if not MedicationIndexPage.objects.exists():
+        if not MedicationIndexPage.objects.exists() and home_page:
             medication_index = MedicationIndexPage(
                 title="Medications",
-                slug='medications',
+                slug='medications-index',  # Use different slug to avoid conflicts
                 intro="Manage your medications with advanced features"
             )
             home_page.add_child(instance=medication_index)
         
-        # Set up site if needed
-        site, created = Site.objects.get_or_create(
-            hostname='localhost',
-            defaults={
-                'port': 8000,
-                'root_page': home_page,
-                'is_default_site': True,
-                'site_name': 'MedGuard SA Development'
-            }
-        )
+        # Set up site if needed (use the actual home page if it exists)
+        if home_page and home_page.id != 1:  # Don't use root page as site root
+            site, created = Site.objects.get_or_create(
+                hostname='localhost',
+                defaults={
+                    'port': 8000,
+                    'root_page': home_page,
+                    'is_default_site': True,
+                    'site_name': 'MedGuard SA Development'
+                }
+            )

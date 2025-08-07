@@ -91,6 +91,7 @@ DJANGO_APPS = [
 WAGTAIL_APPS = [
     'wagtail.contrib.forms',
     'wagtail.contrib.redirects',
+    'wagtail.contrib.search_promotions',  # Required for MedicationSearchPromotion
     'wagtail.embeds',
     'wagtail.sites',
     'wagtail.users',
