@@ -6,7 +6,6 @@ from django.utils.translation import gettext_lazy as _
 from PIL import Image as PILImage
 from io import BytesIO
 from django.core.files import File
-from wagtail.admin.panels import FieldPanel, MultiFieldPanel, InlinePanel, HelpPanel
 from wagtail.search import index
 
 
@@ -166,70 +165,7 @@ class User(AbstractUser):
     ]
     
     # Wagtail 7.0.2: Enhanced admin panels with improved widgets
-    panels = [
-        # Basic Information Panel
-        MultiFieldPanel([
-            FieldPanel('username'),
-            FieldPanel('email'),
-            FieldPanel('first_name'),
-            FieldPanel('last_name'),
-            FieldPanel('user_type'),
-        ], heading=_('Basic Information'), classname='collapsible'),
-        
-        # Contact Information Panel
-        MultiFieldPanel([
-            FieldPanel('phone'),
-            FieldPanel('address'),
-            FieldPanel('city'),
-            FieldPanel('province'),
-            FieldPanel('postal_code'),
-        ], heading=_('Contact Information'), classname='collapsible'),
-        
-        # Personal Information Panel
-        MultiFieldPanel([
-            FieldPanel('date_of_birth'),
-            FieldPanel('gender'),
-            FieldPanel('blood_type'),
-        ], heading=_('Personal Information'), classname='collapsible'),
-        
-        # Medical Information Panel
-        MultiFieldPanel([
-            FieldPanel('allergies'),
-            FieldPanel('medical_conditions'),
-            FieldPanel('current_medications'),
-        ], heading=_('Medical Information'), classname='collapsible'),
-        
-        # Emergency Contact Panel
-        MultiFieldPanel([
-            FieldPanel('emergency_contact_name'),
-            FieldPanel('emergency_contact_phone'),
-            FieldPanel('emergency_contact_relationship'),
-        ], heading=_('Emergency Contact'), classname='collapsible'),
-        
-        # Account Settings Panel
-        MultiFieldPanel([
-            FieldPanel('preferred_language'),
-            FieldPanel('timezone'),
-            FieldPanel('email_notifications'),
-            FieldPanel('sms_notifications'),
-            FieldPanel('mfa_enabled'),
-        ], heading=_('Account Settings'), classname='collapsible'),
-        
-        # Security Panel
-        MultiFieldPanel([
-            FieldPanel('is_active'),
-            FieldPanel('is_staff'),
-            FieldPanel('is_superuser'),
-            FieldPanel('groups'),
-            FieldPanel('user_permissions'),
-        ], heading=_('Security & Permissions'), classname='collapsible'),
-        
-        # Timestamps Panel
-        MultiFieldPanel([
-            FieldPanel('date_joined'),
-            FieldPanel('last_login'),
-        ], heading=_('Timestamps'), classname='collapsible'),
-    ]
+    panels = []
     
     class Meta:
         verbose_name = _('User')
@@ -320,17 +256,7 @@ class UserAvatar(models.Model):
     ]
     
     # Wagtail 7.0.2: Enhanced admin panels
-    panels = [
-        MultiFieldPanel([
-            FieldPanel('user'),
-            FieldPanel('image'),
-        ], heading=_('Avatar Information'), classname='collapsible'),
-        
-        MultiFieldPanel([
-            FieldPanel('created_at'),
-            FieldPanel('updated_at'),
-        ], heading=_('Timestamps'), classname='collapsible'),
-    ]
+    panels = []
     
     class Meta:
         verbose_name = _('User Avatar')
@@ -456,33 +382,7 @@ class UserProfile(models.Model):
     ]
     
     # Wagtail 7.0.2: Enhanced admin panels
-    panels = [
-        MultiFieldPanel([
-            FieldPanel('user'),
-        ], heading=_('User Information'), classname='collapsible'),
-        
-        MultiFieldPanel([
-            FieldPanel('professional_title'),
-            FieldPanel('license_number'),
-            FieldPanel('specialization'),
-        ], heading=_('Professional Information'), classname='collapsible'),
-        
-        MultiFieldPanel([
-            FieldPanel('facility_name'),
-            FieldPanel('facility_address'),
-            FieldPanel('facility_phone'),
-        ], heading=_('Facility Information'), classname='collapsible'),
-        
-        MultiFieldPanel([
-            FieldPanel('notification_preferences'),
-            FieldPanel('privacy_settings'),
-        ], heading=_('Preferences'), classname='collapsible'),
-        
-        MultiFieldPanel([
-            FieldPanel('created_at'),
-            FieldPanel('updated_at'),
-        ], heading=_('Timestamps'), classname='collapsible'),
-    ]
+    panels = []
     
     class Meta:
         verbose_name = _('User Profile')
